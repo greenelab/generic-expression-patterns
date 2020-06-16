@@ -291,7 +291,7 @@ template_data.to_csv(template_data_file, float_format='%.5f', sep='\t')
 original_compendium_file = params['compendium_data_file']
 
 
-# In[28]:
+# In[27]:
 
 
 # Read data
@@ -305,7 +305,7 @@ print(original_compendium.shape)
 original_compendium.head()
 
 
-# In[ ]:
+# In[28]:
 
 
 # Replace ensembl ids with gene symbols
@@ -380,7 +380,7 @@ for each_dir in output_dirs:
         os.makedirs(new_dir, exist_ok=True)
 
 
-# In[34]:
+# In[33]:
 
 
 # Train VAE on new compendium data
