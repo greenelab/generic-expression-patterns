@@ -9,6 +9,7 @@ dependencies:
 - r::r-devtools 
 - bioconda::bioconductor-limma
 - bioconda::bioconductor-sva
+- bioconda::bioconductor-recount
 - conda-forge::python=3.7
 - conda-forge::keras
 - conda-forge::tensorboard
