@@ -20,12 +20,11 @@ local_dir){
 
   # Get data associated with project ids
   # Download the RangedSummarizedExperiment object at the gene level for 
-  if(!file.exists(file.path(project_id, 'rse_gene.Rdata'))) {
+  if (!file.exists(file.path(project_id, 'rse_gene.Rdata'))) {
     download_study(project_id)
-    load(file.path(project_id, 'rse_gene.Rdata'), verbose = TRUE)
   } 
-  else {
-    load(file.path(project_id, 'rse_gene.Rdata'), verbose = TRUE)
+  load(file.path(project_id, 'rse_gene.Rdata'), verbose = TRUE)
+
   # Counts are raw read counts from the sequencing run
   # Counts are the number of reads that map that each gene
   
@@ -34,18 +33,18 @@ local_dir){
   # Most runs are single-end
   # RPKM: normalizes for sequencing depth (coverge per gene) and gene length. Usually used for single-end
   rse_rpkm <- getRPKM(rse_gene, length_var="bp_length")
-  }  
+
   # Rename counts for storage
   assign(paste0("rse_gene_", project_id), rse_gene)
 
-data_counts_rpkm <- t(rse_rpkm)
+  data_counts_rpkm <- t(rse_rpkm)
 
-## Save counts matrix to file
-write.table(data_counts_rpkm,
-          paste(local_dir,'/recount2_template_data.tsv',sep=""),
-          sep='\t',
-          row.names=TRUE,
-          col.names=NA)
+  ## Save counts matrix to file
+  write.table(data_counts_rpkm,
+            paste(local_dir,'/recount2_template_data.tsv',sep=""),
+            sep='\t',
+            row.names=TRUE,
+            col.names=NA)
 
 }
 
@@ -85,14 +84,12 @@ local_dir){
 
   # Get data associated with project ids
   # Download the RangedSummarizedExperiment object at the gene level for 
-  for(i in 1:length(selected_project_ids)){
-    if(!file.exists(file.path(selected_project_ids[i], 'rse_gene.Rdata'))) {
+  for (i in 1:length(selected_project_ids)) {
+    if (!file.exists(file.path(selected_project_ids[i], 'rse_gene.Rdata'))) {
       download_study(selected_project_ids[i])
-      load(file.path(selected_project_ids[i], 'rse_gene.Rdata'), verbose = TRUE)
     } 
-    else {
-      load(file.path(selected_project_ids[i], 'rse_gene.Rdata'), verbose = TRUE)
-    }
+    load(file.path(selected_project_ids[i], 'rse_gene.Rdata'), verbose = TRUE)
+
     # Counts are raw read counts from the sequencing run
     # Counts are the number of reads that map that each gene
     
@@ -103,10 +100,10 @@ local_dir){
     rse_rpkm <- getRPKM(rse_gene, length_var="bp_length")
     
     # Concatenate scaled counts into one matrix
-    if (i==1){
+    if (i==1) {
       data_counts_all_rpkm <- rse_rpkm
     }
-    else{
+    else {
       data_counts_all_rpkm <- cbind(data_counts_all_rpkm, rse_rpkm)
     }
     # Rename counts for storage

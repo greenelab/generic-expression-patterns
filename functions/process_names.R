@@ -1,10 +1,12 @@
-  
 ## Run this once to setup environment
 ## Used R 3.6.3
 #if (!requireNamespace("BiocManager", quietly = TRUE))
 #  install.packages("BiocManager")
 
-convertEnsembl2Symbol <- function(ensembl.genes) {
+## About
+# The functions 
+
+convert_ensembl_to_symbol <- function(ensembl.genes) {
   #require(biomaRt)
   ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
   getBM(values = ensembl.genes, attributes = c('ensembl_gene_id','hgnc_symbol'), 
@@ -22,7 +24,7 @@ out_file){
   parsed_gene_id <- gsub("\\..*","", original_gene_id)
   
   # Get mapping from ensembl - gene symbol
-  gene_id_mapping <- convertEnsembl2Symbol(as.character(parsed_gene_id))
+  gene_id_mapping <- convert_ensembl_to_symbol(as.character(parsed_gene_id))
 
   write.table(gene_id_mapping, file = out_file, row.names = T, sep = "\t", quote = F)
 }
