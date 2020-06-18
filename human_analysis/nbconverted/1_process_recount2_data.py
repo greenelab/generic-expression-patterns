@@ -30,8 +30,8 @@ from ponyo import generate_template_data, utils, pipeline
 from functions import process, calc
 
 from numpy.random import seed
-randomState = 123
-seed(randomState)
+random_state = 123
+seed(random_state)
 
 
 # In[2]:
@@ -384,6 +384,6 @@ for each_dir in output_dirs:
 
 
 # Train VAE on new compendium data
-pipeline.train_vae(config_file,
-                   normalized_data_file)
+#pipeline.train_vae(config_file,
+#                   normalized_data_file)
 

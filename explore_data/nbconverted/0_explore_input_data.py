@@ -43,8 +43,8 @@ from plotnine import (ggplot,
 from ponyo import utils
 
 from numpy.random import seed
-randomState = 123
-seed(randomState)
+random_state = 123
+seed(random_state)
 
 
 # In[2]:
@@ -96,8 +96,7 @@ template_data.head()
 # In[6]:
 
 
-"""
-# Try different partitions of the data
+"""# Try different partitions of the data
 smRNA_samples = ["SRR493961",
                  "SRR493962",
                  "SRR493963",
@@ -110,7 +109,6 @@ smRNA_samples = ["SRR493961",
                  "SRR493970",
                  "SRR493971",
                  "SRR493972"]
-#template_data = template_data.loc[smRNA_samples]
 template_data = template_data.drop(smRNA_samples)
 print(template_data.shape)
 template_data.head()"""
@@ -156,7 +154,6 @@ template_data_labeled
 
 # Plot
 fig = ggplot(template_data_labeled, aes(x='1', y='2'))
-#fig += ggplot(template_data_labeled[template_data_labeled['source']=='Normal'], aes(x='1', y='2'))
 fig += geom_point(aes(color='source'), alpha=0.7)
 fig += labs(x ='PCA 1',
             y = 'PCA 2',
@@ -173,8 +170,6 @@ fig += theme(
     axis_title=element_text(family='sans-serif', size=15)
     )
 fig += guides(colour=guide_legend(override_aes={'alpha': 1}))
-#fig += ylim(-750000,10)
-#fig += xlim(-1000000,-750000)
 
 print(fig)
 
