@@ -46,6 +46,11 @@ conda env create -f environment.yml
 
 conda activate generic_expression
 ```
+Install local modules into this environment:
+
+```
+pip install -e .
+```
 
 ## How to run
 The directory paths and parameters will need to be updated in the `config.tsv` file. 
