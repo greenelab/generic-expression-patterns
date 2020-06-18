@@ -19,18 +19,21 @@
 * If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switch contexts will require a lot of manual effort. 
 * Similarly, using a different statistical method will require re-curation effort
 
-**Question**: Can we use our gene expression simulator to automatically generate null experiments for different contexts in order to overcome manual effort?
+**Question**: Can we use our gene expression simulator, [ponyo](https://github.com/greenelab/ponyo), automatically generate null experiments for different contexts in order to overcome this manual effort?
 
 ## Initial experiment
-**Question**: Can our compendia simulation [link to github] identify the same common enriched pathways as filtered out in GSEA-InContext?
+**Question**: Can our compendia simulation method, [ponyo](https://github.com/greenelab/ponyo) identify the same commonly DEGs found in [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491) and commonly enriched pathways as filtered out in GSEA-InContext?
 
 **Approach**:
 1. Select treatment vs control experiment from recount2
 2. Simulate 100 new experiments using experiment (1) as template
 3. Perform DE analysis to get association statistics
-4. Perform enrichment analysis using DEGs and rank pathways
+4. Perform enrichment analysis using DE stats
+5. Rank DEGs and pathways based on aggregated statistics across the simulated experiments
 
-**Hypothesis**: If we ranked pathways by the number of times that they showed up and we looked at those, we'd find the pathways that [GSEA-InContext](https://www.biorxiv.org/content/10.1101/659847v1) is designed to not find.
+**Hypothesis**: 
+* Our compendia simulation method, [ponyo](https://github.com/greenelab/ponyo) can help us identify the same commonly DEGs found in [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491) 
+* If we ranked pathways by the number of times that they showed up in our ponyo-generated null set, and we looked at those, we'd find the pathways that [GSEA-InContext](https://www.biorxiv.org/content/10.1101/659847v1) is designed to not find.
 
 ## Computational environment
 
@@ -43,3 +46,26 @@ conda env create -f environment.yml
 
 conda activate generic_expression
 ```
+
+## How to run
+The directory paths and parameters will need to be updated in the `config.tsv` file. 
+
+| Name | Description |
+| :--- | :---------- |
+| local_dir| str: Parent directory on local machine to store intermediate results|
+| dataset_name| str: Name for analysis directory, which contains the notebooks being run. For our analysis its named "human_analysis"|
+| template_data_file | str: Path on your local machine where to write and store template gene expression data file|
+| compendium_data_file | str: Path on your local machine where to write and store compendium gene expression data file|
+| normalized_compendium_data_file | str: Path on your local machine where to write and store normalized compendium gene expression data file|
+| scaler_transform_file | str: Path on your local machine where to write and store normalization transform to be used to process data for visualization|
+| NN_architecture | str: Name of neural network architecture to use. Format 'NN_<intermediate layer>_<latent layer>'|
+| learning_rate| float: Parent directory on local machine to store intermediate results|
+| batch_size | str: Name for analysis directory. Either "Human" or "Pseudomonas"|
+| epochs | int: Number of times to train over the entire input dataset|
+| kappa | float: How fast to linearly ramp up KL loss|
+| intermediate_dim| int: Size of the hidden layer|
+| latent_dim | int: Size of the bottleneck layer|
+| epsilon_std | float: Standard deviation of Normal distribution to sample latent space|
+| num_simulated| int: Simulate a compendia with these many experiments, created by shifting the template experiment these many times|
+| project_id | str:  Experiment id to use as a template experiment|
+| col_to_rank | str:  Name of column header from DE association statistic results. This column will be use to rank genes|
