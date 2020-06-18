@@ -1,0 +1,32 @@
+name: generic_expression
+
+channels:
+- conda-forge
+- r
+- bioconda
+dependencies:
+- r::r=3.6.0
+- r::r-devtools 
+- bioconda::bioconductor-limma
+- bioconda::bioconductor-sva
+- bioconda::bioconductor-recount
+- conda-forge::python=3.7
+- conda-forge::keras
+- conda-forge::tensorboard
+- conda-forge::tensorflow
+- conda-forge::scikit-learn
+- conda-forge::pandas=0.23.4
+- conda-forge::seaborn=0.10
+- conda-forge::umap-learn
+- conda-forge::scipy=1.1.0
+- conda-forge::plotnine=0.5.1
+- conda-forge::ipykernel=5.1.1
+- conda-forge::nb_conda_kernels
+- conda-forge::gxx_linux-64
+- conda-forge::rpy2=2.9.4
+- conda-forge::libiconv=1.15
+- pip=19.2.1
+- pip:
+  - matplotlib==3.0.0
+  - jupyter-datatables
+  - jupyter-require

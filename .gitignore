@@ -1,0 +1,5 @@
+# ignore all ipynb checkpoints
+.ipynb_checkpoints/
+*.pyc
+*.~lock*
+*.log
