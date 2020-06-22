@@ -26,7 +26,7 @@ from sklearn import preprocessing
 import pickle
 
 from ponyo import generate_template_data, utils, pipeline
-from generic_modules import process, calc
+from generic_expression_patterns_modules import process, calc
 
 from numpy.random import seed
 random_state = 123
@@ -78,7 +78,7 @@ get_ipython().run_cell_magic('R', '', "library('recount')")
 
 #%%R -i project_id -i local_dir
 
-#source('../generic_modules/download_recount2_data.R')
+#source('../generic_expression_patterns_modules/download_recount2_data.R')
 
 #get_recount2_compendium(project_id, local_dir)
 
@@ -88,7 +88,7 @@ get_ipython().run_cell_magic('R', '', "library('recount')")
 # In[7]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir', "\nsource('../generic_modules/download_recount2_data.R')\n\nget_recount2_template_experiment(project_id, local_dir)")
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_template_experiment(project_id, local_dir)")
 
 
 # ### Subset genes
@@ -149,7 +149,7 @@ get_ipython().run_cell_magic('R', '', 'suppressWarnings(library("biomaRt"))')
 # In[13]:
 
 
-get_ipython().run_cell_magic('R', '-i template_data_file -i gene_id_file', "\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n\nsource('../generic_modules/process_names.R')\n\nif (file.exists(gene_id_file) == FALSE){\n    gene_id_mapping <- get_ensembl_symbol_mapping(template_data_file, gene_id_file)\n}")
+get_ipython().run_cell_magic('R', '-i template_data_file -i gene_id_file', "\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n\nsource('../generic_expression_patterns_modules/process_names.R')\n\nif (file.exists(gene_id_file) == FALSE){\n    gene_id_mapping <- get_ensembl_symbol_mapping(template_data_file, gene_id_file)\n}")
 
 
 # In[14]:
