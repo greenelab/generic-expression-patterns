@@ -5,7 +5,7 @@
 # This notebook does the following:
 # 
 # 1. Selects template experiment
-# 2. Downloads subset of recount2 data, including the template experiment (50 random experiments + 1 template experiment)
+# 2. Downloads subset of recount2 data, including the template experiment (subset of random experiments + 1 template experiment)
 # 3. Train VAE on subset of recount2 data
 
 # In[1]:
@@ -56,6 +56,7 @@ local_dir = params["local_dir"]
 dataset_name = params['dataset_name']
 NN_architecture = params['NN_architecture']
 project_id = params['project_id']
+num_experiments = params['num_experiments']
 
 
 # ### Download subset of recount2 to use as a compendium
@@ -76,11 +77,7 @@ get_ipython().run_cell_magic('R', '', "library('recount')")
 # In[6]:
 
 
-#%%R -i project_id -i local_dir
-
-#source('../generic_expression_patterns_modules/download_recount2_data.R')
-
-#get_recount2_compendium(project_id, local_dir)
+get_ipython().run_cell_magic('R', '-i project_id -i num_experiments -i local_dir -i base_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_compendium(project_id, num_experiments, local_dir, base_dir)")
 
 
 # ### Download expression data for selected project id
@@ -308,8 +305,8 @@ original_compendium.head()
 
 
 # Replace ensembl ids with gene symbols
-#original_compendium = process.replace_ensembl_ids(original_compendium,
-#                                                gene_id_mapping)
+original_compendium = process.replace_ensembl_ids(original_compendium,
+                                                gene_id_mapping)
 
 
 # In[29]:
@@ -356,6 +353,7 @@ outfile.close()
 
 
 # ### Train VAE 
+# Performed exploratory analysis of compendium data [here](../explore_data/viz_recount2_compendium.ipynb) to help interpret loss curve.
 
 # In[32]:
 
@@ -383,6 +381,6 @@ for each_dir in output_dirs:
 
 
 # Train VAE on new compendium data
-#pipeline.train_vae(config_file,
-#                   normalized_data_file)
+pipeline.train_vae(config_file,
+                   normalized_data_file)
 
