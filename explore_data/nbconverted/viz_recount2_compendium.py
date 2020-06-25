@@ -107,9 +107,11 @@ val_samples = list(val_df.index)
 model = umap.UMAP(random_state=random_state).fit(normalized_compendium)
 
 input_data_UMAPencoded = model.transform(normalized_compendium)
-input_data_UMAPencoded_df = pd.DataFrame(data=input_data_UMAPencoded,
-                                         index=normalized_compendium.index,
-                                         columns=['1','2'])
+input_data_UMAPencoded_df = pd.DataFrame(
+  data=input_data_UMAPencoded,
+  index=normalized_compendium.index,
+  columns=['1','2']
+)
 # Add label
 input_data_UMAPencoded_df['dataset'] = 'training'
 input_data_UMAPencoded_df.loc[val_samples,'dataset'] = 'validation'
