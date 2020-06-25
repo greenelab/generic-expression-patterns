@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Visualize recount2 compendium
@@ -53,12 +53,7 @@ seed(random_state)
 # Read in config variables
 base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
-config_file = os.path.abspath(
-  os.path.join(
-    base_dir,
-    "config_human.tsv"
-   )
-)
+config_file = os.path.abspath(os.path.join(base_dir,
                                            "config_human.tsv"))
 params = utils.read_config(config_file)
 
@@ -91,10 +86,7 @@ normalized_compendium.head()
 # Get validation and training set
 # random_state matches the state used in the training
 test_set_percent = validation_frac
-val_df = (
-  normalized_compendium
-  .sample(frac=test_set_percent, random_state=123)
-)
+val_df = normalized_compendium.sample(frac=test_set_percent, random_state=random_state)
 val_samples = list(val_df.index)
 
 
@@ -107,11 +99,9 @@ val_samples = list(val_df.index)
 model = umap.UMAP(random_state=random_state).fit(normalized_compendium)
 
 input_data_UMAPencoded = model.transform(normalized_compendium)
-input_data_UMAPencoded_df = pd.DataFrame(
-  data=input_data_UMAPencoded,
-  index=normalized_compendium.index,
-  columns=['1','2']
-)
+input_data_UMAPencoded_df = pd.DataFrame(data=input_data_UMAPencoded,
+                                         index=normalized_compendium.index,
+                                         columns=['1','2'])
 # Add label
 input_data_UMAPencoded_df['dataset'] = 'training'
 input_data_UMAPencoded_df.loc[val_samples,'dataset'] = 'validation'
