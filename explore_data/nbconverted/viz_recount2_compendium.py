@@ -91,7 +91,10 @@ normalized_compendium.head()
 # Get validation and training set
 # random_state matches the state used in the training
 test_set_percent = validation_frac
-val_df = normalized_compendium.sample(frac=test_set_percent, random_state=123)
+val_df = (
+  normalized_compendium
+  .sample(frac=test_set_percent, random_state=123)
+)
 val_samples = list(val_df.index)
 
 
