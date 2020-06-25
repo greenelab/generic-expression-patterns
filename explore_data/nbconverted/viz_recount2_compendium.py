@@ -53,7 +53,12 @@ seed(random_state)
 # Read in config variables
 base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
-config_file = os.path.abspath(os.path.join(base_dir,
+config_file = os.path.abspath(
+  os.path.join(
+    base_dir,
+    "config_human.tsv"
+   )
+)
                                            "config_human.tsv"))
 params = utils.read_config(config_file)
 
