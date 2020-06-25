@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # In[1]:
@@ -172,4 +172,10 @@ fig += theme(
 fig += guides(colour=guide_legend(override_aes={'alpha': 1}))
 
 print(fig)
+
+
+# In[ ]:
+
+
+
 

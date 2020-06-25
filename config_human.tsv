@@ -15,3 +15,5 @@ epsilon_std	1.0
 project_id	"SRP012656"
 num_simulated	25
 col_to_rank	"logFC"
+num_experiments	200
+validation_frac	0.25

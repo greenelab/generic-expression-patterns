@@ -10,6 +10,8 @@
 # TCGA, SRA and GTEx
 # library('recount')
 
+set.seed(123)
+
 get_recount2_template_experiment <- function(project_id,
 local_dir){
 
@@ -50,7 +52,9 @@ local_dir){
 
 
 get_recount2_compendium <- function(template_project_id,
-local_dir){
+num_experiments,
+local_dir,
+base_dir){
 
   # This function downloads 50 random experiments, including the 
   # the experiment associated with the input project_id.
@@ -59,7 +63,10 @@ local_dir){
 
   # Download metadata file
   metadata <- all_metadata()
-  write.table(metadata, '~/Documents/Repos/generic-expression_patterns/analysis/data/metadata/recount2_metadata.tsv', sep='\t', row.names=FALSE)
+  write.table(metadata, 
+              paste(base_dir, '/human_analysis/data/metadata/recount2_metadata.tsv', sep=""),
+              sep='\t', 
+              row.names=FALSE)
 
   # Format of the metadata
   # Based on definitions from NCBI and blog post: 
@@ -71,11 +78,13 @@ local_dir){
   # Experiment: Unique sequencing library for a specific sample.  A sample can have multiple experiments, most have 1 experiment.
   # Run: Sequencing run.  An experiment can contain many runs (i.e. technical replicates)
   # In this case, we want to group runs into projects (for "experiment-level" simulation)
+
+  metadata <- metadata[metadata[,"read_count_as_reported_by_sra"] > 0,]
   project_ids <- unique(metadata$project)
 
   # Entire recount2 is 8TB
-  # We will only select the top 50 studies instead
-  selected_project_ids <- sample(project_ids, 50)
+  # We will only select the subset of studies instead
+  selected_project_ids <- sample(project_ids, num_experiments)
 
   # Add user selected project id
   selected_project_ids <- append(selected_project_ids, template_project_id)
@@ -85,6 +94,7 @@ local_dir){
   # Get data associated with project ids
   # Download the RangedSummarizedExperiment object at the gene level for 
   for (i in 1:length(selected_project_ids)) {
+    print(selected_project_ids[i])
     if (!file.exists(file.path(selected_project_ids[i], 'rse_gene.Rdata'))) {
       download_study(selected_project_ids[i])
     } 
