@@ -6,7 +6,6 @@ These scripts perform calculations used in analysis notebooks.
 These calculations include: getting spearman correlation and CI. 
 """
 
-import pandas as pd
 from scipy import stats
 
 
@@ -50,3 +49,87 @@ def spearman_ci(ci, gene_rank_df, num_permutations):
         sort_r_perm_values[num_permutations - offset],
     )
 
+
+def aggregate_stats(col_to_rank, simulated_DE_stats_all):
+    """
+    Aggregate statistics across all simulated experiments
+
+    Arguments
+    ---------
+    col_to_rank: str
+        The DE statistic to use to rank genes. These are column headers of the DE
+        statistics results table.
+    simulated_DE_stats_all: df
+        Dataframe of concatenated simulated experiments
+    """
+    if col_to_rank == "adj.P.Val":
+        simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
+            [col_to_rank]
+        ].agg(["median", "mean", "std", "count"])
+    else:
+        simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
+            [col_to_rank, "adj.P.Val"]
+        ].agg(
+            {col_to_rank: ["median", "mean", "std", "count"], "adj.P.Val": ["median"]}
+        )
+    return simulated_DE_summary_stats
+
+
+def rank_genes(col_to_rank, DE_summary_stats, is_template):
+    """
+    Rank genes by median value of col_to_rank for simulated experiments
+    Rank genes by value of col_to_rank for template for template experiment 
+
+    """
+    # If ranking by p-value or adjusted p-value then high rank = low value
+    if col_to_rank in ["P.Value", "adj.P.Val"]:
+        if is_template:
+            DE_summary_stats["ranking"] = DE_summary_stats[col_to_rank].rank(
+                ascending=False
+            )
+            DE_summary_stats = DE_summary_stats.sort_values(
+                by=col_to_rank, ascending=True
+            )
+        else:
+            DE_summary_stats["ranking"] = DE_summary_stats[
+                (col_to_rank, "median")
+            ].rank(ascending=False)
+            DE_summary_stats = DE_summary_stats.sort_values(
+                by=(col_to_rank, "median"), ascending=True
+            )
+
+    # If ranking by logFC then high rank = high abs(value)
+    elif col_to_rank in ["logFC", "t"]:
+        if is_template:
+            DE_summary_stats["ranking"] = (
+                DE_summary_stats[col_to_rank].abs().rank(ascending=True)
+            )
+            DE_summary_stats = DE_summary_stats.sort_values(
+                by=col_to_rank, ascending=False
+            )
+        else:
+            DE_summary_stats["ranking"] = (
+                DE_summary_stats[(col_to_rank, "median")].abs().rank(ascending=True)
+            )
+            DE_summary_stats = DE_summary_stats.sort_values(
+                by=(col_to_rank, "median"), ascending=False
+            )
+
+    # If ranking by Z-score then high rank = high value
+    else:
+        if is_template:
+            DE_summary_stats["ranking"] = DE_summary_stats[col_to_rank].rank(
+                ascending=True
+            )
+            DE_summary_stats = DE_summary_stats.sort_values(
+                by=col_to_rank, ascending=False
+            )
+        else:
+            DE_summary_stats["ranking"] = DE_summary_stats[
+                (col_to_rank, "median")
+            ].rank(ascending=True)
+            DE_summary_stats = DE_summary_stats.sort_values(
+                by=(col_to_rank, "median"), ascending=False
+            )
+
+    return DE_summary_stats
