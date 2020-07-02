@@ -96,7 +96,7 @@ def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
     local_dir: str
         Local directory containing simulated experiments
     project_id: str
-        Project id to use to retreieve simulated experiments
+        Project id to use to retrieve simulated experiments
 
     """
 
@@ -203,4 +203,3 @@ def generate_summary_table(
     summary.to_csv(summary_file, float_format="%.5f", sep="\t")
 
     return summary
-
