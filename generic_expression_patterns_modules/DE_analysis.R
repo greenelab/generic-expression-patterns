@@ -8,11 +8,11 @@
 # library('limma')
 
 get_DE_stats <- function(metadata_file, 
-                      experiment_id, 
-                      expression_file,
-                      data_type,
-                      local_dir,
-                      run){
+                         experiment_id, 
+                         expression_file,
+                         data_type,
+                         local_dir,
+                         run) {
   
   # This function performs DE analysis using expression data in expression_file
   # where samples are grouped based on metadata_file
