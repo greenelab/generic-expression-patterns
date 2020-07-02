@@ -93,7 +93,7 @@ get_DE_stats <- function(metadata_file,
 create_volcano <- function(expression_file,
                            experiment_id,
                            pval,
-                           local_dir){
+                           local_dir) {
 
     # This functioni generates a volcano plot using the output from
     # the DE analysis script 'get_DE_stats' and output it to local_dir
