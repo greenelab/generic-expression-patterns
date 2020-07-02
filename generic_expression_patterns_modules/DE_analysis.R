@@ -79,9 +79,9 @@ get_DE_stats <- function(metadata_file,
   num_sign_DEGs <- all_genes[all_genes[,'adj.P.Val']<threshold & abs(all_genes[,'logFC'])>1,]
   
   # Save summary statistics of DEGs
-  if (data_type == "template"){
+  if (data_type == "template") {
     out_file = paste(local_dir, "DE_stats/DE_stats_template_data_", experiment_id,"_", run, ".txt", sep="")
-  } else if (data_type == "simulated"){
+  } else if (data_type == "simulated") {
     out_file = paste(local_dir, "DE_stats/DE_stats_simulated_data_", experiment_id,"_", run, ".txt", sep="")
   }  
   write.table(all_genes, file = out_file, row.names = T, sep = "\t", quote = F)
