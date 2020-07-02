@@ -55,11 +55,11 @@ get_DE_stats <- function(metadata_file,
   # Comparisons between groups (log fold-changes) are obtained as contrasts of these fitted linear models:
   # Samples are grouped based on experimental condition
   # The variability of gene expression is compared between these groups
-  if (grepl("SRP000762_groups", metadata_file)){
+  if (grepl("SRP000762_groups", metadata_file)) {
     contr <- makeContrasts(groupDEX_treated - groupcontrol, levels = colnames(coef(fit)))
-  }else if (grepl("SRP057087_groups", metadata_file)){
+  } else if (grepl("SRP057087_groups", metadata_file)) {
     contr <- makeContrasts(grouplesion - groupnot_lesion, levels = colnames(coef(fit)))
-  }else if (grepl("SRP012656_groups", metadata_file)){
+  } else if (grepl("SRP012656_groups", metadata_file)) {
     contr <- makeContrasts(groupTumor - groupNormal, levels = colnames(coef(fit)))
   }
   
