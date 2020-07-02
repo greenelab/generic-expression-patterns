@@ -6,6 +6,9 @@
 # This notebooke performs the following steps to identify generic genes
 # 1. Simulates N gene expression experiments using [ponyo](https://github.com/ajlee21/ponyo)
 # 2. Perform DE analysis to get association statistics for each gene
+# 
+# In this case the DE analysis is based on the experimental design of the template experiment, described in the previous [notebook](1_process_recount2_data.ipynb). The template experiment is [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764), which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients. So the DE analysis is comparing tumor vs normal in this case.
+# 
 # 3. For each gene, aggregate statsitics across all simulated experiments 
 # 4. Rank genes based on this aggregated statistic
 # 
@@ -147,13 +150,13 @@ get_ipython().run_cell_magic('R', '', "library('limma')")
 # In[9]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nout_file <- paste(local_dir,\n                  "DE_stats/DE_stats_template_data_",\n                  project_id,\n                  "_real.txt",\n                  sep="")\n\n    get_DE_stats(metadata_file,\n                 project_id, \n                 template_data_file,\n                 "template",\n                 local_dir,\n                 "real")')
+get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats(metadata_file,\n             project_id, \n             template_data_file,\n             "template",\n             local_dir,\n             "real")')
 
 
 # In[10]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_file <- paste(local_dir, \n                                 "pseudo_experiment/selected_simulated_data_",\n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    out_file <- paste(local_dir, \n                      "DE_stats/DE_stats_simulated_data_",\n                      project_id,\n                      "_",\n                      i,\n                      ".txt", \n                      sep="")\n    \n    run_output <- get_DE_stats(metadata_file,\n                               project_id, \n                               simulated_data_file,\n                               "simulated",\n                               local_dir,\n                               i)\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
+get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_file <- paste(local_dir, \n                                 "pseudo_experiment/selected_simulated_data_",\n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    run_output <- get_DE_stats(metadata_file,\n                               project_id, \n                               simulated_data_file,\n                               "simulated",\n                               local_dir,\n                               i)\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
 
 
 # ### Rank genes
@@ -334,5 +337,8 @@ r, p, ci_high, ci_low = calc.spearman_ci(0.95,
 
 print(r, p, ci_high, ci_low)
 
+
+# **Takeaway:**
+# Based on the correlation plot, we can see that our simulation method is very good at capturing variability in genes that are very low or very high in the DE rank (i.e. are significantly differentially expressed often across different studies). These results serve to validate that our method can be used to identify these generic genes, as we were able to recapitulate the some of the generic genes as those identified by Crow et. al. Additionally, our method extends the Crow et. al. work, which used array data, and since here we used RNA-seq.
 
 # ### Compare pathway ranking
