@@ -75,7 +75,7 @@ get_DE_stats <- function(metadata_file,
   all_genes <-  as.data.frame(top.table)
   
   # Find all DEGs based on adjusted p-value cutoff
-  threshold = 0.001
+  threshold <- 0.001
   num_sign_DEGs <- all_genes[all_genes[,'adj.P.Val']<threshold & abs(all_genes[,'logFC'])>1,]
   
   # Save summary statistics of DEGs
