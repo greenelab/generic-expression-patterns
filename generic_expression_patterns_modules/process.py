@@ -131,7 +131,7 @@ def concat_simulated_data(local_dir, num_runs, project_id):
     num_runs: int
         Number of simulated experiments
     project_id: str
-        Project id to use to retreieve simulated experiments
+        Project id to use to retrieve simulated experiments
 
     Returns
     -------
