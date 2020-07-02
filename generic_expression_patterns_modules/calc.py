@@ -61,6 +61,15 @@ def aggregate_stats(col_to_rank, simulated_DE_stats_all):
         statistics results table.
     simulated_DE_stats_all: df
         Dataframe of concatenated simulated experiments
+
+    Returns
+    --------
+    Dataframe grouped by gene (row of the dataframe).
+    For each gene this function calculates the median, mean, standard deviation
+    of the distribution of the selected statistic (`col_to_rank`) across all
+    simulated experiments.
+    For each gene, it also returns the count to tell you the number of simulated
+     experiments that were generated.
     """
     if col_to_rank == "adj.P.Val":
         simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
@@ -77,8 +86,10 @@ def aggregate_stats(col_to_rank, simulated_DE_stats_all):
 
 def rank_genes(col_to_rank, DE_summary_stats, is_template):
     """
-    Rank genes by median value of col_to_rank for simulated experiments
-    Rank genes by value of col_to_rank for template for template experiment 
+    Returns the input dataframe (`DE_summary_stats`), ranked by the selected
+    statistic, `col_to_rank` (if the input is the template experiment)
+     or the median of the selected statistic (if the input is the simulated experiments).
+    The ordering of the ranking depends on the statistic selected.
 
     """
     # If ranking by p-value or adjusted p-value then high rank = low value

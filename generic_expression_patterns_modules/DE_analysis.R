@@ -105,16 +105,16 @@ create_volcano <- function(expression_file,
 
     # Make a basic volcano plot
     f <- EnhancedVolcano(res,
-                    lab = rownames(res),
-                    x = 'logFC',
-                    y = 'adj.P.Val',
-                    xlim = c(-2,2),
-                    pCutoff = threshold,
-                    FCcutoff = 1,
-                    pointSize = 1.0,
-                    labSize = 3.0,
-                    xlab=bquote(~Log[2]~ 'fold change'),
-                    ylab=bquote(-~Log[10]~ 'FDR adj p-value')
+                         lab = rownames(res),
+                         x = 'logFC',
+                         y = 'adj.P.Val',
+                         xlim = c(-2,2),
+                         pCutoff = threshold,
+                         FCcutoff = 1,
+                         pointSize = 1.0,
+                         labSize = 3.0,
+                         xlab=bquote(~Log[2]~ 'fold change'),
+                         ylab=bquote(-~Log[10]~ 'FDR adj p-value')
     )
 
     # Save
