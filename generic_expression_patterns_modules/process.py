@@ -7,6 +7,7 @@ These scripts include: replacing ensembl gene ids with hgnc symbols.
 """
 
 import pandas as pd
+import os
 
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
@@ -80,3 +81,125 @@ def replace_ensembl_ids(expression_df, gene_id_mapping):
     # Save
     return gene_expression
 
+
+def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
+    """
+    Removes user selected samples from the simulated experiments. This function
+    overwrites the data in the simulated gene expression data files. 
+    
+    Arguments
+    ---------
+    samples_to_remove: lst
+        list of samples ids to remove from each simulated experiment
+    num_runs: int
+        Number of simulated experiments
+    local_dir: str
+        Local directory containing simulated experiments
+    project_id: str
+        Project id to use to retrieve simulated experiments
+
+    """
+
+    for i in range(num_runs):
+        simulated_data_file = os.path.join(
+            local_dir,
+            "pseudo_experiment",
+            "selected_simulated_data_" + project_id + "_" + str(i) + ".txt",
+        )
+
+        # Read simulated data
+        simulated_data = pd.read_csv(
+            simulated_data_file, header=0, sep="\t", index_col=0
+        )
+
+        # Drop samples
+        simulated_data = simulated_data.drop(samples_to_remove)
+
+        # Save
+        simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
+
+
+def concat_simulated_data(local_dir, num_runs, project_id):
+    """
+    This function will concatenate the simulated experiments into a single dataframe
+    in order to aggregate statistics across all experiments.
+
+    Arguments
+    ---------
+    local_dir: str
+        Local directory containing simulated experiments
+    num_runs: int
+        Number of simulated experiments
+    project_id: str
+        Project id to use to retrieve simulated experiments
+
+    Returns
+    -------
+    Dataframe containing all simulated experiments concatenated together
+
+    """
+
+    simulated_DE_stats_all = pd.DataFrame()
+    for i in range(num_runs):
+        simulated_DE_stats_file = os.path.join(
+            local_dir,
+            "DE_stats",
+            "DE_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
+        )
+
+        # Read results
+        simulated_DE_stats = pd.read_csv(
+            simulated_DE_stats_file, header=0, sep="\t", index_col=0
+        )
+
+        simulated_DE_stats.reset_index(inplace=True)
+
+        # Concatenate df
+        simulated_DE_stats_all = pd.concat([simulated_DE_stats_all, simulated_DE_stats])
+
+    return simulated_DE_stats_all
+
+
+def generate_summary_table(
+    template_DE_stats, simulated_DE_summary_stats, col_to_rank, local_dir
+):
+    """
+    Generate a summary table of the template and summary statistics
+
+    """
+    # Merge template statistics with simulated statistics
+    template_simulated_DE_stats = template_DE_stats.merge(
+        simulated_DE_summary_stats, left_index=True, right_index=True
+    )
+    print(template_simulated_DE_stats.shape)
+
+    # Parse columns
+    median_pval_simulated = template_simulated_DE_stats[("adj.P.Val", "median")]
+    mean_test_simulated = template_simulated_DE_stats[(col_to_rank, "mean")]
+    std_test_simulated = template_simulated_DE_stats[(col_to_rank, "std")]
+    count_simulated = template_simulated_DE_stats[(col_to_rank, "count")]
+    rank_simulated = template_simulated_DE_stats[("ranking", "")]
+
+    summary = pd.DataFrame(
+        data={
+            "Gene ID": template_simulated_DE_stats.index,
+            "Adj P-value (Real)": template_simulated_DE_stats["adj.P.Val"],
+            "Rank (Real)": template_simulated_DE_stats["ranking"],
+            "Test statistic (Real)": template_simulated_DE_stats[col_to_rank],
+            "Median adj p-value (simulated)": median_pval_simulated,
+            "Rank (simulated)": rank_simulated,
+            "Mean test statistic (simulated)": mean_test_simulated,
+            "Std deviation (simulated)": std_test_simulated,
+            "Number of experiments (simulated)": count_simulated,
+        }
+    )
+    summary["Z score"] = (
+        summary["Test statistic (Real)"] - summary["Mean test statistic (simulated)"]
+    ) / summary["Std deviation (simulated)"]
+
+    # Save file
+    summary_file = os.path.join(local_dir, "gene_summary_table_" + col_to_rank + ".tsv")
+
+    summary.to_csv(summary_file, float_format="%.5f", sep="\t")
+
+    return summary
