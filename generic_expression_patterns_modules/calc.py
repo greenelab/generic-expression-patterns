@@ -69,7 +69,7 @@ def aggregate_stats(col_to_rank, simulated_DE_stats_all):
     of the distribution of the selected statistic (`col_to_rank`) across all
     simulated experiments.
     For each gene, it also returns the count to tell you the number of simulated
-     experiments that were generated.
+    experiments that were generated.
     """
     if col_to_rank == "adj.P.Val":
         simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
@@ -86,9 +86,10 @@ def aggregate_stats(col_to_rank, simulated_DE_stats_all):
 
 def rank_genes(col_to_rank, DE_summary_stats, is_template):
     """
-    Returns the input dataframe (`DE_summary_stats`), ranked by the selected
-    statistic, `col_to_rank` (if the input is the template experiment)
-     or the median of the selected statistic (if the input is the simulated experiments).
+    Returns the input dataframe (`DE_summary_stats`) that has been modified such that
+    genes are ranked by the selected statistic, `col_to_rank` 
+    (if the input is the template experiment) or the median of the selected statistic
+    (if the input is the simulated experiments).
     The ordering of the ranking depends on the statistic selected.
 
     """
