@@ -27,19 +27,15 @@ import sys
 import glob
 import pandas as pd
 import numpy as np
-import random
 import seaborn as sns
-import umap
-from keras.models import load_model
-from sklearn.decomposition import PCA
 import pickle
 from rpy2.robjects import pandas2ri
 pandas2ri.activate()
 
-from ponyo import utils, generate_template_data
+from ponyo import utils, simulate_expression_data
 from generic_expression_patterns_modules import calc, process
 
-random.seed(123)
+np.random.seed(123)
 
 
 # In[2]:
@@ -53,7 +49,7 @@ config_file = os.path.abspath(os.path.join(base_dir,
 params = utils.read_config(config_file)
 
 
-# In[3]:
+# In[54]:
 
 
 # Load params
@@ -62,6 +58,7 @@ dataset_name = params['dataset_name']
 NN_architecture = params['NN_architecture']
 num_runs = params['num_simulated']
 project_id = params['project_id']
+metadata_col_id = params['metadata_colname']
 template_data_file = params['template_data_file']
 original_compendium_file = params['compendium_data_file']
 normalized_compendium_file = params['normalized_compendium_data_file']
@@ -85,9 +82,10 @@ scaler = pickle.load(open(scaler_file, "rb"))
 
 # Simulate multiple experiments
 for i in range(num_runs):
-    generate_template_data.shift_template_experiment(
+    simulate_expression_data.shift_template_experiment(
         normalized_compendium_file,
         project_id,
+        metadata_col_id,
         NN_architecture,
         dataset_name,
         scaler,
@@ -237,14 +235,14 @@ summary_gene_ranks.head()
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[16]:
+# In[17]:
 
 
 # Get list of our genes
 gene_ids = list(summary_gene_ranks.index)
 
 
-# In[17]:
+# In[18]:
 
 
 # Get generic genes identified by Crow et. al.
@@ -257,14 +255,14 @@ DE_prior = pd.read_csv(DE_prior_file,
 DE_prior.head()
 
 
-# In[18]:
+# In[19]:
 
 
 # Get list of published generic genes
 published_generic_genes = list(DE_prior['Gene_Name'])
 
 
-# In[19]:
+# In[20]:
 
 
 # Get intersection of gene lists
@@ -272,7 +270,7 @@ shared_genes = set(gene_ids).intersection(published_generic_genes)
 print(len(shared_genes))
 
 
-# In[20]:
+# In[21]:
 
 
 # Get rank of shared genes
@@ -281,7 +279,7 @@ print(our_gene_rank_df.shape)
 our_gene_rank_df.head()
 
 
-# In[21]:
+# In[22]:
 
 
 # Merge published ranking
@@ -295,7 +293,7 @@ print(shared_gene_rank_df.shape)
 shared_gene_rank_df.head()
 
 
-# In[22]:
+# In[23]:
 
 
 # Scale published ranking to our range
@@ -304,7 +302,7 @@ shared_gene_rank_df['DE_Prior_Rank'] = round(shared_gene_rank_df['DE_Prior_Rank'
 shared_gene_rank_df.head()
 
 
-# In[23]:
+# In[24]:
 
 
 # Plot our ranking vs published ranking
@@ -327,7 +325,7 @@ fig.savefig(fig_file,
             dpi=300,)
 
 
-# In[24]:
+# In[25]:
 
 
 # Get correlation

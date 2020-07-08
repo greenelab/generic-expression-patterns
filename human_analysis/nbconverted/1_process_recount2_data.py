@@ -19,18 +19,15 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-import random
 import rpy2
 import seaborn as sns
 from sklearn import preprocessing
 import pickle
 
-from ponyo import generate_template_data, utils, pipeline
+from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process, calc
 
-from numpy.random import seed
-random_state = 123
-seed(random_state)
+np.random.seed(123)
 
 
 # In[2]:
@@ -56,7 +53,7 @@ local_dir = params["local_dir"]
 dataset_name = params['dataset_name']
 NN_architecture = params['NN_architecture']
 project_id = params['project_id']
-num_experiments = params['num_experiments']
+num_recount2_experiments = params['num_recount2_experiments']
 
 
 # ### Download subset of recount2 to use as a compendium
@@ -77,7 +74,7 @@ get_ipython().run_cell_magic('R', '', "library('recount')")
 # In[6]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i num_experiments -i local_dir -i base_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_compendium(project_id, num_experiments, local_dir, base_dir)")
+get_ipython().run_cell_magic('R', '-i project_id -i num_recount2_experiments -i local_dir -i base_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_compendium(project_id, num_recount2_experiments, local_dir, base_dir)")
 
 
 # ### Download expression data for selected project id
@@ -381,6 +378,6 @@ for each_dir in output_dirs:
 
 
 # Train VAE on new compendium data
-pipeline.train_vae(config_file,
+train_vae_modules.train_vae(config_file,
                    normalized_data_file)
 
