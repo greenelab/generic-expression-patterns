@@ -49,7 +49,7 @@ config_file = os.path.abspath(os.path.join(base_dir,
 params = utils.read_config(config_file)
 
 
-# In[54]:
+# In[3]:
 
 
 # Load params
@@ -64,6 +64,12 @@ original_compendium_file = params['compendium_data_file']
 normalized_compendium_file = params['normalized_compendium_data_file']
 scaler_file = params['scaler_transform_file']
 col_to_rank = params['col_to_rank']
+compare_genes = params['compare_genes']
+
+gene_summary_file = os.path.join(
+    base_dir, 
+    dataset_name, 
+    "generic_gene_summary.tsv")
 
 NN_dir = os.path.join(
     base_dir, 
@@ -80,7 +86,7 @@ scaler = pickle.load(open(scaler_file, "rb"))
 # In[4]:
 
 
-# Simulate multiple experiments
+"""# Simulate multiple experiments
 for i in range(num_runs):
     simulate_expression_data.shift_template_experiment(
         normalized_compendium_file,
@@ -91,7 +97,7 @@ for i in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        i)
+        i)"""
 
 
 # Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](../explore_data/0_explore_input_data.ipynb)
@@ -99,7 +105,7 @@ for i in range(num_runs):
 # In[5]:
 
 
-# Remove subset of samples
+"""# Remove subset of samples
 smRNA_samples = ["SRR493961",
                  "SRR493962",
                  "SRR493963",
@@ -116,7 +122,7 @@ smRNA_samples = ["SRR493961",
 process.subset_samples(smRNA_samples,
                       num_runs,
                       local_dir,
-                      project_id)
+                      project_id)"""
 
 
 # ### Differential expression analysis
@@ -219,6 +225,13 @@ summary_gene_ranks = process.generate_summary_table(template_DE_stats,
 summary_gene_ranks.head()
 
 
+# In[16]:
+
+
+summary_gene_ranks.to_csv(
+    gene_summary_file, sep='\t')
+
+
 # ### GSEA 
 # **Goal:** To detect modest but coordinated changes in prespecified sets of related genes (i.e. those genes in the same pathway or share the same GO term).
 # 
@@ -235,105 +248,49 @@ summary_gene_ranks.head()
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[17]:
+# In[28]:
 
 
-# Get list of our genes
-gene_ids = list(summary_gene_ranks.index)
+if compare_genes:
+    # Get generic genes identified by Crow et. al.
+    DE_prior_file = params['reference_gene_file']
+    ref_gene_col = params['reference_gene_name_col']
+    ref_rank_col = params['reference_rank_col']
+    
+    # Merge our ranking and reference ranking
+    shared_gene_rank_df = process.merge_ranks_to_compare(
+        summary_gene_ranks,
+        DE_prior_file,
+        ref_gene_col,
+        ref_rank_col)
+    
+    if max(shared_gene_rank_df["Rank (simulated)"]) != max(shared_gene_rank_df[ref_rank_col]):
+        shared_gene_rank_scaled_df = process.scale_reference_ranking(shared_gene_rank_df, ref_rank_col)
+        
+    # Get correlation
+    r, p, ci_high, ci_low = calc.spearman_ci(0.95,
+                                             shared_gene_rank_scaled_df,
+                                             1000)
+    print(r, p, ci_high, ci_low)
+    
+    # Plot our ranking vs published ranking
+    fig_file = os.path.join(
+        local_dir, 
+        "gene_ranking_"+col_to_rank+".svg")
 
+    fig = sns.jointplot(data=shared_gene_rank_scaled_df,
+                        x='Rank (simulated)',
+                        y=ref_rank_col,
+                        kind='hex',
+                        marginal_kws={'color':'white'})
+    fig.set_axis_labels("Our preliminary method", "DE prior (Crow et. al. 2019)", fontsize=14)
 
-# In[18]:
-
-
-# Get generic genes identified by Crow et. al.
-DE_prior_file = "https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
-
-DE_prior = pd.read_csv(DE_prior_file,
-                       header=0,
-                       sep="\t")
-
-DE_prior.head()
-
-
-# In[19]:
-
-
-# Get list of published generic genes
-published_generic_genes = list(DE_prior['Gene_Name'])
-
-
-# In[20]:
-
-
-# Get intersection of gene lists
-shared_genes = set(gene_ids).intersection(published_generic_genes)
-print(len(shared_genes))
-
-
-# In[21]:
-
-
-# Get rank of shared genes
-our_gene_rank_df = pd.DataFrame(summary_gene_ranks.loc[shared_genes,'Rank (simulated)'])
-print(our_gene_rank_df.shape)
-our_gene_rank_df.head()
-
-
-# In[22]:
-
-
-# Merge published ranking
-shared_gene_rank_df = pd.merge(our_gene_rank_df,
-                               DE_prior[['DE_Prior_Rank','Gene_Name']],
-                               left_index=True,
-                               right_on='Gene_Name')
-
-shared_gene_rank_df.set_index('Gene_Name', inplace=True)
-print(shared_gene_rank_df.shape)
-shared_gene_rank_df.head()
-
-
-# In[23]:
-
-
-# Scale published ranking to our range
-max_rank = max(shared_gene_rank_df['Rank (simulated)'])
-shared_gene_rank_df['DE_Prior_Rank'] = round(shared_gene_rank_df['DE_Prior_Rank']*max_rank)
-shared_gene_rank_df.head()
-
-
-# In[24]:
-
-
-# Plot our ranking vs published ranking
-fig_file = os.path.join(
-    local_dir, 
-    "gene_ranking_"+col_to_rank+".svg")
-
-fig = sns.jointplot(data=shared_gene_rank_df,
-                    x='Rank (simulated)',
-                    y='DE_Prior_Rank',
-                    kind='hex',
-                    marginal_kws={'color':'white'})
-fig.set_axis_labels("Our preliminary method", "DE prior (Crow et. al. 2019)", fontsize=14)
-
-fig.savefig(fig_file,
-            format='svg',
-            bbox_inches="tight",
-            transparent=True,
-            pad_inches=0,
-            dpi=300,)
-
-
-# In[25]:
-
-
-# Get correlation
-r, p, ci_high, ci_low = calc.spearman_ci(0.95,
-                                         shared_gene_rank_df,
-                                         1000)
-
-print(r, p, ci_high, ci_low)
+    fig.savefig(fig_file,
+                format='svg',
+                bbox_inches="tight",
+                transparent=True,
+                pad_inches=0,
+                dpi=300,)
 
 
 # **Takeaway:**
