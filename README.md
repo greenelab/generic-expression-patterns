@@ -53,7 +53,22 @@ pip install -e .
 ```
 
 ## How to run
-The directory paths and parameters will need to be updated in the `config.tsv` file. 
+
+**Steps:**
+1. Create analysis directory in base repository directory.
+2. Copy jupyter notebooks (1_process_data.ipynb, 2_identify_generic_genes_pathways.ipynb) into analysis directory.
+3. Customize `1_process_data.ipynb` to generate the following saved files: 1) compendium of gene expression data, 2) template experiment data, 3) normalized gene expression compendium. See examples of this processing in `human_analysis/` and `pseudomonas_analysis/`.
+4. Required data files:
+* Gene expression compendium to use as input data. Specify path of data file in config file.
+* Metadata matrix (sample x experimental metadata) with sample id as index. Add file to `analysis_dir/data/metadata/`. Specify path of metadata file in config file.
+* Sample grouping matrix (sample x group) with group = [1 if control; 2 if case]. Add file to `analysis_dir/data/metadata/<project_id>_groups.tsv`.
+5. `2_identify_generic_genes_pathways.ipynb` will need to include comparison cells as seen in `human_analysis/2_identify_generic_genes_pathways.ipynb` if you would like to compare genes/genes sets with some reference ranking. 
+6. Update config file (see below)
+
+
+The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking.
+
+Note: Some of these parameters are required by the imported [ponyo](https://github.com/greenelab/ponyo) modules. 
 
 | Name | Description |
 | :--- | :---------- |
@@ -62,10 +77,14 @@ The directory paths and parameters will need to be updated in the `config.tsv` f
 | template_data_file | str: Path on your local machine where to write and store template gene expression data file|
 | compendium_data_file | str: Path on your local machine where to write and store compendium gene expression data file|
 | normalized_compendium_data_file | str: Path on your local machine where to write and store normalized compendium gene expression data file|
+| shared_genes_file | str: Path on your local machine where to write and store genes that will be examined. These genes are the intersection of genes in your dataset versus a reference to ensure that there are not Nans in downstream analysis|
 | scaler_transform_file | str: Path on your local machine where to write and store normalization transform to be used to process data for visualization|
+| reference_gene_file* | str: Path to file that contains reference genes and their rank|
+| refrence_gene_name_col| str: Name of the column header that contains the reference genes. This is found in reference_gene_file*|
+| reference_rank_col | str: Name of the column header that contains the reference gene ranks. This is found in reference_gene_file*|
 | NN_architecture | str: Name of neural network architecture to use. Format 'NN_<intermediate layer>_<latent layer>'|
-| learning_rate| float: Parent directory on local machine to store intermediate results|
-| batch_size | str: Name for analysis directory. Either "Human" or "Pseudomonas"|
+| learning_rate| float: Step size used for gradient descent. In other words, it's how quickly the  methods is learning|
+| batch_size | str: Training is performed in batches. So this determines the number of samples to consider at a given time|
 | epochs | int: Number of times to train over the entire input dataset|
 | kappa | float: How fast to linearly ramp up KL loss|
 | intermediate_dim| int: Size of the hidden layer|
@@ -73,4 +92,6 @@ The directory paths and parameters will need to be updated in the `config.tsv` f
 | epsilon_std | float: Standard deviation of Normal distribution to sample latent space|
 | num_simulated| int: Simulate a compendia with these many experiments, created by shifting the template experiment these many times|
 | project_id | str:  Experiment id to use as a template experiment|
-| col_to_rank | str:  Name of column header from DE association statistic results. This column will be use to rank genes|
+| col_to_rank | str:  Name of column header from DE association statistic results. This column will be use to rank genes. Select `logFC`, `P.Value`, `adj.P.Val`, `t`|
+| num_recount2_experiments | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
+| compare_genes | bool:  1 if comparing gene ranks with reference gene ranks. 0 if just identifying generic genes and gene sets but not comparing against a reference.|
