@@ -92,6 +92,15 @@ def rank_genes(col_to_rank, DE_summary_stats, is_template):
     (if the input is the simulated experiments).
     The ordering of the ranking depends on the statistic selected.
 
+    Arguments
+    ---------
+    col_to_rank: str
+        DE statistic to use to rank genes
+    DE_summary_stats: df
+        dataframe containing gene ranking for either template or simulated experiments
+    is_template: bool
+        if the DE_summary_stats df is for the template experiment or simulated experiments    
+
     """
     # If ranking by p-value or adjusted p-value then high rank = low value
     if col_to_rank in ["P.Value", "adj.P.Val"]:

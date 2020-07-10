@@ -166,6 +166,21 @@ def generate_summary_table(
     """
     Generate a summary table of the template and summary statistics
 
+    Arguments
+    ---------
+    template_DE_stats: df
+        dataframe containing DE statistics for template experiment
+    simulated_DE_summary_stats: df
+        dataframe containing aggregated DE statistics across all simulated experiments
+    col_to_rank: str
+        DE statistic to use to rank genes
+    local_dir: str
+        path to local machine where output file will be stored
+
+    Returns
+    -------
+    Dataframe summarizing gene ranking for template and simulated experiments
+
     """
     # Merge template statistics with simulated statistics
     template_simulated_DE_stats = template_DE_stats.merge(
@@ -211,6 +226,27 @@ def merge_ranks_to_compare(
     reference_gene_name_col,
     reference_rank_col,
 ):
+    """
+    Given dataframes of your ranking of genes and reference ranking
+    of genes. This function merges the ranking into one dataframe
+    to be able to compare, `shared_gene_rank_df`
+
+    Arguments
+    ---------
+    your_summary_gene_ranks_df: df
+        dataframe containing your rank per gene
+    reference_gene_ranks_file: file
+        file contining reference ranks per gene
+    reference_gene_name_col: str
+        column header containing the reference genes
+    reference_rank_col: str
+        column header containing the reference rank
+
+    Returns
+    -------
+    Dataframe containing your ranking and the reference ranking per gene
+
+    """
     # Read in reference gene ranks file
     reference_gene_ranks_df = pd.read_csv(reference_gene_ranks_file, header=0, sep="\t")
 
@@ -240,6 +276,29 @@ def merge_ranks_to_compare(
 
 
 def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
+    """
+    In the case where the reference ranking and your ranking are not
+    in the same range, this function scales the reference ranking
+    to be in the range as your ranking.
+
+    For example, if reference ranking ranged from (0,1) and your
+    ranking ranged from (0,100). This function would scale the
+    reference ranking to also be between 0 and 100.
+
+    Note: This function is assuming that the reference ranking range
+    is smaller than yours
+
+    Arguments
+    ---------
+    merged_gene_ranks: df
+        dataframe containing your rank and reference rank per gene
+    reference_rank_col: str
+        column header containing the reference rank
+
+    Returns
+    -------
+    The same merged_gene_ranks dataframe with reference ranks re-scaled
+    """
     # Scale published ranking to our range
     max_rank = max(merged_gene_ranks_df["Rank (simulated)"])
     merged_gene_ranks_df[reference_rank_col] = round(
