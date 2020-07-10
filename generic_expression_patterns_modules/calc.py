@@ -122,16 +122,16 @@ def rank_genes(col_to_rank, DE_summary_stats, is_template):
     # If ranking by logFC then high rank = high abs(value)
     elif col_to_rank in ["logFC", "t"]:
         if is_template:
-            DE_summary_stats["ranking"] = (
-                DE_summary_stats[col_to_rank].abs().rank(ascending=True)
+            DE_summary_stats["ranking"] = DE_summary_stats[col_to_rank].rank(
+                ascending=True
             )
             DE_summary_stats = DE_summary_stats.sort_values(
                 by=col_to_rank, ascending=False
             )
         else:
-            DE_summary_stats["ranking"] = (
-                DE_summary_stats[(col_to_rank, "median")].abs().rank(ascending=True)
-            )
+            DE_summary_stats["ranking"] = DE_summary_stats[
+                (col_to_rank, "median")
+            ].rank(ascending=True)
             DE_summary_stats = DE_summary_stats.sort_values(
                 by=(col_to_rank, "median"), ascending=False
             )

@@ -160,6 +160,20 @@ def concat_simulated_data(local_dir, num_runs, project_id):
     return simulated_DE_stats_all
 
 
+def abs_value_stats(simulated_DE_stats_all):
+    """
+    This function takes the absolute value of columns=[`logFC`, `t`].
+    For ranking genes, we only care about the magnitude of the change for
+    the logFC and t statistic, but not the direction.
+
+    The ranking for each gene will be based on the mean absolute value of either
+    logFC or t statistic, depending on the user selection
+    """
+    simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
+    simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
+    return simulated_DE_stats_all
+
+
 def generate_summary_table(
     template_DE_stats, simulated_DE_summary_stats, col_to_rank, local_dir
 ):
