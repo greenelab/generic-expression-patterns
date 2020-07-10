@@ -46,7 +46,7 @@ local_dir){
             paste(local_dir,'/recount2_template_data.tsv',sep=""),
             sep='\t',
             row.names=TRUE,
-            col.names=NA)
+            col.names=TRUE)
 
 }
 

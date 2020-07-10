@@ -203,3 +203,48 @@ def generate_summary_table(
     summary.to_csv(summary_file, float_format="%.5f", sep="\t")
 
     return summary
+
+
+def merge_ranks_to_compare(
+    your_summary_gene_ranks_df,
+    reference_gene_ranks_file,
+    reference_gene_name_col,
+    reference_rank_col,
+):
+    # Read in reference gene ranks file
+    reference_gene_ranks_df = pd.read_csv(reference_gene_ranks_file, header=0, sep="\t")
+
+    # Get list of our genes
+    gene_ids = list(your_summary_gene_ranks_df.index)
+
+    # Get list of published generic genes
+    published_generic_genes = list(reference_gene_ranks_df[reference_gene_name_col])
+
+    # Get intersection of gene lists
+    shared_genes = set(gene_ids).intersection(published_generic_genes)
+
+    # Get rank of shared genes
+    your_gene_rank_df = pd.DataFrame(
+        your_summary_gene_ranks_df.loc[shared_genes, "Rank (simulated)"]
+    )
+
+    # Merge published ranking
+    shared_gene_rank_df = pd.merge(
+        your_gene_rank_df,
+        reference_gene_ranks_df[[reference_rank_col, reference_gene_name_col]],
+        left_index=True,
+        right_on=reference_gene_name_col,
+    )
+
+    return shared_gene_rank_df
+
+
+def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
+    # Scale published ranking to our range
+    max_rank = max(merged_gene_ranks_df["Rank (simulated)"])
+    merged_gene_ranks_df[reference_rank_col] = round(
+        merged_gene_ranks_df[reference_rank_col] * max_rank
+    )
+
+    return merged_gene_ranks_df
+

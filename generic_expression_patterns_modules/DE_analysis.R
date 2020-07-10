@@ -38,8 +38,8 @@ get_DE_stats <- function(metadata_file,
   #   Used as identifier for different simulated experiments 
   
   # Read in data
-  expression_data <- t(as.matrix(read.table(expression_file, sep="\t", header=TRUE, row.names=1)))
-  metadata <- as.matrix(read.table(metadata_file, sep="\t", header=TRUE, row.names=1))
+  expression_data <- t(as.matrix(read.csv(expression_file, sep="\t", header=TRUE, row.names=1)))
+  metadata <- as.matrix(read.csv(metadata_file, sep="\t", header=TRUE, row.names=1))
   
   # NOTE: It make sure the metadata is in the same order 
   # as the column names of the expression matrix.
@@ -55,13 +55,7 @@ get_DE_stats <- function(metadata_file,
   # Comparisons between groups (log fold-changes) are obtained as contrasts of these fitted linear models:
   # Samples are grouped based on experimental condition
   # The variability of gene expression is compared between these groups
-  if (grepl("SRP000762_groups", metadata_file)) {
-    contr <- makeContrasts(groupDEX_treated - groupcontrol, levels = colnames(coef(fit)))
-  } else if (grepl("SRP057087_groups", metadata_file)) {
-    contr <- makeContrasts(grouplesion - groupnot_lesion, levels = colnames(coef(fit)))
-  } else if (grepl("SRP012656_groups", metadata_file)) {
-    contr <- makeContrasts(groupTumor - groupNormal, levels = colnames(coef(fit)))
-  }
+  contr <- makeContrasts(group2 - group1, levels = colnames(coef(fit)))
   
   # Estimate contrast for each gene
   tmp <- contrasts.fit(fit, contr)
