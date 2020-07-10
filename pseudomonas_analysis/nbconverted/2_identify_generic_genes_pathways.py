@@ -64,6 +64,7 @@ original_compendium_file = params['compendium_data_file']
 normalized_compendium_file = params['normalized_compendium_data_file']
 scaler_file = params['scaler_transform_file']
 col_to_rank = params['col_to_rank']
+compare_genes = params['compare_genes']
 
 gene_summary_file = os.path.join(
     base_dir, 
@@ -151,12 +152,19 @@ print(simulated_DE_stats_all.shape)
 # In[11]:
 
 
+# Take absolute value of logFC and t statistic
+simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
+
+
+# In[12]:
+
+
 # Aggregate statistics across all simulated experiments
 simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank,
                                                   simulated_DE_stats_all)
 
 
-# In[12]:
+# In[13]:
 
 
 # Load association statistics for template experiment
@@ -171,13 +179,16 @@ template_DE_stats = pd.read_csv(
     sep='\t',
     index_col=0)
 
+# Take absolute value of logFC and t statistic
+template_DE_stats = process.abs_value_stats(template_DE_stats)
+
 # Rank genes in template experiment
 template_DE_stats = calc.rank_genes(col_to_rank,
                                    template_DE_stats,
                                    True)
 
 
-# In[13]:
+# In[14]:
 
 
 # Rank genes in simulated experiments
@@ -188,7 +199,7 @@ simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
 
 # ### Gene summary table
 
-# In[14]:
+# In[15]:
 
 
 summary_gene_ranks = process.generate_summary_table(template_DE_stats,
@@ -199,7 +210,68 @@ summary_gene_ranks = process.generate_summary_table(template_DE_stats,
 summary_gene_ranks.head()
 
 
-# In[15]:
+# #### Add gene name as column
+
+# In[16]:
+
+
+# Gene number to gene name file
+gene_name_file = os.path.join(
+    base_dir,
+    "pseudomonas_analysis",
+    "data",
+    "metadata",
+    "Pseudomonas_aeruginosa_PAO1_107.csv")
+
+
+# In[17]:
+
+
+# Read gene number to name mapping
+gene_name_mapping = pd.read_table(
+    gene_name_file,
+    header=0,
+    sep=',',
+    index_col=0)
+
+gene_name_mapping = gene_name_mapping[["Locus Tag", "Name"]]
+
+gene_name_mapping.set_index("Locus Tag", inplace=True)
+print(gene_name_mapping.shape)
+gene_name_mapping.head()
+
+
+# In[18]:
+
+
+# Format gene numbers to remove extraneous quotes
+gene_number = gene_name_mapping.index
+gene_name_mapping.index = gene_number.str.strip("\"")
+
+gene_name_mapping.dropna(inplace=True)
+print(gene_name_mapping.shape)
+gene_name_mapping.head(10)
+
+
+# In[19]:
+
+
+# Remove duplicate mapping
+# Not sure which mapping is correct in this case
+# PA4527 maps to pilC and still frameshift type 4 fimbrial biogenesis protein PilC (putative pseudogene)
+gene_name_mapping = gene_name_mapping[~gene_name_mapping.index.duplicated(keep=False)]
+
+
+# In[20]:
+
+
+# Add gene names
+#gene_name_mapping_dict = gene_name_mapping.to_dict()
+summary_gene_ranks['Gene Name'] = summary_gene_ranks['Gene ID'].map(gene_name_mapping["Name"])
+summary_gene_ranks.head()
+
+
+# In[21]:
 
 
 summary_gene_ranks.to_csv(
@@ -219,7 +291,7 @@ summary_gene_ranks.to_csv(
 
 # ### Compare gene rankings
 
-# In[ ]:
+# In[22]:
 
 
 if compare_genes:

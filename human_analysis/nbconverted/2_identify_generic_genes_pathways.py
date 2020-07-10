@@ -177,12 +177,19 @@ print(simulated_DE_stats_all.shape)
 # In[12]:
 
 
+# Take absolute value of logFC and t statistic
+simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
+
+
+# In[13]:
+
+
 # Aggregate statistics across all simulated experiments
 simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank,
                                                   simulated_DE_stats_all)
 
 
-# In[13]:
+# In[14]:
 
 
 # Load association statistics for template experiment
@@ -197,13 +204,16 @@ template_DE_stats = pd.read_csv(
     sep='\t',
     index_col=0)
 
+# Take absolute value of logFC and t statistic
+template_DE_stats = process.abs_value_stats(template_DE_stats)
+
 # Rank genes in template experiment
 template_DE_stats = calc.rank_genes(col_to_rank,
                                    template_DE_stats,
                                    True)
 
 
-# In[14]:
+# In[15]:
 
 
 # Rank genes in simulated experiments
@@ -214,7 +224,7 @@ simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
 
 # ### Gene summary table
 
-# In[15]:
+# In[16]:
 
 
 summary_gene_ranks = process.generate_summary_table(template_DE_stats,
@@ -225,7 +235,7 @@ summary_gene_ranks = process.generate_summary_table(template_DE_stats,
 summary_gene_ranks.head()
 
 
-# In[16]:
+# In[17]:
 
 
 summary_gene_ranks.to_csv(
@@ -248,7 +258,7 @@ summary_gene_ranks.to_csv(
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[28]:
+# In[18]:
 
 
 if compare_genes:

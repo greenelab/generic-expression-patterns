@@ -91,59 +91,9 @@ print(template_data.shape)
 template_data.head()
 
 
-# ### Convert gene ids to gene names
-
-# In[7]:
-
-
-# Gene number to gene name file
-gene_name_file = os.path.join(
-    base_dir,
-    "pseudomonas_analysis",
-    "data",
-    "metadata",
-    "Pseudomonas_aeruginosa_PAO1_107.csv")
-
-
-# In[8]:
-
-
-# Read gene number to name mapping
-gene_name_mapping = pd.read_table(
-    gene_name_file,
-    header=0,
-    sep=',',
-    index_col=0)
-
-gene_name_mapping = gene_name_mapping[["Locus Tag", "Name"]]
-
-gene_name_mapping.set_index("Locus Tag", inplace=True)
-gene_name_mapping.head()
-
-
-# In[9]:
-
-
-# Format gene numbers to remove extraneous quotes
-gene_number = gene_name_mapping.index
-gene_name_mapping.index = gene_number.str.strip("\"")
-
-gene_name_mapping.dropna(inplace=True)
-gene_name_mapping.head(10)
-
-
-# In[10]:
-
-
-# Rename gene ids
-gene_name_mapping_dict = gene_name_mapping.to_dict()
-original_compendium.rename(mapper=gene_name_mapping_dict['Name'], axis='columns', inplace=True)
-template_data.rename(mapper=gene_name_mapping_dict['Name'], axis='columns', inplace=True)
-
-
 # ### Normalize compendium 
 
-# In[11]:
+# In[7]:
 
 
 # 0-1 normalize per gene
@@ -159,7 +109,7 @@ original_data_scaled_df.head()
 
 # ### Save data files
 
-# In[12]:
+# In[8]:
 
 
 # Save data
@@ -187,7 +137,7 @@ outfile.close()
 
 # ### Train VAE 
 
-# In[13]:
+# In[9]:
 
 
 # Setup directories
@@ -209,10 +159,10 @@ for each_dir in output_dirs:
         os.makedirs(new_dir, exist_ok=True)
 
 
-# In[14]:
+# In[10]:
 
 
 # Train VAE on new compendium data
-#train_vae_modules.train_vae(config_file,
-#                            normalized_data_file)
+train_vae_modules.train_vae(config_file,
+                            normalized_data_file)
 
