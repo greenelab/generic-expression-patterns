@@ -3,7 +3,11 @@ dataset_name	"human_analysis"
 template_data_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/recount2_template_data.tsv"
 compendium_data_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/recount2_compendium_data.tsv"
 normalized_compendium_data_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/normalized_recount2_compendium_data.tsv"
-scaler_transform_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/scaler_transform.pickle"
+shared_genes_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/shared_genes_human.pickle"
+scaler_transform_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/scaler_transform_human.pickle"
+reference_gene_file	"https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
+reference_gene_name_col	"Gene_Name"
+reference_rank_col	"DE_Prior_Rank"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10
@@ -18,3 +22,4 @@ metadata_colname	'run'
 num_simulated	25
 col_to_rank	"logFC"
 num_recount2_experiments	200
+compare_genes	1
