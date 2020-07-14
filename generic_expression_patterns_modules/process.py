@@ -160,11 +160,40 @@ def concat_simulated_data(local_dir, num_runs, project_id):
     return simulated_DE_stats_all
 
 
+def abs_value_stats(simulated_DE_stats_all):
+    """
+    This function takes the absolute value of columns=[`logFC`, `t`].
+    For ranking genes, we only care about the magnitude of the change for
+    the logFC and t statistic, but not the direction.
+
+    The ranking for each gene will be based on the mean absolute value of either
+    logFC or t statistic, depending on the user selection
+    """
+    simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
+    simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
+    return simulated_DE_stats_all
+
+
 def generate_summary_table(
     template_DE_stats, simulated_DE_summary_stats, col_to_rank, local_dir
 ):
     """
     Generate a summary table of the template and summary statistics
+
+    Arguments
+    ---------
+    template_DE_stats: df
+        dataframe containing DE statistics for template experiment
+    simulated_DE_summary_stats: df
+        dataframe containing aggregated DE statistics across all simulated experiments
+    col_to_rank: str
+        DE statistic to use to rank genes
+    local_dir: str
+        path to local machine where output file will be stored
+
+    Returns
+    -------
+    Dataframe summarizing gene ranking for template and simulated experiments
 
     """
     # Merge template statistics with simulated statistics
@@ -203,3 +232,92 @@ def generate_summary_table(
     summary.to_csv(summary_file, float_format="%.5f", sep="\t")
 
     return summary
+
+
+def merge_ranks_to_compare(
+    your_summary_gene_ranks_df,
+    reference_gene_ranks_file,
+    reference_gene_name_col,
+    reference_rank_col,
+):
+    """
+    Given dataframes of your ranking of genes and reference ranking
+    of genes. This function merges the ranking into one dataframe
+    to be able to compare, `shared_gene_rank_df`
+
+    Arguments
+    ---------
+    your_summary_gene_ranks_df: df
+        dataframe containing your rank per gene
+    reference_gene_ranks_file: file
+        file contining reference ranks per gene
+    reference_gene_name_col: str
+        column header containing the reference genes
+    reference_rank_col: str
+        column header containing the reference rank
+
+    Returns
+    -------
+    Dataframe containing your ranking and the reference ranking per gene
+
+    """
+    # Read in reference gene ranks file
+    reference_gene_ranks_df = pd.read_csv(reference_gene_ranks_file, header=0, sep="\t")
+
+    # Get list of our genes
+    gene_ids = list(your_summary_gene_ranks_df.index)
+
+    # Get list of published generic genes
+    published_generic_genes = list(reference_gene_ranks_df[reference_gene_name_col])
+
+    # Get intersection of gene lists
+    shared_genes = set(gene_ids).intersection(published_generic_genes)
+
+    # Get rank of shared genes
+    your_gene_rank_df = pd.DataFrame(
+        your_summary_gene_ranks_df.loc[shared_genes, "Rank (simulated)"]
+    )
+
+    # Merge published ranking
+    shared_gene_rank_df = pd.merge(
+        your_gene_rank_df,
+        reference_gene_ranks_df[[reference_rank_col, reference_gene_name_col]],
+        left_index=True,
+        right_on=reference_gene_name_col,
+    )
+
+    return shared_gene_rank_df
+
+
+def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
+    """
+    In the case where the reference ranking and your ranking are not
+    in the same range, this function scales the reference ranking
+    to be in the range as your ranking.
+
+    For example, if reference ranking ranged from (0,1) and your
+    ranking ranged from (0,100). This function would scale the
+    reference ranking to also be between 0 and 100.
+
+    Note: This function is assuming that the reference ranking range
+    is smaller than yours
+
+    Arguments
+    ---------
+    merged_gene_ranks: df
+        dataframe containing your rank and reference rank per gene
+    reference_rank_col: str
+        column header containing the reference rank
+
+    Returns
+    -------
+    The same merged_gene_ranks dataframe with reference ranks re-scaled
+    """
+    # Scale published ranking to our range
+    max_rank = max(merged_gene_ranks_df["Rank (simulated)"])
+    merged_gene_ranks_df[reference_rank_col] = round(
+        merged_gene_ranks_df[reference_rank_col] * max_rank
+    )
+
+    return merged_gene_ranks_df
+

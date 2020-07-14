@@ -19,18 +19,15 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-import random
 import rpy2
 import seaborn as sns
 from sklearn import preprocessing
 import pickle
 
-from ponyo import generate_template_data, utils, pipeline
+from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process, calc
 
-from numpy.random import seed
-random_state = 123
-seed(random_state)
+np.random.seed(123)
 
 
 # In[2]:
@@ -56,7 +53,12 @@ local_dir = params["local_dir"]
 dataset_name = params['dataset_name']
 NN_architecture = params['NN_architecture']
 project_id = params['project_id']
-num_experiments = params['num_experiments']
+num_recount2_experiments = params['num_recount2_experiments']
+template_data_file = params['template_data_file']
+original_compendium_file = params['compendium_data_file']
+normalized_data_file = params['normalized_compendium_data_file']
+shared_genes_file = params['shared_genes_file']
+scaler_file = params['scaler_transform_file']
 
 
 # ### Download subset of recount2 to use as a compendium
@@ -77,7 +79,7 @@ get_ipython().run_cell_magic('R', '', "library('recount')")
 # In[6]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i num_experiments -i local_dir -i base_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_compendium(project_id, num_experiments, local_dir, base_dir)")
+get_ipython().run_cell_magic('R', '-i project_id -i num_recount2_experiments -i local_dir -i base_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_compendium(project_id, num_recount2_experiments, local_dir, base_dir)")
 
 
 # ### Download expression data for selected project id
@@ -88,7 +90,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i num_experiments -i local_dir
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_template_experiment(project_id, local_dir)")
 
 
-# ### Subset genes
+# ### Subset genes and convert gene names
 # For our downstream analysis we will be comparing our set of differentially expression genes against the set found in [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf), therefore we will limit our genes to include only those genes shared between our starting set of genes and those in publication. 
 
 # In[8]:
@@ -115,8 +117,6 @@ published_generic_genes = list(DE_prior['Gene_Name'])
 
 
 # Get list of our genes
-# Load real template experiment
-template_data_file = params['template_data_file']
 
 # Read template data
 template_data = pd.read_csv(
@@ -219,10 +219,6 @@ print(len(shared_genes_hgnc))
 
 
 # Save shared genes
-shared_genes_file = os.path.join(
-    local_dir,
-    "shared_gene_ids.pickle")
-
 outfile = open(shared_genes_file,'wb')
 pickle.dump(shared_genes_hgnc,outfile)
 outfile.close()
@@ -271,23 +267,9 @@ print(len(template_data.columns) - len(shared_genes_hgnc))
 
 # *Note:* There is a difference in the number of `shared_genes_hgnc` and genes in the template experiment because 3 genes have 2 different ensembl gene ids have map to the same hgnc symbol (one forward, one reverse)
 
-# In[25]:
-
-
-# Save 
-template_data.to_csv(template_data_file, float_format='%.5f', sep='\t')
-
-
 # ### Normalize compendium 
 
-# In[26]:
-
-
-# Load real gene expression data
-original_compendium_file = params['compendium_data_file']
-
-
-# In[27]:
+# In[25]:
 
 
 # Read data
@@ -301,7 +283,7 @@ print(original_compendium.shape)
 original_compendium.head()
 
 
-# In[28]:
+# In[26]:
 
 
 # Replace ensembl ids with gene symbols
@@ -309,7 +291,7 @@ original_compendium = process.replace_ensembl_ids(original_compendium,
                                                 gene_id_mapping)
 
 
-# In[29]:
+# In[27]:
 
 
 # Drop genes
@@ -318,7 +300,7 @@ original_compendium = original_compendium[shared_genes_hgnc]
 original_compendium.head()
 
 
-# In[30]:
+# In[28]:
 
 
 # 0-1 normalize per gene
@@ -332,21 +314,20 @@ print(original_data_scaled_df.shape)
 original_data_scaled_df.head()
 
 
-# In[31]:
+# In[29]:
 
 
 # Save data
-normalized_data_file = params['normalized_compendium_data_file']
-
-original_data_scaled_df.to_csv(
-    normalized_data_file, float_format='%.3f', sep='\t')
+template_data.to_csv(
+    template_data_file, float_format='%.5f', sep='\t')
 
 original_compendium.to_csv(
     original_compendium_file, float_format='%.3f', sep='\t')
 
-# Save scaler transform
-scaler_file = params['scaler_transform_file']
+original_data_scaled_df.to_csv(
+    normalized_data_file, float_format='%.3f', sep='\t')
 
+# Save scaler transform
 outfile = open(scaler_file,'wb')
 pickle.dump(scaler,outfile)
 outfile.close()
@@ -355,7 +336,7 @@ outfile.close()
 # ### Train VAE 
 # Performed exploratory analysis of compendium data [here](../explore_data/viz_recount2_compendium.ipynb) to help interpret loss curve.
 
-# In[32]:
+# In[30]:
 
 
 # Setup directories
@@ -377,10 +358,10 @@ for each_dir in output_dirs:
         os.makedirs(new_dir, exist_ok=True)
 
 
-# In[33]:
+# In[31]:
 
 
 # Train VAE on new compendium data
-pipeline.train_vae(config_file,
+train_vae_modules.train_vae(config_file,
                    normalized_data_file)
 

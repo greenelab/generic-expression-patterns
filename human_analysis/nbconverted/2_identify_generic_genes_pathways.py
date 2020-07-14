@@ -27,19 +27,15 @@ import sys
 import glob
 import pandas as pd
 import numpy as np
-import random
 import seaborn as sns
-import umap
-from keras.models import load_model
-from sklearn.decomposition import PCA
 import pickle
 from rpy2.robjects import pandas2ri
 pandas2ri.activate()
 
-from ponyo import utils, generate_template_data
+from ponyo import utils, simulate_expression_data
 from generic_expression_patterns_modules import calc, process
 
-random.seed(123)
+np.random.seed(123)
 
 
 # In[2]:
@@ -62,11 +58,18 @@ dataset_name = params['dataset_name']
 NN_architecture = params['NN_architecture']
 num_runs = params['num_simulated']
 project_id = params['project_id']
+metadata_col_id = params['metadata_colname']
 template_data_file = params['template_data_file']
 original_compendium_file = params['compendium_data_file']
 normalized_compendium_file = params['normalized_compendium_data_file']
 scaler_file = params['scaler_transform_file']
 col_to_rank = params['col_to_rank']
+compare_genes = params['compare_genes']
+
+gene_summary_file = os.path.join(
+    base_dir, 
+    dataset_name, 
+    "generic_gene_summary.tsv")
 
 NN_dir = os.path.join(
     base_dir, 
@@ -85,9 +88,10 @@ scaler = pickle.load(open(scaler_file, "rb"))
 
 # Simulate multiple experiments
 for i in range(num_runs):
-    generate_template_data.shift_template_experiment(
+    simulate_expression_data.shift_template_experiment(
         normalized_compendium_file,
         project_id,
+        metadata_col_id,
         NN_architecture,
         dataset_name,
         scaler,
@@ -173,12 +177,19 @@ print(simulated_DE_stats_all.shape)
 # In[12]:
 
 
+# Take absolute value of logFC and t statistic
+simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
+
+
+# In[13]:
+
+
 # Aggregate statistics across all simulated experiments
 simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank,
                                                   simulated_DE_stats_all)
 
 
-# In[13]:
+# In[14]:
 
 
 # Load association statistics for template experiment
@@ -193,13 +204,16 @@ template_DE_stats = pd.read_csv(
     sep='\t',
     index_col=0)
 
+# Take absolute value of logFC and t statistic
+template_DE_stats = process.abs_value_stats(template_DE_stats)
+
 # Rank genes in template experiment
 template_DE_stats = calc.rank_genes(col_to_rank,
                                    template_DE_stats,
                                    True)
 
 
-# In[14]:
+# In[15]:
 
 
 # Rank genes in simulated experiments
@@ -210,7 +224,7 @@ simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
 
 # ### Gene summary table
 
-# In[15]:
+# In[16]:
 
 
 summary_gene_ranks = process.generate_summary_table(template_DE_stats,
@@ -219,6 +233,13 @@ summary_gene_ranks = process.generate_summary_table(template_DE_stats,
                                                    local_dir)
 
 summary_gene_ranks.head()
+
+
+# In[17]:
+
+
+summary_gene_ranks.to_csv(
+    gene_summary_file, sep='\t')
 
 
 # ### GSEA 
@@ -237,105 +258,49 @@ summary_gene_ranks.head()
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[16]:
-
-
-# Get list of our genes
-gene_ids = list(summary_gene_ranks.index)
-
-
-# In[17]:
-
-
-# Get generic genes identified by Crow et. al.
-DE_prior_file = "https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
-
-DE_prior = pd.read_csv(DE_prior_file,
-                       header=0,
-                       sep="\t")
-
-DE_prior.head()
-
-
 # In[18]:
 
 
-# Get list of published generic genes
-published_generic_genes = list(DE_prior['Gene_Name'])
+if compare_genes:
+    # Get generic genes identified by Crow et. al.
+    DE_prior_file = params['reference_gene_file']
+    ref_gene_col = params['reference_gene_name_col']
+    ref_rank_col = params['reference_rank_col']
+    
+    # Merge our ranking and reference ranking
+    shared_gene_rank_df = process.merge_ranks_to_compare(
+        summary_gene_ranks,
+        DE_prior_file,
+        ref_gene_col,
+        ref_rank_col)
+    
+    if max(shared_gene_rank_df["Rank (simulated)"]) != max(shared_gene_rank_df[ref_rank_col]):
+        shared_gene_rank_scaled_df = process.scale_reference_ranking(shared_gene_rank_df, ref_rank_col)
+        
+    # Get correlation
+    r, p, ci_high, ci_low = calc.spearman_ci(0.95,
+                                             shared_gene_rank_scaled_df,
+                                             1000)
+    print(r, p, ci_high, ci_low)
+    
+    # Plot our ranking vs published ranking
+    fig_file = os.path.join(
+        local_dir, 
+        "gene_ranking_"+col_to_rank+".svg")
 
+    fig = sns.jointplot(data=shared_gene_rank_scaled_df,
+                        x='Rank (simulated)',
+                        y=ref_rank_col,
+                        kind='hex',
+                        marginal_kws={'color':'white'})
+    fig.set_axis_labels("Our preliminary method", "DE prior (Crow et. al. 2019)", fontsize=14)
 
-# In[19]:
-
-
-# Get intersection of gene lists
-shared_genes = set(gene_ids).intersection(published_generic_genes)
-print(len(shared_genes))
-
-
-# In[20]:
-
-
-# Get rank of shared genes
-our_gene_rank_df = pd.DataFrame(summary_gene_ranks.loc[shared_genes,'Rank (simulated)'])
-print(our_gene_rank_df.shape)
-our_gene_rank_df.head()
-
-
-# In[21]:
-
-
-# Merge published ranking
-shared_gene_rank_df = pd.merge(our_gene_rank_df,
-                               DE_prior[['DE_Prior_Rank','Gene_Name']],
-                               left_index=True,
-                               right_on='Gene_Name')
-
-shared_gene_rank_df.set_index('Gene_Name', inplace=True)
-print(shared_gene_rank_df.shape)
-shared_gene_rank_df.head()
-
-
-# In[22]:
-
-
-# Scale published ranking to our range
-max_rank = max(shared_gene_rank_df['Rank (simulated)'])
-shared_gene_rank_df['DE_Prior_Rank'] = round(shared_gene_rank_df['DE_Prior_Rank']*max_rank)
-shared_gene_rank_df.head()
-
-
-# In[23]:
-
-
-# Plot our ranking vs published ranking
-fig_file = os.path.join(
-    local_dir, 
-    "gene_ranking_"+col_to_rank+".svg")
-
-fig = sns.jointplot(data=shared_gene_rank_df,
-                    x='Rank (simulated)',
-                    y='DE_Prior_Rank',
-                    kind='hex',
-                    marginal_kws={'color':'white'})
-fig.set_axis_labels("Our preliminary method", "DE prior (Crow et. al. 2019)", fontsize=14)
-
-fig.savefig(fig_file,
-            format='svg',
-            bbox_inches="tight",
-            transparent=True,
-            pad_inches=0,
-            dpi=300,)
-
-
-# In[24]:
-
-
-# Get correlation
-r, p, ci_high, ci_low = calc.spearman_ci(0.95,
-                                         shared_gene_rank_df,
-                                         1000)
-
-print(r, p, ci_high, ci_low)
+    fig.savefig(fig_file,
+                format='svg',
+                bbox_inches="tight",
+                transparent=True,
+                pad_inches=0,
+                dpi=300,)
 
 
 # **Takeaway:**
