@@ -362,6 +362,6 @@ for each_dir in output_dirs:
 
 
 # Train VAE on new compendium data
-#train_vae_modules.train_vae(config_file,
-#                   normalized_data_file)
+train_vae_modules.train_vae(config_file,
+                   normalized_data_file)
 

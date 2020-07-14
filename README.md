@@ -35,35 +35,50 @@
 * Our compendia simulation method, [ponyo](https://github.com/greenelab/ponyo) can help us identify the same commonly DEGs found in [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491) 
 * If we ranked pathways by the number of times that they showed up in our ponyo-generated null set, and we looked at those, we'd find the pathways that [GSEA-InContext](https://www.biorxiv.org/content/10.1101/659847v1) is designed to not find.
 
-## Computational environment
 
-Processing and analysis scripts were performed using the conda environment specified in `environment.yml`.
-To build and activate this environment run:
+## How to run notebooks from generic-expression-patterns
 
+In order to run this simulation on your own gene expression data the following steps should be performed:
+
+First you need to set up your local repository: 
+1. Clone the `generic-expression-patterns` repository
+2. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+3. Set up conda environment by running the following command in the terminal:
 ```bash
 # conda version 4.6.12
 conda env create -f environment.yml
 
 conda activate generic_expression
-```
-Install local modules into this environment:
 
-```
 pip install -e .
 ```
+4. Navigate to either the `human_analysis` or `pseudomonas_analysis` directories and run the notebooks.
 
-## How to run
+## How to run using your own data
 
-**Steps:**
-1. Create analysis directory in base repository directory.
-2. Copy jupyter notebooks (1_process_data.ipynb, 2_identify_generic_genes_pathways.ipynb) into analysis directory.
-3. Customize `1_process_data.ipynb` to generate the following saved files: 1) compendium of gene expression data, 2) template experiment data, 3) normalized gene expression compendium. See examples of this processing in `human_analysis/` and `pseudomonas_analysis/`.
-4. Required data files:
+In order to run this simulation on your own gene expression data the following steps should be performed:
+
+First you need to set up your local repository and environment: 
+1. Clone the `generic-expression-patterns` repository
+2. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+3. Set up conda environment by running the following command in the terminal:
+```bash
+# conda version 4.6.12
+conda env create -f environment.yml
+
+conda activate generic_expression
+
+pip install -e .
+```
+4. Create a new analysis folder in the main directory. This is equivalent to the `human_analysis` directory
+5. Copy jupyter notebooks (1_process_data.ipynb, 2_identify_generic_genes_pathways.ipynb) into analysis directory.
+6. Customize `1_process_data.ipynb` to generate the following saved files: 1) compendium of gene expression data, 2) template experiment data, 3) normalized gene expression compendium. See examples of this processing in `human_analysis/` and `pseudomonas_analysis/`.
+7. Required data files:
 * Gene expression compendium to use as input data. Specify path of data file in config file.
 * Metadata matrix (sample x experimental metadata) with sample id as index. Add file to `analysis_dir/data/metadata/`. Specify path of metadata file in config file.
 * Sample grouping matrix (sample x group) with group = [1 if control; 2 if case]. Add file to `analysis_dir/data/metadata/<project_id>_groups.tsv`.
-5. `2_identify_generic_genes_pathways.ipynb` will need to include comparison cells as seen in `human_analysis/2_identify_generic_genes_pathways.ipynb` if you would like to compare genes/genes sets with some reference ranking. 
-6. Update config file (see below)
+8. `2_identify_generic_genes_pathways.ipynb` will need to include `Compare gene ranking` cells as seen in `human_analysis/` if you would like to compare genes/genes sets with some reference ranking. 
+9. Update config file (see below)
 
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking.

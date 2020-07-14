@@ -86,7 +86,7 @@ scaler = pickle.load(open(scaler_file, "rb"))
 # In[4]:
 
 
-"""# Simulate multiple experiments
+# Simulate multiple experiments
 for i in range(num_runs):
     simulate_expression_data.shift_template_experiment(
         normalized_compendium_file,
@@ -97,7 +97,7 @@ for i in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        i)"""
+        i)
 
 
 # Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](../explore_data/0_explore_input_data.ipynb)
@@ -105,7 +105,7 @@ for i in range(num_runs):
 # In[5]:
 
 
-"""# Remove subset of samples
+# Remove subset of samples
 smRNA_samples = ["SRR493961",
                  "SRR493962",
                  "SRR493963",
@@ -122,7 +122,7 @@ smRNA_samples = ["SRR493961",
 process.subset_samples(smRNA_samples,
                       num_runs,
                       local_dir,
-                      project_id)"""
+                      project_id)
 
 
 # ### Differential expression analysis

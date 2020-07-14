@@ -7,9 +7,10 @@
 # 1. Simulates N gene expression experiments using [ponyo](https://github.com/ajlee21/ponyo)
 # 2. Perform DE analysis to get association statistics for each gene
 # 
-# In this case the DE analysis is based on the experimental design of the template experiment, described in the previous [notebook](1_process_recount2_data.ipynb). The template experiment is [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764), which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients. So the DE analysis is comparing tumor vs normal in this case.
+# In this case the DE analysis is based on the experimental design of the template experiment, described in the previous [notebook](1_process_pseudomonas_data.ipynb). 
+# The template experiment is [E-GEOD-9989](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-9989/?query=George+O%27Toole), which contains 2 samples (3 replicates each) of PA14 WT that are grown on CFBE41o- cells are either treated tobramycin or untreated. So the DE analysis is comparing treated vs untreated in this case.
 # 
-# 3. For each gene, aggregate statsitics across all simulated experiments 
+# 3. For each gene, aggregate statistics across all simulated experiments 
 # 4. Rank genes based on this aggregated statistic
 # 
 # **Evaluation:**

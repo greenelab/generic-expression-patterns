@@ -1,7 +1,10 @@
 
 # coding: utf-8
 
-# In[1]:
+# # Visualization of template experiment
+# This notebook plots the gene expression data of the template experiment in order to confirm the strength of the differential signal, since we will be performing a DE analysis downstream.
+
+# In[ ]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -140,3 +143,5 @@ fig += guides(colour=guide_legend(override_aes={'alpha': 1}))
 
 print(fig)
 
+
+# **Observation:** We see a good separation between the treated and untreated samples. We expect this template experiment to provide a fairly strong differential signal in our DE analysis.

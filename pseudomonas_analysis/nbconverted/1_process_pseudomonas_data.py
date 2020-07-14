@@ -1,12 +1,12 @@
 
 # coding: utf-8
 
-# # Process recount2 data
+# # Process pseudomonas data
 # This notebook does the following:
 # 
-# 1. Selects template experiment
-# 2. Downloads subset of recount2 data, including the template experiment (subset of random experiments + 1 template experiment)
-# 3. Train VAE on subset of recount2 data
+# 1. Selects template experiment from the Pseudomonas compendium
+# 2. Normalizes the Pseudomonas compendium
+# 3. Train VAE on the normalized data
 
 # In[1]:
 
@@ -68,6 +68,9 @@ original_compendium = pd.read_csv(original_compendium_file,
 
 if original_compendium.shape != (950, 5549):
     original_compendium = original_compendium.T
+    
+assert original_compendium.shape == (950, 5549)
+
 print(original_compendium.shape)
 original_compendium.head()
 
