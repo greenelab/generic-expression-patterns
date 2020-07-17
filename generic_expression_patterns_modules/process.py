@@ -8,12 +8,14 @@ These scripts include: replacing ensembl gene ids with hgnc symbols.
 
 import pandas as pd
 import os
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
     """
-    Replaces ensembl gene ids with hgnc symbols 
-    
+    Replaces ensembl gene ids with hgnc symbols
+
     Arguments
     ---------
     expression_df: df
@@ -314,9 +316,15 @@ def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
     The same merged_gene_ranks dataframe with reference ranks re-scaled
     """
     # Scale published ranking to our range
-    max_rank = max(merged_gene_ranks_df["Rank (simulated)"])
-    merged_gene_ranks_df[reference_rank_col] = round(
-        merged_gene_ranks_df[reference_rank_col] * max_rank
+    scaler = MinMaxScaler(
+        feature_range=(
+            min(merged_gene_ranks_df["Rank (simulated)"]),
+            max(merged_gene_ranks_df["Rank (simulated)"]),
+        )
+    )
+
+    merged_gene_ranks_df[reference_rank_col] = scaler.fit_transform(
+        np.array(merged_gene_ranks_df[reference_rank_col]).reshape(-1, 1)
     )
 
     return merged_gene_ranks_df
