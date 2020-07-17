@@ -1,0 +1,32 @@
+name: Test analysis notebooks
+
+on: [push, pull_request]
+
+jobs:
+  run-analysis:
+    name: Test analysis notebooks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Setup conda environment
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          $CONDA/bin/conda env update --file environment.yml --name base
+          $CONDA/bin/pip install .
+          $CONDA/bin/pip install pytest
+          $CONDA/bin/pip install nbval
+
+      - name: Run analysis notebooks
+        run: |
+          export R_HOME=`$CONDA/bin/R RHOME`
+          $CONDA/bin/pytest -v --nbval-lax --current-env tests/1_process_recount2_data.ipynb
+          $CONDA/bin/pytest -v --nbval-lax --current-env tests/2_identify_generic_genes_pathways.ipynb
+          
