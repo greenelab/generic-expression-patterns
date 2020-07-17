@@ -86,7 +86,7 @@ scaler = pickle.load(open(scaler_file, "rb"))
 # In[4]:
 
 
-# Simulate multiple experiments
+"""# Simulate multiple experiments
 for i in range(num_runs):
     simulate_expression_data.shift_template_experiment(
         normalized_compendium_file,
@@ -97,7 +97,7 @@ for i in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        i)
+        i)"""
 
 
 # Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](../explore_data/0_explore_input_data.ipynb)
@@ -105,7 +105,7 @@ for i in range(num_runs):
 # In[5]:
 
 
-# Remove subset of samples
+"""# Remove subset of samples
 smRNA_samples = ["SRR493961",
                  "SRR493962",
                  "SRR493963",
@@ -122,7 +122,7 @@ smRNA_samples = ["SRR493961",
 process.subset_samples(smRNA_samples,
                       num_runs,
                       local_dir,
-                      project_id)
+                      project_id)"""
 
 
 # ### Differential expression analysis
@@ -242,6 +242,17 @@ summary_gene_ranks.to_csv(
     gene_summary_file, sep='\t')
 
 
+# In[18]:
+
+
+# Test reproducibility
+#template_path = "generic_gene_summary_test.tsv"
+#assert np.all(np.isclose(
+#    pd.read_csv(gene_summary_file, sep="\t").values,
+#    pd.read_csv(template_path, sep="\t").values
+#    ))
+
+
 # ### GSEA 
 # **Goal:** To detect modest but coordinated changes in prespecified sets of related genes (i.e. those genes in the same pathway or share the same GO term).
 # 
@@ -258,7 +269,7 @@ summary_gene_ranks.to_csv(
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[18]:
+# In[19]:
 
 
 if compare_genes:
@@ -282,6 +293,7 @@ if compare_genes:
                                              shared_gene_rank_scaled_df,
                                              1000)
     print(r, p, ci_high, ci_low)
+    # 0.2397233887765045 3.960267987659121e-223 0.22519096058775306 0.25479874632262184
     
     # Plot our ranking vs published ranking
     fig_file = os.path.join(

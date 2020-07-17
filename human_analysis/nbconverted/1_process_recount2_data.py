@@ -256,6 +256,7 @@ template_data = template_data.drop(smRNA_samples)
 template_data = template_data[shared_genes_hgnc]
 
 print(template_data.shape)
+assert(template_data.shape[0] == 24)
 template_data.head()
 
 
