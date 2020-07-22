@@ -18,7 +18,7 @@
 Why is it important to identify generic genes and pathways?
 
 **Challenge**: 
-Identification of generic genes and pathways required a large manual curation effort. If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switch contexts will require a lot of manual effort. Similarly, using a different statistical method will require re-curation effort
+Identification of generic genes and pathways required a large manual curation effort. If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require a lot of manual effort. Similarly, using a different statistical method will require re-curation effort
 
 **Goal of this study:**
 * To show that our compendia simulation method, [ponyo](https://github.com/greenelab/ponyo) can automatically identify generic genes and pathways
