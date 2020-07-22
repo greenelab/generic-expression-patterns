@@ -242,17 +242,6 @@ summary_gene_ranks.to_csv(
     gene_summary_file, sep='\t')
 
 
-# In[18]:
-
-
-# Test reproducibility
-#template_path = "generic_gene_summary_test.tsv"
-#assert np.all(np.isclose(
-#    pd.read_csv(gene_summary_file, sep="\t").values,
-#    pd.read_csv(template_path, sep="\t").values
-#    ))
-
-
 # ### GSEA 
 # **Goal:** To detect modest but coordinated changes in prespecified sets of related genes (i.e. those genes in the same pathway or share the same GO term).
 # 
@@ -293,7 +282,11 @@ if compare_genes:
                                              shared_gene_rank_scaled_df,
                                              1000)
     print(r, p, ci_high, ci_low)
-    # 0.2397233887765045 3.960267987659121e-223 0.22519096058775306 0.25479874632262184
+    assert(np.all(np.isclose([r,p],
+                             [0.2397233887765045 3.960267987659121e-223]
+                            )
+                 )
+          )
     
     # Plot our ranking vs published ranking
     fig_file = os.path.join(
