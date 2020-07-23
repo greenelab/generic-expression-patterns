@@ -16,7 +16,7 @@ convert_ensembl_to_symbol <- function(ensembl.genes) {
 get_ensembl_symbol_mapping <- function(input_file,
 out_file){
   # Read in data
-  data <- read.table(input_file, sep="\t", header=FALSE, row.names=1)
+  data <- read.csv(input_file, sep="\t", header=FALSE, row.names=1)
 
   original_gene_id <- t(data[1,])
 

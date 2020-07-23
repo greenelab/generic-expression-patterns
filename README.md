@@ -14,27 +14,23 @@
 
 **Rationale**: People performing differential expression (DE) analysis find that some genes and subsequent pathways are more likely to be differentially expressed even across a wide range of experimental designs.[Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793 ); [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491). Powers et. al. developped a tool, [Explorer-InContext](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793) with corresponding [app](https://www.biorxiv.org/content/10.1101/659847v1.full.pdf), to try to correct for these commonly enriched gene sets by comparing gene set ranks from a target experiment with a null set of experiments (called "context"). In other words, the gene set ranks obtained from the target experiment are compared against the gene set ranks from the null experiments to determine if high rank gene sets from the target experiment are significant given the distribution of their rank in the null set. This method required a large manual curation effort to: collect a large set of samples with corresponding metadata (metadata is used to group samples per experiment and perform DE analysis to get ranked list of genes)
 
-**Problem**: 
-* This method required a large manual curation effort
-* If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switch contexts will require a lot of manual effort. 
-* Similarly, using a different statistical method will require re-curation effort
+**Importance:**
+Why is it important to identify generic genes and pathways?
 
-**Question**: Can we use our gene expression simulator, [ponyo](https://github.com/greenelab/ponyo), automatically generate null experiments for different contexts in order to overcome this manual effort?
+**Challenge**: 
+Identification of generic genes and pathways required a large manual curation effort. If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require a lot of manual effort. Similarly, using a different statistical method will require re-curation effort
 
-## Initial experiment
-**Question**: Can our compendia simulation method, [ponyo](https://github.com/greenelab/ponyo) identify the same commonly DEGs found in [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491) and commonly enriched pathways as filtered out in GSEA-InContext?
+**Goal of this study:**
+* To show that our compendia simulation method, [ponyo](https://github.com/greenelab/ponyo) can automatically identify generic genes and pathways
+* We can extend our method to analyze RNA-seq data which would otherwise have required a re-curation effort
+* We can extend our method to analyze data from a different organism which would otherwise required a re-curation effort
 
 **Approach**:
-1. Select treatment vs control experiment from recount2
-2. Simulate 100 new experiments using experiment (1) as template
+1. Select binary case-control experiment from recount2 or pseudomonas dataset
+2. Simulate 25 new experiments using experiment (1) as template
 3. Perform DE analysis to get association statistics
 4. Perform enrichment analysis using DE stats
 5. Rank DEGs and pathways based on aggregated statistics across the simulated experiments
-
-**Hypothesis**: 
-* Our compendia simulation method, [ponyo](https://github.com/greenelab/ponyo) can help us identify the same commonly DEGs found in [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491) 
-* If we ranked pathways by the number of times that they showed up in our ponyo-generated null set, and we looked at those, we'd find the pathways that [GSEA-InContext](https://www.biorxiv.org/content/10.1101/659847v1) is designed to not find.
-
 
 ## How to run notebooks from generic-expression-patterns
 
