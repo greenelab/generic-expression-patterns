@@ -45,6 +45,7 @@ np.random.seed(123)
 base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
 config_file = os.path.abspath(os.path.join(base_dir,
+                                           "configs",
                                            "config_human.tsv"))
 params = utils.read_config(config_file)
 
