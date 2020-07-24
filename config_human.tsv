@@ -22,4 +22,5 @@ metadata_colname	'run'
 num_simulated	25
 col_to_rank	"logFC"
 num_recount2_experiments	200
+gsea_statistic	'logFC'
 compare_genes	1

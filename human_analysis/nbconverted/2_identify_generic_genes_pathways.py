@@ -65,6 +65,7 @@ normalized_compendium_file = params['normalized_compendium_data_file']
 scaler_file = params['scaler_transform_file']
 col_to_rank = params['col_to_rank']
 compare_genes = params['compare_genes']
+statistic = params['gsea_statistic']
 
 gene_summary_file = os.path.join(
     base_dir, 
@@ -249,6 +250,60 @@ summary_gene_ranks.to_csv(
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
+# In[18]:
+
+
+get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("GSA")\n#BiocManager::install("fgsea")')
+
+
+# In[19]:
+
+
+get_ipython().run_cell_magic('R', '', 'suppressWarnings(library("GSA"))\nsuppressWarnings(library("fgsea"))')
+
+
+# In[20]:
+
+
+# Load pathway data
+hallmark_DB_file = os.path.join(
+    local_dir,
+    "hallmark_DB.gmt")
+
+
+# In[27]:
+
+
+statistic = 't'
+
+
+# In[32]:
+
+
+get_ipython().run_cell_magic('R', '-i template_DE_stats_file -i hallmark_DB_file -i statistic', '# Read in data\nDE_stats_data <- read.table(template_DE_stats_file, sep="\\t", header=TRUE, row.names=NULL)\n\n# Sort genes by feature 1\n\n# feature 1: numeric vector\nif (statistic ==\'t\'){\n    col_num = 4\n} else if (statistic == \'adj p-value\'){\n    col_num = 6\n} else if (statistic == \'p-value\'){\n    col_num = 5\n} else if (statistic == \'logFC\'){\n    col_num = 2\n}\nrank_genes <- as.numeric(as.character(DE_stats_data[,col_num]))\n\n# feature 2: named vector of gene ids\nnames(rank_genes) <- as.character(DE_stats_data[,1])\n\n## feature 3: decreasing order\nrank_genes <- sort(rank_genes, decreasing = TRUE)\n\npathway_DB_data <- GSA.read.gmt(hallmark_DB_file)\npathway_parsed <- {}\nfor (i in 1:length(pathway_DB_data$genesets)){\npathway_parsed[pathway_DB_data$geneset.name[i]] <- as.list(pathway_DB_data$genesets[i])\n}\n\n#print(head(pathway_DB_data))\n# GSEA is a generic gene set enrichment function\n# Different backend methods can be applied depending on the \n# type of annotations\n# Here we will use fgsea\n#enrich_pathways <- GSEA(geneList=rank_genes, \n#                        TERM2GENE=pathway_DB_data,\n#                        nPerm=100000,\n#                        by=\'fgsea\',\n#                        verbose=T)\n#enrich_pathways <- fgsea(pathways=pathway_parsed,\n#                         stats=rank_genes,\n#                         nperm=20000)\n#print(enrich_pathways)\nplotEnrichment(pathway_parsed[["HALLMARK_ALLOGRAFT_REJECTION"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)\n#barplot(sort(rank_genes, decreasing = T))')
+
+
+# In[29]:
+
+
+get_ipython().run_cell_magic('R', '-i template_DE_stats_file -i hallmark_DB_file -i statistic -o template_enriched_pathways', "\nsource('../generic_expression_patterns_modules/GSEA_analysis.R')\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_file, hallmark_DB_file, statistic)")
+
+
+# In[42]:
+
+
+print(template_enriched_pathways.shape)
+#template_enriched_pathways[template_enriched_pathways['padj']<0.1]
+template_enriched_pathways.set_index('pathway', inplace=True)
+template_enriched_pathways.loc['HALLMARK_P53_PATHWAY']
+
+
+# In[24]:
+
+
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_file -i num_runs -i statistic', '\nsource(\'../generic_expression_patterns_modules/GSEA_analysis.R\')\n\nfor (i in 0:(num_runs-1)){\n    simulated_DE_stats_file <- paste(local_dir, \n                                 "DE_stats/DE_stats_simulated_data_", \n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    out_file = paste(local_dir, \n                     "GSEA_stats/GSEA_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep="")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_file, statistic) \n    #print(head(enriched_pathways))\n    \n    write.table(enriched_pathways, file = out_file, row.names = T, sep = "\\t")\n    }')
+
+
 # ### Rank pathways 
 
 # ### Pathway summary table
@@ -258,7 +313,7 @@ summary_gene_ranks.to_csv(
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[19]:
+# In[25]:
 
 
 if compare_genes:

@@ -1,0 +1,47 @@
+## Run this once to setup environment
+## Used R 3.6.3
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
+
+#BiocManager::install("clusterProfiler")
+
+#library(clusterProfiler)
+
+find_enriched_pathways <- function(DE_stats_file,
+                                  pathway_DB,
+								  statistic){
+    # Read in data
+    DE_stats_data <- read.table(DE_stats_file, sep="\t", header=TRUE, row.names=NULL)
+   
+    # Sort genes by feature 1
+    
+    # feature 1: numeric vector
+	if (statistic =='t'){
+		col_num = 4
+	} else if (statistic == 'adj p-value'){
+		col_num = 6
+	} else if (statistic == 'p-value'){
+		col_num = 5
+	} else if (statistic == 'logFC'){
+		col_num = 2
+	}
+    rank_genes <- as.numeric(as.character(DE_stats_data[,col_num]))
+
+    # feature 2: named vector of gene ids
+    names(rank_genes) <- as.character(DE_stats_data[,1])
+
+	## feature 3: decreasing order
+	rank_genes <- sort(rank_genes, decreasing = TRUE)
+
+    pathway_DB_data <- GSA.read.gmt(hallmark_DB_file)
+    pathway_parsed <- {}
+    for (i in 1:length(pathway_DB_data$genesets)){
+    pathway_parsed[pathway_DB_data$geneset.name[i]] <- as.list(pathway_DB_data$genesets[i])
+    }
+
+    enrich_pathways <- fgsea(pathways=pathway_parsed,
+                              stats=rank_genes,
+                              nperm=20000)
+
+    return(as.data.frame(enrich_pathways))
+}
