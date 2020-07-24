@@ -10,6 +10,8 @@
 # In this case the DE analysis is based on the experimental design of the template experiment, described in the previous [notebook](1_process_pseudomonas_data.ipynb). 
 # The template experiment is [E-GEOD-9989](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-9989/?query=George+O%27Toole), which contains 2 samples (3 replicates each) of PA14 WT that are grown on CFBE41o- cells are either treated tobramycin or untreated. So the DE analysis is comparing treated vs untreated in this case.
 # 
+# Another template experiment is [E-MEXP-1183](https://www.ebi.ac.uk/arrayexpress/experiments/E-MEXP-1183/), which contains a total of 10 samples. But for now we will select those 4 samples using WT that were measuring the effect of acyl-HSL signal.
+# 
 # 3. For each gene, aggregate statistics across all simulated experiments 
 # 4. Rank genes based on this aggregated statistic
 # 
@@ -47,7 +49,7 @@ base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
 config_file = os.path.abspath(os.path.join(base_dir,
                                            "configs",
-                                           "config_pseudomonas.tsv"))
+                                           "config_pseudomonas_1183.tsv"))
 params = utils.read_config(config_file)
 
 
@@ -102,9 +104,27 @@ for i in range(num_runs):
         i)
 
 
+# In[5]:
+
+
+if project_id == "E-MEXP-1183":
+    # drop samples
+    sample_ids_to_drop = ["MSC_05.CEL",
+                          "MSC_06.CEL",
+                          "MSC_07.CEL",
+                          "MSC_08.CEL",
+                          "MSC_09.CEL",
+                          "MSC_10.CEL"]
+    
+    process.subset_samples(sample_ids_to_drop,
+                           num_runs,
+                           local_dir,
+                           project_id)
+
+
 # ### Differential expression analysis
 
-# In[5]:
+# In[6]:
 
 
 # Load metadata file with grouping assignments for samples
@@ -116,25 +136,25 @@ metadata_file = os.path.join(
     project_id+"_groups.tsv")
 
 
-# In[6]:
+# In[7]:
 
 
 get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("limma")')
 
 
-# In[7]:
+# In[8]:
 
 
 get_ipython().run_cell_magic('R', '', "library('limma')")
 
 
-# In[8]:
+# In[9]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats(metadata_file,\n             project_id, \n             template_data_file,\n             "template",\n             local_dir,\n             "real")')
 
 
-# In[9]:
+# In[10]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_file <- paste(local_dir, \n                                 "pseudo_experiment/selected_simulated_data_",\n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    run_output <- get_DE_stats(metadata_file,\n                               project_id, \n                               simulated_data_file,\n                               "simulated",\n                               local_dir,\n                               i)\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
@@ -142,7 +162,7 @@ get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i
 
 # ### Rank genes
 
-# In[10]:
+# In[11]:
 
 
 # Concatenate simulated experiments
@@ -151,14 +171,14 @@ simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, proj
 print(simulated_DE_stats_all.shape)
 
 
-# In[11]:
+# In[12]:
 
 
 # Take absolute value of logFC and t statistic
 simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
 
 
-# In[12]:
+# In[13]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -166,7 +186,7 @@ simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank,
                                                   simulated_DE_stats_all)
 
 
-# In[13]:
+# In[14]:
 
 
 # Load association statistics for template experiment
@@ -190,7 +210,7 @@ template_DE_stats = calc.rank_genes(col_to_rank,
                                    True)
 
 
-# In[14]:
+# In[15]:
 
 
 # Rank genes in simulated experiments
@@ -201,7 +221,7 @@ simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
 
 # ### Gene summary table
 
-# In[15]:
+# In[16]:
 
 
 summary_gene_ranks = process.generate_summary_table(template_DE_stats,
@@ -214,7 +234,7 @@ summary_gene_ranks.head()
 
 # #### Add gene name as column
 
-# In[16]:
+# In[17]:
 
 
 # Gene number to gene name file
@@ -226,7 +246,7 @@ gene_name_file = os.path.join(
     "Pseudomonas_aeruginosa_PAO1_107.csv")
 
 
-# In[17]:
+# In[18]:
 
 
 # Read gene number to name mapping
@@ -243,7 +263,7 @@ print(gene_name_mapping.shape)
 gene_name_mapping.head()
 
 
-# In[18]:
+# In[19]:
 
 
 # Format gene numbers to remove extraneous quotes
@@ -255,7 +275,7 @@ print(gene_name_mapping.shape)
 gene_name_mapping.head(10)
 
 
-# In[19]:
+# In[20]:
 
 
 # Remove duplicate mapping
@@ -264,7 +284,7 @@ gene_name_mapping.head(10)
 gene_name_mapping = gene_name_mapping[~gene_name_mapping.index.duplicated(keep=False)]
 
 
-# In[20]:
+# In[21]:
 
 
 # Add gene names
@@ -273,7 +293,7 @@ summary_gene_ranks['Gene Name'] = summary_gene_ranks['Gene ID'].map(gene_name_ma
 summary_gene_ranks.head()
 
 
-# In[21]:
+# In[22]:
 
 
 summary_gene_ranks.to_csv(
@@ -293,7 +313,7 @@ summary_gene_ranks.to_csv(
 
 # ### Compare gene rankings
 
-# In[22]:
+# In[23]:
 
 
 if compare_genes:

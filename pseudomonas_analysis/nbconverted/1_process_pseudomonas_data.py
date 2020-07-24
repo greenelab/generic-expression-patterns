@@ -35,7 +35,7 @@ base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
 config_file = os.path.abspath(os.path.join(base_dir,
                                            "configs",
-                                           "config_pseudomonas.tsv"))
+                                           "config_pseudomonas_1183.tsv"))
 params = utils.read_config(config_file)
 
 
@@ -79,6 +79,8 @@ original_compendium.head()
 # ### Select template experiment
 # 
 # We manually selected bioproject [E-GEOD-9989](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-9989/?query=George+O%27Toole), which contains 2 samples (3 replicates each) of PA14 WT that are grown on CFBE41o- cells are either treated tobramycin or untreated.
+# 
+# Another bioproject selected [E-MEXP-1183](https://www.ebi.ac.uk/arrayexpress/experiments/E-MEXP-1183/), which contains a total of 10 samples. But for now we will select those 4 samples using WT that were measuring the effect of acyl-HSL signal.
 
 # In[5]:
 
@@ -95,9 +97,29 @@ print(template_data.shape)
 template_data.head()
 
 
+# In[7]:
+
+
+if project_id == "E-MEXP-1183":
+    # drop samples
+    sample_ids_to_drop = ["MSC_05.CEL",
+                          "MSC_06.CEL",
+                          "MSC_07.CEL",
+                          "MSC_08.CEL",
+                          "MSC_09.CEL",
+                          "MSC_10.CEL"]
+    template_data = template_data.drop(sample_ids_to_drop)
+    
+    assert(template_data.shape[0] == 4)
+
+
+# Note: We are training a compendium using all the samples (including those that are being dropped in the template experiment). However, only the subset of samples (those kept) in the template experiment are those used in the DE analysis in order to ensure the comparison of samples with consistent backgrounds. 
+# 
+# So there is an inconsistency in the samples used to learn a low-dimensional representation and those used to calculate DE statistics. The inconsistency could possibly effect the DE statistics if the low dimensional space is significantly different including these extra samples vs not. These few samples will likely not effect the space.
+
 # ### Normalize compendium 
 
-# In[7]:
+# In[8]:
 
 
 # 0-1 normalize per gene
@@ -113,7 +135,7 @@ original_data_scaled_df.head()
 
 # ### Save data files
 
-# In[8]:
+# In[9]:
 
 
 # Save data
@@ -141,7 +163,7 @@ outfile.close()
 
 # ### Train VAE 
 
-# In[9]:
+# In[10]:
 
 
 # Setup directories
@@ -163,10 +185,10 @@ for each_dir in output_dirs:
         os.makedirs(new_dir, exist_ok=True)
 
 
-# In[10]:
+# In[11]:
 
 
 # Train VAE on new compendium data
-train_vae_modules.train_vae(config_file,
-                            normalized_data_file)
+#train_vae_modules.train_vae(config_file,
+#                            normalized_data_file)
 
