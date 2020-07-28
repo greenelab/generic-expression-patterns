@@ -1,0 +1,17 @@
+Sample	processing
+GSM822689_wtBSM_A.CEL	2
+GSM822690_wtBSM_B.CEL	2
+GSM822691_delta_crcBSM_A.CEL	drop
+GSM822692_delta_crcBSM_B.CEL	drop
+GSM822693_delta_cbrBBSM_A.CEL	drop
+GSM822694_delta_cbrBBSM_B.CEL	drop
+GSM822695_delta_crcZBSM_A.CEL	drop
+GSM822696_delta_crcZBSM_B.CEL	drop
+GSM822708_wtLB_A.CEL	1
+GSM822709_wtLB_B.CEL	1
+GSM822710_delta_crcLB_A.CEL	drop
+GSM822711_delta_crcLB_B.CEL	drop
+GSM822712_delta_cbrBLB_A.CEL	drop
+GSM822713_delta_cbrBLB_B.CEL	drop
+GSM822714_delta_crcZLB_A.CEL	drop
+GSM822715_delta_crcZLB_B.CEL	drop

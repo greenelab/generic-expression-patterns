@@ -49,7 +49,7 @@ base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
 config_file = os.path.abspath(os.path.join(base_dir,
                                            "configs",
-                                           "config_pseudomonas_1183.tsv"))
+                                           "config_pseudomonas_9989.tsv"))
 params = utils.read_config(config_file)
 
 
@@ -73,13 +73,21 @@ compare_genes = params['compare_genes']
 gene_summary_file = os.path.join(
     base_dir, 
     dataset_name, 
-    "generic_gene_summary.tsv")
+    f"generic_gene_summary_{project_id}.tsv")
 
 NN_dir = os.path.join(
     base_dir, 
     dataset_name, 
     "models", 
     NN_architecture)
+
+# Load metadata file with grouping assignments for samples
+sample_id_metadata_file = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    f"{project_id}_process_samples.tsv")
 
 # Load pickled file
 scaler = pickle.load(open(scaler_file, "rb"))
@@ -107,15 +115,13 @@ for i in range(num_runs):
 # In[5]:
 
 
-if project_id == "E-MEXP-1183":
-    # drop samples
-    sample_ids_to_drop = ["MSC_05.CEL",
-                          "MSC_06.CEL",
-                          "MSC_07.CEL",
-                          "MSC_08.CEL",
-                          "MSC_09.CEL",
-                          "MSC_10.CEL"]
+if os.path.exists(sample_id_metadata_file):
+    # Read in metadata
+    metadata = pd.read_csv(sample_id_metadata_file, sep='\t', header=0, index_col=0)
     
+    # Get samples to be dropped
+    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
+
     process.subset_samples(sample_ids_to_drop,
                            num_runs,
                            local_dir,
@@ -133,7 +139,7 @@ metadata_file = os.path.join(
     dataset_name,
     "data",
     "metadata",
-    project_id+"_groups.tsv")
+    f"{project_id}_groups.tsv")
 
 
 # In[7]:
@@ -151,10 +157,23 @@ get_ipython().run_cell_magic('R', '', "library('limma')")
 # In[9]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats(metadata_file,\n             project_id, \n             template_data_file,\n             "template",\n             local_dir,\n             "real")')
+# Check ordering of sample ids is consistent between gene expression data and metadata
+metadata = pd.read_csv(metadata_file, sep='\t', header=0, index_col=0)
+metadata_sample_ids = list(metadata.index)
+
+template_data = pd.read_csv(template_data_file, sep='\t', header=0, index_col=0)
+template_sample_ids = list(template_data.index)
+
+assert(metadata_sample_ids == template_sample_ids)
 
 
 # In[10]:
+
+
+get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats(metadata_file,\n             project_id, \n             template_data_file,\n             "template",\n             local_dir,\n             "real")')
+
+
+# In[11]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_file <- paste(local_dir, \n                                 "pseudo_experiment/selected_simulated_data_",\n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    run_output <- get_DE_stats(metadata_file,\n                               project_id, \n                               simulated_data_file,\n                               "simulated",\n                               local_dir,\n                               i)\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
@@ -162,7 +181,7 @@ get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i
 
 # ### Rank genes
 
-# In[11]:
+# In[12]:
 
 
 # Concatenate simulated experiments
@@ -171,14 +190,14 @@ simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, proj
 print(simulated_DE_stats_all.shape)
 
 
-# In[12]:
+# In[13]:
 
 
 # Take absolute value of logFC and t statistic
 simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
 
 
-# In[13]:
+# In[14]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -186,7 +205,7 @@ simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank,
                                                   simulated_DE_stats_all)
 
 
-# In[14]:
+# In[15]:
 
 
 # Load association statistics for template experiment
@@ -210,7 +229,7 @@ template_DE_stats = calc.rank_genes(col_to_rank,
                                    True)
 
 
-# In[15]:
+# In[16]:
 
 
 # Rank genes in simulated experiments
@@ -221,7 +240,7 @@ simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
 
 # ### Gene summary table
 
-# In[16]:
+# In[17]:
 
 
 summary_gene_ranks = process.generate_summary_table(template_DE_stats,
@@ -234,7 +253,7 @@ summary_gene_ranks.head()
 
 # #### Add gene name as column
 
-# In[17]:
+# In[18]:
 
 
 # Gene number to gene name file
@@ -246,7 +265,7 @@ gene_name_file = os.path.join(
     "Pseudomonas_aeruginosa_PAO1_107.csv")
 
 
-# In[18]:
+# In[19]:
 
 
 # Read gene number to name mapping
@@ -263,7 +282,7 @@ print(gene_name_mapping.shape)
 gene_name_mapping.head()
 
 
-# In[19]:
+# In[20]:
 
 
 # Format gene numbers to remove extraneous quotes
@@ -275,7 +294,7 @@ print(gene_name_mapping.shape)
 gene_name_mapping.head(10)
 
 
-# In[20]:
+# In[21]:
 
 
 # Remove duplicate mapping
@@ -284,7 +303,7 @@ gene_name_mapping.head(10)
 gene_name_mapping = gene_name_mapping[~gene_name_mapping.index.duplicated(keep=False)]
 
 
-# In[21]:
+# In[22]:
 
 
 # Add gene names
@@ -293,7 +312,7 @@ summary_gene_ranks['Gene Name'] = summary_gene_ranks['Gene ID'].map(gene_name_ma
 summary_gene_ranks.head()
 
 
-# In[22]:
+# In[23]:
 
 
 summary_gene_ranks.to_csv(
@@ -313,7 +332,7 @@ summary_gene_ranks.to_csv(
 
 # ### Compare gene rankings
 
-# In[23]:
+# In[24]:
 
 
 if compare_genes:
