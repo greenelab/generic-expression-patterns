@@ -61,6 +61,14 @@ normalized_data_file = params['normalized_compendium_data_file']
 shared_genes_file = params['shared_genes_file']
 scaler_file = params['scaler_transform_file']
 
+# Load metadata file with grouping assignments for samples
+sample_id_metadata_file = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    f"{project_id}_process_samples.tsv")
+
 
 # ### Download subset of recount2 to use as a compendium
 # The compendium will be composed of random experiments + the selected template experiment
@@ -228,40 +236,30 @@ outfile.close()
 # In[21]:
 
 
-# Drop smRNA samples so that samples are within the same range
-smRNA_samples = ["SRR493961",
-                 "SRR493962",
-                 "SRR493963",
-                 "SRR493964",
-                 "SRR493965",
-                 "SRR493966",
-                 "SRR493967",
-                 "SRR493968",
-                 "SRR493969",
-                 "SRR493970",
-                 "SRR493971",
-                 "SRR493972"]
+if os.path.exists(sample_id_metadata_file):
+    # Read in metadata
+    metadata = pd.read_csv(sample_id_metadata_file, sep='\t', header=0, index_col=0)
+    
+    # Get samples to be dropped
+    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
+
+    template_data = template_data.drop(sample_ids_to_drop)
+    
+    if project_id == "SRP012656":
+        assert(template_data.shape[0] == 24)
 
 
 # In[22]:
-
-
-# Drop samples
-template_data = template_data.drop(smRNA_samples)
-
-
-# In[23]:
 
 
 # Drop genes
 template_data = template_data[shared_genes_hgnc]
 
 print(template_data.shape)
-assert(template_data.shape[0] == 24)
 template_data.head()
 
 
-# In[24]:
+# In[23]:
 
 
 print(len(template_data.columns) - len(shared_genes_hgnc))
@@ -271,7 +269,7 @@ print(len(template_data.columns) - len(shared_genes_hgnc))
 
 # ### Normalize compendium 
 
-# In[25]:
+# In[24]:
 
 
 # Read data
@@ -285,7 +283,7 @@ print(original_compendium.shape)
 original_compendium.head()
 
 
-# In[26]:
+# In[25]:
 
 
 # Replace ensembl ids with gene symbols
@@ -293,7 +291,7 @@ original_compendium = process.replace_ensembl_ids(original_compendium,
                                                 gene_id_mapping)
 
 
-# In[27]:
+# In[26]:
 
 
 # Drop genes
@@ -302,7 +300,7 @@ original_compendium = original_compendium[shared_genes_hgnc]
 original_compendium.head()
 
 
-# In[28]:
+# In[27]:
 
 
 # 0-1 normalize per gene
@@ -316,7 +314,7 @@ print(original_data_scaled_df.shape)
 original_data_scaled_df.head()
 
 
-# In[29]:
+# In[28]:
 
 
 # Save data
@@ -338,7 +336,7 @@ outfile.close()
 # ### Train VAE 
 # Performed exploratory analysis of compendium data [here](../explore_data/viz_recount2_compendium.ipynb) to help interpret loss curve.
 
-# In[30]:
+# In[29]:
 
 
 # Setup directories
@@ -360,10 +358,10 @@ for each_dir in output_dirs:
         os.makedirs(new_dir, exist_ok=True)
 
 
-# In[31]:
+# In[30]:
 
 
 # Train VAE on new compendium data
-train_vae_modules.train_vae(config_file,
-                   normalized_data_file)
+#train_vae_modules.train_vae(config_file,
+#                   normalized_data_file)
 
