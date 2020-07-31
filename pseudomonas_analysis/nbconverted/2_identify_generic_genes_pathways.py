@@ -3,7 +3,7 @@
 
 # # Identify generic genes and pathways
 # 
-# This notebooke performs the following steps to identify generic genes
+# This notebook performs the following steps to identify generic genes
 # 1. Simulates N gene expression experiments using [ponyo](https://github.com/ajlee21/ponyo)
 # 2. Perform DE analysis to get association statistics for each gene
 # 
@@ -158,19 +158,26 @@ get_ipython().run_cell_magic('R', '', "library('limma')")
 
 
 # Check ordering of sample ids is consistent between gene expression data and metadata
-metadata = pd.read_csv(metadata_file, sep='\t', header=0, index_col=0)
-metadata_sample_ids = list(metadata.index)
-
-template_data = pd.read_csv(template_data_file, sep='\t', header=0, index_col=0)
-template_sample_ids = list(template_data.index)
-
-assert(metadata_sample_ids == template_sample_ids)
+process.check_sample_ordering(template_data_file, metadata_file)
 
 
 # In[10]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats(metadata_file,\n             project_id, \n             template_data_file,\n             "template",\n             local_dir,\n             "real")')
+
+
+# In[ ]:
+
+
+# Check ordering of sample ids is consistent between gene expression data and metadata
+for i in range(num_runs):
+    simulated_data_file = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        f"selected_simulated_data_{project_id}_{i}.txt")
+        
+    process.check_sample_ordering(simulated_data_file, metadata_file)
 
 
 # In[11]:
