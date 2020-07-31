@@ -33,13 +33,13 @@ find_enriched_pathways <- function(DE_stats_file,
 	## feature 3: decreasing order
 	rank_genes <- sort(rank_genes, decreasing = TRUE)
 
-    pathway_DB_data <- GSA.read.gmt(hallmark_DB_file)
-    pathway_parsed <- {}
-    for (i in 1:length(pathway_DB_data$genesets)){
-    pathway_parsed[pathway_DB_data$geneset.name[i]] <- as.list(pathway_DB_data$genesets[i])
-    }
+    pathway_DB_data <- gmtPathways(hallmark_DB_file)
+    #pathway_parsed <- {}
+    #for (i in 1:length(pathway_DB_data$genesets)){
+    #pathway_parsed[pathway_DB_data$geneset.name[i]] <- as.list(pathway_DB_data$genesets[i])
+    #}
 
-    enrich_pathways <- fgsea(pathways=pathway_parsed,
+    enrich_pathways <- fgsea(pathways=pathway_DB_data,
                               stats=rank_genes,
                               nperm=20000)
 

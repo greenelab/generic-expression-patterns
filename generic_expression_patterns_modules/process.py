@@ -329,3 +329,27 @@ def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
 
     return merged_gene_ranks_df
 
+
+def check_sample_ordering(expression_file, metadata_file):
+    """
+    This function checks that the ordering of the samples matches
+    between the expression file and the metadata file. This
+    ordering is used for calculating DEGs.
+    """
+    # Check ordering of sample ids is consistent between gene expression data and metadata
+    metadata = pd.read_csv(metadata_file, sep="\t", header=0, index_col=0)
+    metadata_sample_ids = list(metadata.index)
+
+    expression_data = pd.read_csv(expression_file, sep="\t", header=0, index_col=0)
+    expression_sample_ids = list(expression_data.index)
+
+    if metadata_sample_ids == expression_sample_ids:
+        print("sample ids are ordered correctly")
+        return
+    else:
+        # Convert gene expression ordering to be the same as
+        # metadata sample ordering
+        print("sample ids don't match, going to re-order gene expression samples")
+        expression_data = expression_data.loc[metadata_sample_ids]
+        expression_data.to_csv(expression_file, sep="\t")
+        return
