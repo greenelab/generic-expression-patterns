@@ -3,7 +3,7 @@
 
 # # Identify generic genes and pathways
 # 
-# This notebooke performs the following steps to identify generic genes
+# This notebook performs the following steps to identify generic genes
 # 1. Simulates N gene expression experiments using [ponyo](https://github.com/ajlee21/ponyo)
 # 2. Perform DE analysis to get association statistics for each gene
 # 
@@ -158,13 +158,7 @@ get_ipython().run_cell_magic('R', '', "library('limma')")
 
 
 # Check ordering of sample ids is consistent between gene expression data and metadata
-metadata = pd.read_csv(metadata_file, sep='\t', header=0, index_col=0)
-metadata_sample_ids = list(metadata.index)
-
-template_data = pd.read_csv(template_data_file, sep='\t', header=0, index_col=0)
-template_sample_ids = list(template_data.index)
-
-assert(metadata_sample_ids == template_sample_ids)
+process.check_sample_ordering(template_data_file, metadata_file)
 
 
 # In[10]:
@@ -176,12 +170,25 @@ get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_da
 # In[11]:
 
 
+# Check ordering of sample ids is consistent between gene expression data and metadata
+for i in range(num_runs):
+    simulated_data_file = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        f"selected_simulated_data_{project_id}_{i}.txt")
+        
+    process.check_sample_ordering(simulated_data_file, metadata_file)
+
+
+# In[12]:
+
+
 get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_file <- paste(local_dir, \n                                 "pseudo_experiment/selected_simulated_data_",\n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    run_output <- get_DE_stats(metadata_file,\n                               project_id, \n                               simulated_data_file,\n                               "simulated",\n                               local_dir,\n                               i)\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
 
 
 # ### Rank genes
 
-# In[12]:
+# In[13]:
 
 
 # Concatenate simulated experiments
@@ -190,14 +197,14 @@ simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, proj
 print(simulated_DE_stats_all.shape)
 
 
-# In[13]:
+# In[14]:
 
 
 # Take absolute value of logFC and t statistic
 simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
 
 
-# In[14]:
+# In[15]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -205,7 +212,7 @@ simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank,
                                                   simulated_DE_stats_all)
 
 
-# In[15]:
+# In[16]:
 
 
 # Load association statistics for template experiment
@@ -229,7 +236,7 @@ template_DE_stats = calc.rank_genes(col_to_rank,
                                    True)
 
 
-# In[16]:
+# In[17]:
 
 
 # Rank genes in simulated experiments
@@ -240,7 +247,7 @@ simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
 
 # ### Gene summary table
 
-# In[17]:
+# In[18]:
 
 
 summary_gene_ranks = process.generate_summary_table(template_DE_stats,
@@ -251,11 +258,11 @@ summary_gene_ranks = process.generate_summary_table(template_DE_stats,
 summary_gene_ranks.head()
 
 
-# In[18]:
+# In[19]:
 
 
-summary_gene_ranks.to_csv(
-    gene_summary_file, sep='\t')
+#summary_gene_ranks.to_csv(
+#    gene_summary_file, sep='\t')
 
 
 # ### GSEA 
@@ -265,19 +272,19 @@ summary_gene_ranks.to_csv(
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
-# In[19]:
+# In[20]:
 
 
 get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("GSA")\n#BiocManager::install("fgsea")')
 
 
-# In[20]:
+# In[21]:
 
 
 get_ipython().run_cell_magic('R', '', 'suppressWarnings(library("GSA"))\nsuppressWarnings(library("fgsea"))')
 
 
-# In[21]:
+# In[22]:
 
 
 # Load pathway data
@@ -286,37 +293,139 @@ hallmark_DB_file = os.path.join(
     "hallmark_DB.gmt")
 
 
-# In[22]:
-
-
-statistic = 't'
-
+# Based on publication, they found most enriched terms include cancer, cellular growth, cell proliferation, cell death
+# 
+# Would would expect similar enrichment in these types of pathways
 
 # In[23]:
 
 
-get_ipython().run_cell_magic('R', '-i template_DE_stats_file -i hallmark_DB_file -i statistic', '# Read in data\nDE_stats_data <- read.table(template_DE_stats_file, sep="\\t", header=TRUE, row.names=NULL)\n\n# Sort genes by feature 1\n\n# feature 1: numeric vector\nif (statistic ==\'t\'){\n    col_num = 4\n} else if (statistic == \'adj p-value\'){\n    col_num = 6\n} else if (statistic == \'p-value\'){\n    col_num = 5\n} else if (statistic == \'logFC\'){\n    col_num = 2\n}\nrank_genes <- as.numeric(as.character(DE_stats_data[,col_num]))\n\n# feature 2: named vector of gene ids\nnames(rank_genes) <- as.character(DE_stats_data[,1])\n\n## feature 3: decreasing order\nrank_genes <- sort(rank_genes, decreasing = TRUE)\n\npathway_DB_data <- GSA.read.gmt(hallmark_DB_file)\npathway_parsed <- {}\nfor (i in 1:length(pathway_DB_data$genesets)){\npathway_parsed[pathway_DB_data$geneset.name[i]] <- as.list(pathway_DB_data$genesets[i])\n}\n\n#print(head(pathway_DB_data))\n# GSEA is a generic gene set enrichment function\n# Different backend methods can be applied depending on the \n# type of annotations\n# Here we will use fgsea\n#enrich_pathways <- GSEA(geneList=rank_genes, \n#                        TERM2GENE=pathway_DB_data,\n#                        nPerm=100000,\n#                        by=\'fgsea\',\n#                        verbose=T)\n#enrich_pathways <- fgsea(pathways=pathway_parsed,\n#                         stats=rank_genes,\n#                         nperm=20000)\n#print(enrich_pathways)\nplotEnrichment(pathway_parsed[["HALLMARK_ALLOGRAFT_REJECTION"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)\n#barplot(sort(rank_genes, decreasing = T))')
+statistic = 'logFC'
 
 
 # In[24]:
 
 
-get_ipython().run_cell_magic('R', '-i template_DE_stats_file -i hallmark_DB_file -i statistic -o template_enriched_pathways', "\nsource('../generic_expression_patterns_modules/GSEA_analysis.R')\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_file, hallmark_DB_file, statistic)")
+get_ipython().run_cell_magic('R', '', 'data(examplePathways)\ndata(exampleRanks)\nprint(head(exampleRanks))\n#plotEnrichment(examplePathways[["5991130_Programmed_Cell_Death"]],\n#               exampleRanks)')
 
 
 # In[25]:
 
 
-print(template_enriched_pathways.shape)
-#template_enriched_pathways[template_enriched_pathways['padj']<0.1]
-template_enriched_pathways.set_index('pathway', inplace=True)
-template_enriched_pathways.loc['HALLMARK_P53_PATHWAY']
+"""%%R -i template_DE_stats_file -i hallmark_DB_file -i statistic
+# Read in data
+DE_stats_data <- read.table(template_DE_stats_file, sep="\t", header=TRUE, row.names=NULL)
+
+# Sort genes by feature 1
+statistic = 't'
+
+# feature 1: numeric vector
+if (statistic =='t'){
+    col_num = 4
+} else if (statistic == 'adj p-value'){
+    col_num = 6
+} else if (statistic == 'p-value'){
+    col_num = 5
+} else if (statistic == 'logFC'){
+    col_num = 2
+}
+
+rank_genes <- as.numeric(as.character(DE_stats_data[,col_num]))
+
+# feature 2: named vector of gene ids
+names(rank_genes) <- as.character(DE_stats_data[,1])
+
+## feature 3: decreasing order
+rank_genes <- sort(rank_genes, decreasing = TRUE)
+print(head(rank_genes))
+
+pathway_DB_data <- gmtPathways(hallmark_DB_file)
+print(head(pathway_DB_data))
+#pathway_parsed <- {}
+#for (i in 1:length(pathway_DB_data$genesets)){
+#pathway_parsed[pathway_DB_data$geneset.name[i]] <- as.list(pathway_DB_data$genesets[i])
+#}
+
+#print(head(pathway_DB_data))
+# GSEA is a generic gene set enrichment function
+# Different backend methods can be applied depending on the 
+# type of annotations
+# Here we will use fgsea
+#enrich_pathways <- GSEA(geneList=rank_genes, 
+#                        TERM2GENE=pathway_DB_data,
+#                        nPerm=100000,
+#                        by='fgsea',
+#                        verbose=T)
+enrich_pathways <- fgsea(pathways=pathway_DB_data,
+                         stats=rank_genes,
+                         nperm=10000,
+                         minSize=10,
+                         maxSize=200
+                        )
+
+print(enrich_pathways)
+#plotEnrichment(pathway_parsed[["HALLMARK_DNA_REPAIR"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)
+#plotEnrichment(pathway_parsed[["HALLMARK_TNFA_SIGNALING_VIA_NFKB"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)
+#plotEnrichment(pathway_parsed[["HALLMARK_P53_PATHWAY"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)
+#plotEnrichment(pathway_DB_data[["HALLMARK_BILE_ACID_METABOLISM"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)
+#barplot(sort(rank_genes, decreasing = T))"""
 
 
 # In[26]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_file -i num_runs -i statistic', '\nsource(\'../generic_expression_patterns_modules/GSEA_analysis.R\')\n\nfor (i in 0:(num_runs-1)){\n    simulated_DE_stats_file <- paste(local_dir, \n                                 "DE_stats/DE_stats_simulated_data_", \n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    out_file = paste(local_dir, \n                     "GSEA_stats/GSEA_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep="")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_file, statistic) \n    #print(head(enriched_pathways))\n    \n    write.table(enriched_pathways, file = out_file, row.names = T, sep = "\\t")\n    }')
+#statistic='t'
+
+
+# In[27]:
+
+
+#%%R -i template_DE_stats_file -i hallmark_DB_file -i statistic -o template_enriched_pathways
+
+#source('../generic_expression_patterns_modules/GSEA_analysis.R')
+#template_enriched_pathways <- find_enriched_pathways(template_DE_stats_file, hallmark_DB_file, statistic)
+
+
+# In[28]:
+
+
+#print(template_enriched_pathways.shape)
+#template_enriched_pathways['size'].max()
+#template_enriched_pathways[template_enriched_pathways['padj'] < 0.05]
+#template_enriched_pathways[template_enriched_pathways['padj']<0.1]
+#template_enriched_pathways.set_index('pathway', inplace=True)
+#template_enriched_pathways.loc["HALLMARK_P53_PATHWAY"]
+
+
+# In[29]:
+
+
+"""%%R -i project_id -i local_dir -i hallmark_DB_file -i num_runs -i statistic
+
+source('../generic_expression_patterns_modules/GSEA_analysis.R')
+
+for (i in 0:(num_runs-1)){
+    simulated_DE_stats_file <- paste(local_dir, 
+                                 "DE_stats/DE_stats_simulated_data_", 
+                                 project_id,
+                                 "_", 
+                                 i,
+                                 ".txt",
+                                 sep="")
+    
+    out_file = paste(local_dir, 
+                     "GSEA_stats/GSEA_simulated_data_",
+                     project_id,
+                     "_",
+                     i,
+                     ".txt", 
+                     sep="")
+    
+    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_file, statistic) 
+    #print(head(enriched_pathways))
+    
+    write.table(enriched_pathways, file = out_file, row.names = T, sep = "\t")
+    }"""
 
 
 # ### Rank pathways 
@@ -328,7 +437,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_fil
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[29]:
+# In[30]:
 
 
 if compare_genes:

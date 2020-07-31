@@ -19,7 +19,7 @@ epsilon_std	1.0
 validation_frac	0.25
 project_id	"SRP012656"
 metadata_colname	'run'
-num_simulated	25
+num_simulated	50
 col_to_rank	"logFC"
 num_recount2_experiments	200
 gsea_statistic	'logFC'
