@@ -121,6 +121,38 @@ def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
         simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
 
 
+def recast_int(num_runs, local_dir):
+    """
+    Re-casts simulated experiment data to integer to use DESeq. 
+    
+    Arguments
+    ---------
+    num_runs: int
+        Number of simulated experiments
+    local_dir: str
+        Local directory containing simulated experiments
+
+    """
+
+    for i in range(num_runs):
+        simulated_data_file = os.path.join(
+            local_dir,
+            "pseudo_experiment",
+            "selected_simulated_data_" + project_id + "_" + str(i) + ".txt",
+        )
+
+        # Read simulated data
+        simulated_data = pd.read_csv(
+            simulated_data_file, header=0, sep="\t", index_col=0
+        )
+
+        # Cast as int
+        simulated_data = simulated_data.astype(int)
+
+        # Save
+        simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
+
+
 def concat_simulated_data(local_dir, num_runs, project_id):
     """
     This function will concatenate the simulated experiments into a single dataframe
