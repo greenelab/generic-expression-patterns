@@ -5,7 +5,15 @@
 # This notebook does the following:
 # 
 # 1. Selects template experiment
-# 2. Downloads subset of recount2 data, including the template experiment (subset of random experiments + 1 template experiment)
+# 2. Download and process subset of recount2 data, including the template experiment (subset of random experiments + 1 template experiment)
+# 
+# Recount2 data processing:
+# 2a. Download recount2 as RangedSummarizedExperiment(rse) object for each project id provided. Raw reads were mapped to genes using Rail-RNA, which includes exon-exon splice junctions. RSE contains counts summarized at the **gene level** using the **Gencode v25 (GRCh38.p7, CHR) annotation** as provided by Gencode. 
+# 
+# 2b. These rse objects return [coverage counts](https://www.bioconductor.org/packages/devel/workflows/vignettes/recountWorkflow/inst/doc/recount-workflow.html) as opposed to read counts and therefore we need to apply [scale_counts](https://rdrr.io/bioc/recount/man/scale_counts.html) to scale by **sample coverage** (average number of reads mapped per nucleotide)
+# 
+# 2c. DESeq contains performs an internal normalization where geometric mean is calculated for each gene across all samples. The counts for a gene in each sample is then divided by this mean. The median of these ratios in a sample is the size factor for that sample. This procedure corrects for **library size** (i.e. sequencing depth = total number of reads sequenced for a given sample) and RNA composition bias. DESeq expects [un-normalized](http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#input-data) data.
+# 
 # 3. Train VAE on subset of recount2 data
 
 # In[1]:
@@ -82,7 +90,7 @@ get_ipython().run_cell_magic('R', '', '# Select 59\n# Select a\n# Run one time\n
 # In[5]:
 
 
-get_ipython().run_cell_magic('R', '', "library('recount')")
+get_ipython().run_cell_magic('R', '', "suppressPackageStartupMessages(library('recount'))")
 
 
 # In[6]:
@@ -262,6 +270,13 @@ template_data.head()
 # In[23]:
 
 
+# Round read counts to int
+template_data = template_data.astype(int)
+
+
+# In[24]:
+
+
 print(len(template_data.columns) - len(shared_genes_hgnc))
 
 
@@ -269,7 +284,7 @@ print(len(template_data.columns) - len(shared_genes_hgnc))
 
 # ### Normalize compendium 
 
-# In[24]:
+# In[25]:
 
 
 # Read data
@@ -283,7 +298,7 @@ print(original_compendium.shape)
 original_compendium.head()
 
 
-# In[25]:
+# In[26]:
 
 
 # Replace ensembl ids with gene symbols
@@ -291,7 +306,7 @@ original_compendium = process.replace_ensembl_ids(original_compendium,
                                                 gene_id_mapping)
 
 
-# In[26]:
+# In[27]:
 
 
 # Drop genes
@@ -300,7 +315,14 @@ original_compendium = original_compendium[shared_genes_hgnc]
 original_compendium.head()
 
 
-# In[27]:
+# In[28]:
+
+
+# Round compendium read counts to int
+original_compendium = original_compendium.astype(int)
+
+
+# In[29]:
 
 
 # 0-1 normalize per gene
@@ -314,7 +336,7 @@ print(original_data_scaled_df.shape)
 original_data_scaled_df.head()
 
 
-# In[28]:
+# In[30]:
 
 
 # Save data
@@ -336,7 +358,7 @@ outfile.close()
 # ### Train VAE 
 # Performed exploratory analysis of compendium data [here](../explore_data/viz_recount2_compendium.ipynb) to help interpret loss curve.
 
-# In[29]:
+# In[31]:
 
 
 # Setup directories
@@ -358,10 +380,10 @@ for each_dir in output_dirs:
         os.makedirs(new_dir, exist_ok=True)
 
 
-# In[30]:
+# In[32]:
 
 
 # Train VAE on new compendium data
-#train_vae_modules.train_vae(config_file,
-#                   normalized_data_file)
+train_vae_modules.train_vae(config_file,
+                   normalized_data_file)
 
