@@ -22,7 +22,7 @@ find_enriched_pathways <- function(DE_stats_file,
 		col_num = 6
 	} else if (statistic == 'p-value'){
 		col_num = 5
-	} else if (statistic == 'logFC'){
+	} else if (statistic == 'logFC' || statistic == 'log2FoldChange'){
 		col_num = 2
 	}
     rank_genes <- as.numeric(as.character(DE_stats_data[,col_num]))

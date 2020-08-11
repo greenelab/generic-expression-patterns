@@ -35,8 +35,9 @@ local_dir){
   # Rename counts for storage
   assign(paste0("rse_gene_", project_id), rse_gene)
 
-  rse_gene <- assays(rse_gene)$counts
-  data_counts <- t(rse_gene)
+  rse_gene_scaled <- scale_counts(rse_gene)
+  rse_gene_counts <- assays(rse_gene_scaled)$counts
+  data_counts <- t(rse_gene_counts)
 
   ## Save counts matrix to file
   write.table(data_counts,
@@ -44,6 +45,9 @@ local_dir){
             sep='\t',
             row.names=TRUE,
             col.names=TRUE)
+  
+  ## Delete it if you don't need it anymore
+  unlink(project_id, recursive = TRUE)
 
 }
 
@@ -104,13 +108,16 @@ base_dir){
     
     # Concatenate counts into one matrix
     if (i==1) {
-      data_counts_all <- assays(rse_gene)$counts
+      data_counts_all <- assays(scale_counts(rse_gene))$counts
     }
     else {
-      data_counts_all <- cbind(data_counts_all, assays(rse_gene)$counts)
+      data_counts_all <- cbind(data_counts_all, assays(scale_counts(rse_gene))$counts)
     }
     # Rename counts for storage
     assign(paste0("rse_gene_", selected_project_ids[i]), rse_gene)
+
+    ## Delete it if you don't need it anymore
+    unlink(selected_project_ids[i], recursive = TRUE)
   }
 
   data_counts_all <- t(data_counts_all)

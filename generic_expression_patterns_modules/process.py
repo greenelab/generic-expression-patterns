@@ -121,7 +121,7 @@ def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
         simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
 
 
-def recast_int(num_runs, local_dir):
+def recast_int(num_runs, local_dir, project_id):
     """
     Re-casts simulated experiment data to integer to use DESeq. 
     
@@ -131,6 +131,8 @@ def recast_int(num_runs, local_dir):
         Number of simulated experiments
     local_dir: str
         Local directory containing simulated experiments
+    project_id: str
+        Project id to use to retrieve simulated experiments
 
     """
 
@@ -203,8 +205,14 @@ def abs_value_stats(simulated_DE_stats_all):
     The ranking for each gene will be based on the mean absolute value of either
     logFC or t statistic, depending on the user selection
     """
-    simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
-    simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
+    if "logFC" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
+    else:
+        simulated_DE_stats_all["log2FoldChange"] = simulated_DE_stats_all[
+            "log2FoldChange"
+        ].abs()
+    if "t" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
     return simulated_DE_stats_all
 
 
@@ -237,7 +245,12 @@ def generate_summary_table(
     print(template_simulated_DE_stats.shape)
 
     # Parse columns
-    median_pval_simulated = template_simulated_DE_stats[("adj.P.Val", "median")]
+    if "adj.P.Val" in template_simulated_DE_stats.columns:
+        median_pval_simulated = template_simulated_DE_stats[("adj.P.Val", "median")]
+        col_name = "adj.P.Val"
+    else:
+        median_pval_simulated = template_simulated_DE_stats[("padj", "median")]
+        col_name = "padj"
     mean_test_simulated = template_simulated_DE_stats[(col_to_rank, "mean")]
     std_test_simulated = template_simulated_DE_stats[(col_to_rank, "std")]
     count_simulated = template_simulated_DE_stats[(col_to_rank, "count")]
@@ -246,7 +259,7 @@ def generate_summary_table(
     summary = pd.DataFrame(
         data={
             "Gene ID": template_simulated_DE_stats.index,
-            "Adj P-value (Real)": template_simulated_DE_stats["adj.P.Val"],
+            "Adj P-value (Real)": template_simulated_DE_stats[col_name],
             "Rank (Real)": template_simulated_DE_stats["ranking"],
             "Test statistic (Real)": template_simulated_DE_stats[col_to_rank],
             "Median adj p-value (simulated)": median_pval_simulated,

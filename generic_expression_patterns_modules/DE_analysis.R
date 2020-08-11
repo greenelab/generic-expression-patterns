@@ -84,34 +84,61 @@ get_DE_stats <- function(metadata_file,
   
 }
 
-create_volcano <- function(expression_file,
-                           experiment_id,
-                           pval,
-                           local_dir) {
+get_DE_stats_DESeq <- function(metadata_file, 
+                               experiment_id, 
+                               expression_file,
+                               data_type,
+                               local_dir,
+                               run) {
 
-    # This functioni generates a volcano plot using the output from
-    # the DE analysis script 'get_DE_stats' and output it to local_dir
+  # This function performs DE analysis using DESeq.
+  # Expression data in expression_file are grouped based on metadata_file
+  #
+  # Arguments
+  # ---------
+  # metadata_file: str
+  #   File containing mapping between sample id and group
+  #
+  # experiment_id: str
+  #   Experiment id used to label saved output filee
+  #
+  # expression_file: str
+  #   File containing gene expression data
+  #
+  # data_type: str
+  #   Either 'template' or 'simulated' to label saved output file
+  #
+  # local_dir: str
+  #   Directory to save output files to
+  #
+  # run: str
+  #   Used as identifier for different simulated experiments 
 
-    # Read in expression data
-    res <- read.table(expression_file, header=TRUE)
+  expression_data <- t(as.matrix(read.csv(expression_file, sep="\t", header=TRUE, row.names=1)))
+  metadata <- as.matrix(read.csv(metadata_file, sep="\t", header=TRUE, row.names=1))
 
-    threshold <- 0.05
+  print("Checking sample ordering...")
+  print(all.equal(colnames(expression_data), rownames(metadata)))
 
-    # Make a basic volcano plot
-    f <- EnhancedVolcano(res,
-                         lab = rownames(res),
-                         x = 'logFC',
-                         y = 'adj.P.Val',
-                         xlim = c(-2,2),
-                         pCutoff = threshold,
-                         FCcutoff = 1,
-                         pointSize = 1.0,
-                         labSize = 3.0,
-                         xlab=bquote(~Log[2]~ 'fold change'),
-                         ylab=bquote(-~Log[10]~ 'FDR adj p-value')
-    )
+  group <- interaction(metadata[,1])
 
-    # Save
-    out_file = paste(local_dir, "volcano_template_data_", experiment_id,".png", sep="")  
-    ggsave(out_file, plot = f, dpi=300)
-                           }
+  mm <- model.matrix(~0 + group)
+
+  #print(head(expression_data))
+
+  ddset <- DESeqDataSetFromMatrix(expression_data, colData=metadata, design = ~group)
+  
+  deseq_object <- DESeq(ddset)
+
+  deseq_results <- results(deseq_object)
+
+  deseq_results_df <-  as.data.frame(deseq_results)
+
+  # Save summary statistics of DEGs
+  if (data_type == "template") {
+    out_file = paste(local_dir, "DE_stats/DE_stats_template_data_", experiment_id,"_", run, ".txt", sep="")
+  } else if (data_type == "simulated") {
+    out_file = paste(local_dir, "DE_stats/DE_stats_simulated_data_", experiment_id,"_", run, ".txt", sep="")
+  }  
+  write.table(deseq_results_df, file = out_file, row.names = T, sep = "\t", quote = F)
+                              }
