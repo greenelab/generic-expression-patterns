@@ -207,7 +207,7 @@ gene_id_mapping.set_index('ensembl_version', inplace=True)
 gene_id_mapping.head()
 
 
-# Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](0_explore_input_data.ipynb)
+# Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](../explore_data/viz_template_experiment.ipynb)
 
 # In[17]:
 

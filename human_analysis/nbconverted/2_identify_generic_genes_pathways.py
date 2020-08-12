@@ -29,6 +29,28 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import pickle
+from sklearn.decomposition import PCA
+
+from plotnine import (ggplot,
+                      labs,  
+                      geom_line, 
+                      geom_point,
+                      geom_errorbar,
+                      aes, 
+                      ggsave, 
+                      theme_bw,
+                      theme,
+                      xlim,
+                      ylim,
+                      facet_wrap,
+                      scale_color_manual,
+                      guides, 
+                      guide_legend,
+                      element_blank,
+                      element_text,
+                      element_rect,
+                      element_line,
+                      coords)
 from rpy2.robjects import pandas2ri
 pandas2ri.activate()
 
@@ -132,7 +154,7 @@ if os.path.exists(sample_id_metadata_file):
 
 
 # Round compendium read counts to int
-process.recast_int(num_runs, local_dir, project_id)
+#process.recast_int(num_runs, local_dir, project_id)
 
 
 # ### Differential expression analysis
@@ -320,70 +342,10 @@ hallmark_DB_file = os.path.join(
     "hallmark_DB.gmt")
 
 
-# Based on publication, they found most enriched terms include cancer, cellular growth, cell proliferation, cell death
-# 
-# Would would expect similar enrichment in these types of pathways
-
 # In[25]:
 
 
-"""%%R -i template_DE_stats_file -i hallmark_DB_file -i statistic
-# Read in data
-DE_stats_data <- read.table(template_DE_stats_file, sep="\t", header=TRUE, row.names=NULL)
-
-# Sort genes by feature 1
-statistic = 't'
-
-# feature 1: numeric vector
-if (statistic =='t'){
-    col_num = 4
-} else if (statistic == 'adj p-value'){
-    col_num = 6
-} else if (statistic == 'p-value'){
-    col_num = 5
-} else if (statistic == 'logFC'){
-    col_num = 2
-}
-
-rank_genes <- as.numeric(as.character(DE_stats_data[,col_num]))
-
-# feature 2: named vector of gene ids
-names(rank_genes) <- as.character(DE_stats_data[,1])
-
-## feature 3: decreasing order
-rank_genes <- sort(rank_genes, decreasing = TRUE)
-print(head(rank_genes))
-
-pathway_DB_data <- gmtPathways(hallmark_DB_file)
-print(head(pathway_DB_data))
-#pathway_parsed <- {}
-#for (i in 1:length(pathway_DB_data$genesets)){
-#pathway_parsed[pathway_DB_data$geneset.name[i]] <- as.list(pathway_DB_data$genesets[i])
-#}
-
-#print(head(pathway_DB_data))
-# GSEA is a generic gene set enrichment function
-# Different backend methods can be applied depending on the 
-# type of annotations
-# Here we will use fgsea
-#enrich_pathways <- GSEA(geneList=rank_genes, 
-#                        TERM2GENE=pathway_DB_data,
-#                        nPerm=100000,
-#                        by='fgsea',
-#                        verbose=T)
-enrich_pathways <- fgsea(pathways=pathway_DB_data,
-                         stats=rank_genes,
-                         nperm=10000,
-                         minSize=10,
-                         maxSize=200
-                        )
-
-print(enrich_pathways)
-#plotEnrichment(pathway_parsed[["HALLMARK_DNA_REPAIR"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)
-#plotEnrichment(pathway_parsed[["HALLMARK_TNFA_SIGNALING_VIA_NFKB"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)
-#plotEnrichment(pathway_parsed[["HALLMARK_P53_PATHWAY"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)
-#plotEnrichment(pathway_DB_data[["HALLMARK_BILE_ACID_METABOLISM"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)
-#barplot(sort(rank_genes, decreasing = T))"""
+get_ipython().run_cell_magic('R', '-i template_DE_stats_file -i hallmark_DB_file -i statistic', '# This cell is temporary and contains the same code as the GSEA_analysis.R file\n# This is being used to debug the GSEA results found\n# Read in data\nDE_stats_data <- read.table(template_DE_stats_file, sep="\\t", header=TRUE, row.names=NULL)\n\n# feature 1: numeric vector\nif (statistic == \'logFC\'){\n    col_num = 2\n} else if (statistic == \'log2FoldChange\'){\n    col_num = 3\n} else if (statistic ==\'t\'){\n    col_num = 4\n} else if (statistic == \'p-value\'){\n    col_num = 5\n} else if (statistic == \'adj p-value\' || statistic == \'pvalue\'){\n    col_num = 6\n} else if ( statistic == \'padj\'){\n    col_num = 7\n}\n\nrank_genes <- as.numeric(as.character(DE_stats_data[,col_num]))\n\n# feature 2: named vector of gene ids\nnames(rank_genes) <- as.character(DE_stats_data[,1])\nprint(head(rank_genes))\n## feature 3: decreasing order\nrank_genes <- sort(rank_genes, decreasing = TRUE)\nprint(head(rank_genes))\n\npathway_DB_data <- gmtPathways(hallmark_DB_file)\nprint(head(pathway_DB_data))\n\n#print(head(pathway_DB_data))\n# GSEA is a generic gene set enrichment function\n# Different backend methods can be applied depending on the \n# type of annotations\n# Here we will use fgsea\n\n#enrich_pathways <- fgsea(pathways=pathway_DB_data,\n#                         stats=rank_genes,\n#                         nperm=10000,\n#                         minSize=10,\n#                         maxSize=200\n#                        )\n\n#print(enrich_pathways)\n\n# Look at those pathways WITH significant padj\n#plotEnrichment(pathway_DB_data[["HALLMARK_TNFA_SIGNALING_VIA_NFKB"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)\n#plotEnrichment(pathway_DB_data[["HALLMARK_TNFA_SIGNALING_VIA_NFKB"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)\n\n# Look at those pathways with NOT significant padj\nplotEnrichment(pathway_DB_data[["HALLMARK_P53_PATHWAY"]], stats=rank_genes, gseaParam = 1, ticksSize = 0.2)\n#barplot(sort(rank_genes, decreasing = T))"""')
 
 
 # In[26]:
@@ -392,52 +354,109 @@ print(enrich_pathways)
 get_ipython().run_cell_magic('R', '-i template_DE_stats_file -i hallmark_DB_file -i statistic -o template_enriched_pathways', "\nsource('../generic_expression_patterns_modules/GSEA_analysis.R')\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_file, hallmark_DB_file, statistic)")
 
 
-# In[29]:
+# ## Quick validation
+# Significant pathways found include: HALLMARK_G2M_CHECKPOINT, TNFA_SIGNALING, INFLAMMATORY_RESPONSE, APOPTOSIS, HYPOXIA are expected and consistent with what the publication found. However, there are pathways not found to be significant that we would expect to find: P53, NOTCH_SIGNALING, DNA_REPAIR. Not sure how to explain this since the enrichment score plot looks consistent with the p-value score .
+
+# In[27]:
 
 
 print(template_enriched_pathways.shape)
-#template_enriched_pathways['size'].max()
-template_enriched_pathways[template_enriched_pathways['padj'] < 0.05]
-#template_enriched_pathways[template_enriched_pathways['padj']<0.1]
-#template_enriched_pathways.head()
+template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj')
 
 
-# In[30]:
+# In[28]:
+
+
+template_enriched_pathways[template_enriched_pathways['padj'] >= 0.05].sort_values(by='padj')
+
+
+# In[29]:
 
 
 template_enriched_pathways.set_index('pathway', inplace=True)
 template_enriched_pathways.loc["HALLMARK_P53_PATHWAY"]
 
 
-# In[ ]:
+# In[30]:
 
 
-"""%%R -i project_id -i local_dir -i hallmark_DB_file -i num_runs -i statistic
+# Check expression of TP53 genes in cancer vs normal samples
+tp53_genes = list(template_DE_stats[list(template_DE_stats.index.str.find("TP53") == 0)].index)
+template_data = pd.read_csv(template_data_file, sep="\t", index_col=0)
 
-source('../generic_expression_patterns_modules/GSEA_analysis.R')
+selected_template_data = template_data[tp53_genes]
 
-for (i in 0:(num_runs-1)){
-    simulated_DE_stats_file <- paste(local_dir, 
-                                 "DE_stats/DE_stats_simulated_data_", 
-                                 project_id,
-                                 "_", 
-                                 i,
-                                 ".txt",
-                                 sep="")
-    
-    out_file = paste(local_dir, 
-                     "GSEA_stats/GSEA_simulated_data_",
-                     project_id,
-                     "_",
-                     i,
-                     ".txt", 
-                     sep="")
-    
-    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_file, statistic) 
-    #print(head(enriched_pathways))
-    
-    write.table(enriched_pathways, file = out_file, row.names = T, sep = "\t")
-    }"""
+
+# In[31]:
+
+
+# Load metadata file with grouping assignments for samples
+metadata_file = os.path.join(
+    "data",
+    "metadata",
+    project_id+"_groups.tsv")
+
+# Read metadata
+metadata = pd.read_csv(
+    metadata_file,
+    header=0,
+    sep='\t',
+    index_col=0)
+
+
+# In[32]:
+
+
+# PCA encode
+pca = PCA(n_components=2)
+
+model = pca.fit(selected_template_data)
+template_PCAencoded = model.transform(selected_template_data)
+
+template_PCAencoded_df = pd.DataFrame(data=template_PCAencoded ,
+                                         index=template_data.index,
+                                         columns=['1','2'])
+
+
+# In[33]:
+
+
+# Add tumor/normal labels
+template_data_labeled = pd.merge(template_PCAencoded_df, metadata, left_index=True, right_index=True)
+template_data_labeled.loc[template_data_labeled['group'] == 1,'source'] = 'Normal'
+template_data_labeled.loc[template_data_labeled['group'] == 2,'source'] = 'Tumor'
+template_data_labeled.head()
+
+
+# In[34]:
+
+
+# Plot
+fig = ggplot(template_data_labeled, aes(x='1', y='2'))
+fig += geom_point(aes(color='source'), alpha=0.7)
+fig += labs(x ='PCA 1',
+            y = 'PCA 2',
+            title = 'PCA template data')
+fig += theme_bw()
+fig += theme(
+    legend_title_align = "center",
+    plot_background=element_rect(fill='white'),
+    legend_key=element_rect(fill='white', colour='white'), 
+    legend_title=element_text(family='sans-serif', size=15),
+    legend_text=element_text(family='sans-serif', size=12),
+    plot_title=element_text(family='sans-serif', size=15),
+    axis_text=element_text(family='sans-serif', size=12),
+    axis_title=element_text(family='sans-serif', size=15)
+    )
+fig += guides(colour=guide_legend(override_aes={'alpha': 1}))
+
+print(fig)
+
+
+# In[37]:
+
+
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_file -i num_runs -i statistic', '\nsource(\'../generic_expression_patterns_modules/GSEA_analysis.R\')\n\nfor (i in 0:(num_runs-1)){\n    simulated_DE_stats_file <- paste(local_dir, \n                                 "DE_stats/DE_stats_simulated_data_", \n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    out_file = paste(local_dir, \n                     "GSEA_stats/GSEA_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep="")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_file, statistic) \n    \n    write.table(data.frame(enriched_pathways), file = out_file, row.names = T, sep = "\\t")\n    }')
 
 
 # ### Rank pathways 
@@ -449,7 +468,7 @@ for (i in 0:(num_runs-1)){
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[48]:
+# In[36]:
 
 
 if compare_genes:
