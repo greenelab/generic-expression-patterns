@@ -35,7 +35,7 @@ base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
 config_file = os.path.abspath(os.path.join(base_dir,
                                            "configs",
-                                           "config_pseudomonas_9989.tsv"))
+                                           "config_pseudomonas_33245.tsv"))
 params = utils.read_config(config_file)
 
 
@@ -89,6 +89,8 @@ original_compendium.head()
 # We manually selected bioproject [E-GEOD-9989](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-9989/?query=George+O%27Toole), which contains 2 samples (3 replicates each) of PA14 WT that are grown on CFBE41o- cells are either treated tobramycin or untreated.
 # 
 # Another bioproject selected [E-MEXP-1183](https://www.ebi.ac.uk/arrayexpress/experiments/E-MEXP-1183/), which contains a total of 10 samples. But for now we will select those 4 samples using WT that were measuring the effect of acyl-HSL signal.
+# 
+# Another bioproject selected [GEOD-33245](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-33245/?s_sortby=col_8&s_sortorder=ascending), which contains multiple different comparisons including WT vs *crc* mutants, WT vs *cbr* mutants in different conditions.
 
 # In[5]:
 
@@ -205,6 +207,6 @@ for each_dir in output_dirs:
 
 
 # Train VAE on new compendium data
-#train_vae_modules.train_vae(config_file,
-#                            normalized_data_file)
+train_vae_modules.train_vae(config_file,
+                            normalized_data_file)
 
