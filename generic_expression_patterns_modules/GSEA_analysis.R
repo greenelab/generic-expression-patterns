@@ -20,7 +20,7 @@ find_enriched_pathways <- function(DE_stats_file,
 		col_num = 2
 	} else if (statistic == 'log2FoldChange'){
 		col_num = 3
-    } else if (statistic =='t'){
+    } else if (statistic == 't'){
 		col_num = 4
     } else if (statistic == 'p-value'){
 		col_num = 5
