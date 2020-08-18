@@ -71,16 +71,29 @@ def aggregate_stats(col_to_rank, simulated_DE_stats_all):
     For each gene, it also returns the count to tell you the number of simulated
     experiments that were generated.
     """
-    if col_to_rank == "adj.P.Val":
-        simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
-            [col_to_rank]
-        ].agg(["median", "mean", "std", "count"])
+    if "adj.P.Val" in simulated_DE_stats_all.columns:
+        if col_to_rank == "adj.P.Val":
+            simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
+                [col_to_rank]
+            ].agg(["median", "mean", "std", "count"])
+        else:
+            simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
+                [col_to_rank, "adj.P.Val"]
+            ].agg(
+                {
+                    col_to_rank: ["median", "mean", "std", "count"],
+                    "adj.P.Val": ["median"],
+                }
+            )
     else:
-        simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
-            [col_to_rank, "adj.P.Val"]
-        ].agg(
-            {col_to_rank: ["median", "mean", "std", "count"], "adj.P.Val": ["median"]}
-        )
+        if col_to_rank == "padj":
+            simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
+                [col_to_rank]
+            ].agg(["median", "mean", "std", "count"])
+        else:
+            simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
+                [col_to_rank, "padj"]
+            ].agg({col_to_rank: ["median", "mean", "std", "count"], "padj": ["median"]})
     return simulated_DE_summary_stats
 
 
@@ -103,7 +116,7 @@ def rank_genes(col_to_rank, DE_summary_stats, is_template):
 
     """
     # If ranking by p-value or adjusted p-value then high rank = low value
-    if col_to_rank in ["P.Value", "adj.P.Val"]:
+    if col_to_rank in ["P.Value", "adj.P.Val", "pvalue", "padj"]:
         if is_template:
             DE_summary_stats["ranking"] = DE_summary_stats[col_to_rank].rank(
                 ascending=False
@@ -120,7 +133,7 @@ def rank_genes(col_to_rank, DE_summary_stats, is_template):
             )
 
     # If ranking by logFC then high rank = high abs(value)
-    elif col_to_rank in ["logFC", "t"]:
+    elif col_to_rank in ["logFC", "t", "log2FoldChange"]:
         if is_template:
             DE_summary_stats["ranking"] = DE_summary_stats[col_to_rank].rank(
                 ascending=True

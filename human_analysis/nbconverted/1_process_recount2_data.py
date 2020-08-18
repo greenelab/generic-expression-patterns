@@ -5,7 +5,15 @@
 # This notebook does the following:
 # 
 # 1. Selects template experiment
-# 2. Downloads subset of recount2 data, including the template experiment (subset of random experiments + 1 template experiment)
+# 2. Download and process subset of recount2 data, including the template experiment (subset of random experiments + 1 template experiment)
+# 
+# Recount2 data processing:
+# 2a. Download recount2 as RangedSummarizedExperiment(rse) object for each project id provided. Raw reads were mapped to genes using Rail-RNA, which includes exon-exon splice junctions. RSE contains counts summarized at the **gene level** using the **Gencode v25 (GRCh38.p7, CHR) annotation** as provided by Gencode. 
+# 
+# 2b. These rse objects return [coverage counts](https://www.bioconductor.org/packages/devel/workflows/vignettes/recountWorkflow/inst/doc/recount-workflow.html) as opposed to read counts and therefore we need to apply [scale_counts](https://rdrr.io/bioc/recount/man/scale_counts.html) to scale by **sample coverage** (average number of reads mapped per nucleotide)
+# 
+# 2c. DESeq contains performs an internal normalization where geometric mean is calculated for each gene across all samples. The counts for a gene in each sample is then divided by this mean. The median of these ratios in a sample is the size factor for that sample. This procedure corrects for **library size** (i.e. sequencing depth = total number of reads sequenced for a given sample) and RNA composition bias. DESeq expects [un-normalized](http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#input-data) data.
+# 
 # 3. Train VAE on subset of recount2 data
 
 # In[1]:
@@ -37,6 +45,7 @@ np.random.seed(123)
 base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
 config_file = os.path.abspath(os.path.join(base_dir,
+                                           "configs",
                                            "config_human.tsv"))
 params = utils.read_config(config_file)
 
@@ -60,6 +69,14 @@ normalized_data_file = params['normalized_compendium_data_file']
 shared_genes_file = params['shared_genes_file']
 scaler_file = params['scaler_transform_file']
 
+# Load metadata file with grouping assignments for samples
+sample_id_metadata_file = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    f"{project_id}_process_samples.tsv")
+
 
 # ### Download subset of recount2 to use as a compendium
 # The compendium will be composed of random experiments + the selected template experiment
@@ -73,7 +90,7 @@ get_ipython().run_cell_magic('R', '', '# Select 59\n# Select a\n# Run one time\n
 # In[5]:
 
 
-get_ipython().run_cell_magic('R', '', "library('recount')")
+get_ipython().run_cell_magic('R', '', "suppressPackageStartupMessages(library('recount'))")
 
 
 # In[6]:
@@ -190,7 +207,7 @@ gene_id_mapping.set_index('ensembl_version', inplace=True)
 gene_id_mapping.head()
 
 
-# Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](0_explore_input_data.ipynb)
+# Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](../explore_data/viz_template_experiment.ipynb)
 
 # In[17]:
 
@@ -227,37 +244,34 @@ outfile.close()
 # In[21]:
 
 
-# Drop smRNA samples so that samples are within the same range
-smRNA_samples = ["SRR493961",
-                 "SRR493962",
-                 "SRR493963",
-                 "SRR493964",
-                 "SRR493965",
-                 "SRR493966",
-                 "SRR493967",
-                 "SRR493968",
-                 "SRR493969",
-                 "SRR493970",
-                 "SRR493971",
-                 "SRR493972"]
+if os.path.exists(sample_id_metadata_file):
+    # Read in metadata
+    metadata = pd.read_csv(sample_id_metadata_file, sep='\t', header=0, index_col=0)
+    
+    # Get samples to be dropped
+    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
+
+    template_data = template_data.drop(sample_ids_to_drop)
+    
+    if project_id == "SRP012656":
+        assert(template_data.shape[0] == 24)
 
 
 # In[22]:
-
-
-# Drop samples
-template_data = template_data.drop(smRNA_samples)
-
-
-# In[23]:
 
 
 # Drop genes
 template_data = template_data[shared_genes_hgnc]
 
 print(template_data.shape)
-assert(template_data.shape[0] == 24)
 template_data.head()
+
+
+# In[23]:
+
+
+# Round read counts to int
+template_data = template_data.astype(int)
 
 
 # In[24]:
@@ -304,6 +318,13 @@ original_compendium.head()
 # In[28]:
 
 
+# Round compendium read counts to int
+original_compendium = original_compendium.astype(int)
+
+
+# In[29]:
+
+
 # 0-1 normalize per gene
 scaler = preprocessing.MinMaxScaler()
 original_data_scaled = scaler.fit_transform(original_compendium)
@@ -315,7 +336,7 @@ print(original_data_scaled_df.shape)
 original_data_scaled_df.head()
 
 
-# In[29]:
+# In[30]:
 
 
 # Save data
@@ -337,7 +358,7 @@ outfile.close()
 # ### Train VAE 
 # Performed exploratory analysis of compendium data [here](../explore_data/viz_recount2_compendium.ipynb) to help interpret loss curve.
 
-# In[30]:
+# In[31]:
 
 
 # Setup directories
@@ -359,7 +380,7 @@ for each_dir in output_dirs:
         os.makedirs(new_dir, exist_ok=True)
 
 
-# In[31]:
+# In[32]:
 
 
 # Train VAE on new compendium data

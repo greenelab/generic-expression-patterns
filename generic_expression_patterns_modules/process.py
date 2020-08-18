@@ -9,6 +9,7 @@ These scripts include: replacing ensembl gene ids with hgnc symbols.
 import pandas as pd
 import os
 import numpy as np
+import sklearn
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -121,6 +122,40 @@ def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
         simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
 
 
+def recast_int(num_runs, local_dir, project_id):
+    """
+    Re-casts simulated experiment data to integer to use DESeq. 
+    
+    Arguments
+    ---------
+    num_runs: int
+        Number of simulated experiments
+    local_dir: str
+        Local directory containing simulated experiments
+    project_id: str
+        Project id to use to retrieve simulated experiments
+
+    """
+
+    for i in range(num_runs):
+        simulated_data_file = os.path.join(
+            local_dir,
+            "pseudo_experiment",
+            "selected_simulated_data_" + project_id + "_" + str(i) + ".txt",
+        )
+
+        # Read simulated data
+        simulated_data = pd.read_csv(
+            simulated_data_file, header=0, sep="\t", index_col=0
+        )
+
+        # Cast as int
+        simulated_data = simulated_data.astype(int)
+
+        # Save
+        simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
+
+
 def concat_simulated_data(local_dir, num_runs, project_id):
     """
     This function will concatenate the simulated experiments into a single dataframe
@@ -171,8 +206,14 @@ def abs_value_stats(simulated_DE_stats_all):
     The ranking for each gene will be based on the mean absolute value of either
     logFC or t statistic, depending on the user selection
     """
-    simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
-    simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
+    if "logFC" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
+    else:
+        simulated_DE_stats_all["log2FoldChange"] = simulated_DE_stats_all[
+            "log2FoldChange"
+        ].abs()
+    if "t" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
     return simulated_DE_stats_all
 
 
@@ -205,7 +246,12 @@ def generate_summary_table(
     print(template_simulated_DE_stats.shape)
 
     # Parse columns
-    median_pval_simulated = template_simulated_DE_stats[("adj.P.Val", "median")]
+    if "adj.P.Val" in template_simulated_DE_stats.columns:
+        median_pval_simulated = template_simulated_DE_stats[("adj.P.Val", "median")]
+        col_name = "adj.P.Val"
+    else:
+        median_pval_simulated = template_simulated_DE_stats[("padj", "median")]
+        col_name = "padj"
     mean_test_simulated = template_simulated_DE_stats[(col_to_rank, "mean")]
     std_test_simulated = template_simulated_DE_stats[(col_to_rank, "std")]
     count_simulated = template_simulated_DE_stats[(col_to_rank, "count")]
@@ -214,7 +260,7 @@ def generate_summary_table(
     summary = pd.DataFrame(
         data={
             "Gene ID": template_simulated_DE_stats.index,
-            "Adj P-value (Real)": template_simulated_DE_stats["adj.P.Val"],
+            "Adj P-value (Real)": template_simulated_DE_stats[col_name],
             "Rank (Real)": template_simulated_DE_stats["ranking"],
             "Test statistic (Real)": template_simulated_DE_stats[col_to_rank],
             "Median adj p-value (simulated)": median_pval_simulated,
@@ -329,3 +375,27 @@ def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
 
     return merged_gene_ranks_df
 
+
+def compare_and_reorder_samples(expression_file, metadata_file):
+    """
+    This function checks that the ordering of the samples matches
+    between the expression file and the metadata file. This
+    ordering is used for calculating DEGs.
+    """
+    # Check ordering of sample ids is consistent between gene expression data and metadata
+    metadata = pd.read_csv(metadata_file, sep="\t", header=0, index_col=0)
+    metadata_sample_ids = metadata.index
+
+    expression_data = pd.read_csv(expression_file, sep="\t", header=0, index_col=0)
+    expression_sample_ids = expression_data.index
+
+    if metadata_sample_ids.equals(expression_sample_ids):
+        print("sample ids are ordered correctly")
+        return
+    else:
+        # Convert gene expression ordering to be the same as
+        # metadata sample ordering
+        print("sample ids don't match, going to re-order gene expression samples")
+        expression_data = expression_data.reindex(metadata_sample_ids)
+        expression_data.to_csv(expression_file, sep="\t")
+        return

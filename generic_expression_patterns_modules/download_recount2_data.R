@@ -21,7 +21,9 @@ local_dir){
   ## Data
 
   # Get data associated with project ids
-  # Download the RangedSummarizedExperiment object at the gene level for 
+  # Download the RangedSummarizedExperiment object.
+  # The RangedSummarizedExperiment object for the counts summarized 
+  # at the gene level using the Gencode v25 (GRCh38.p7, CHR) annotation as provided by Gencode.
   if (!file.exists(file.path(project_id, 'rse_gene.Rdata'))) {
     download_study(project_id)
   } 
@@ -29,24 +31,23 @@ local_dir){
 
   # Counts are raw read counts from the sequencing run
   # Counts are the number of reads that map that each gene
-  
-  # Scale counts by total coverage (total reads across the genome) per sample
-  # Mixed paired-end and single-end reads per run
-  # Most runs are single-end
-  # RPKM: normalizes for sequencing depth (coverge per gene) and gene length. Usually used for single-end
-  rse_rpkm <- getRPKM(rse_gene, length_var="bp_length")
 
   # Rename counts for storage
   assign(paste0("rse_gene_", project_id), rse_gene)
 
-  data_counts_rpkm <- t(rse_rpkm)
+  rse_gene_scaled <- scale_counts(rse_gene)
+  rse_gene_counts <- assays(rse_gene_scaled)$counts
+  data_counts <- t(rse_gene_counts)
 
   ## Save counts matrix to file
-  write.table(data_counts_rpkm,
+  write.table(data_counts,
             paste(local_dir,'/recount2_template_data.tsv',sep=""),
             sep='\t',
             row.names=TRUE,
             col.names=TRUE)
+  
+  ## Delete it if you don't need it anymore
+  unlink(project_id, recursive = TRUE)
 
 }
 
@@ -84,7 +85,7 @@ base_dir){
 
   # Entire recount2 is 8TB
   # We will only select the subset of studies instead
-  selected_project_ids <- sample(project_ids, num_experiments)
+  selected_project_ids <- sample(project_ids, num_experiments, )
 
   # Add user selected project id
   selected_project_ids <- append(selected_project_ids, template_project_id)
@@ -92,7 +93,9 @@ base_dir){
   ## Data
 
   # Get data associated with project ids
-  # Download the RangedSummarizedExperiment object at the gene level for 
+  # Download the RangedSummarizedExperiment object
+  # The RangedSummarizedExperiment object for the counts summarized 
+  # at the gene level using the Gencode v25 (GRCh38.p7, CHR) annotation as provided by Gencode. 
   for (i in 1:length(selected_project_ids)) {
     print(selected_project_ids[i])
     if (!file.exists(file.path(selected_project_ids[i], 'rse_gene.Rdata'))) {
@@ -103,27 +106,24 @@ base_dir){
     # Counts are raw read counts from the sequencing run
     # Counts are the number of reads that map that each gene
     
-    # Scale counts by total coverage (total reads across the genome) per sample
-    # Mixed paired-end and single-end reads per run
-    # Most runs are single-end
-    # RPKM: normalizes for sequencing depth (coverge per gene) and gene length. Usually used for single-end
-    rse_rpkm <- getRPKM(rse_gene, length_var="bp_length")
-    
-    # Concatenate scaled counts into one matrix
+    # Concatenate counts into one matrix
     if (i==1) {
-      data_counts_all_rpkm <- rse_rpkm
+      data_counts_all <- assays(scale_counts(rse_gene))$counts
     }
     else {
-      data_counts_all_rpkm <- cbind(data_counts_all_rpkm, rse_rpkm)
+      data_counts_all <- cbind(data_counts_all, assays(scale_counts(rse_gene))$counts)
     }
     # Rename counts for storage
     assign(paste0("rse_gene_", selected_project_ids[i]), rse_gene)
+
+    ## Delete it if you don't need it anymore
+    unlink(selected_project_ids[i], recursive = TRUE)
   }
 
-  data_counts_all_rpkm <- t(data_counts_all_rpkm)
+  data_counts_all <- t(data_counts_all)
 
   ## Save counts matrix to file
-  write.table(data_counts_all_rpkm,
+  write.table(data_counts_all,
             paste(local_dir,'/recount2_compendium_data.tsv',sep=""),
             sep='\t',
             row.names=TRUE,
