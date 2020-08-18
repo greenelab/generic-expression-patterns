@@ -35,7 +35,7 @@ find_enriched_pathways <- function(DE_stats_file,
     names(rank_genes) <- as.character(DE_stats_data[,1])
 
 	## feature 3: decreasing order
-	rank_genes <- sort(rank_genes, decreasing = TRUE)
+    rank_genes <- sort(rank_genes, decreasing = TRUE)
 
     pathway_DB_data <- gmtPathways(hallmark_DB_file)
  
