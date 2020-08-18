@@ -9,6 +9,7 @@ These scripts include: replacing ensembl gene ids with hgnc symbols.
 import pandas as pd
 import os
 import numpy as np
+import sklearn
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -375,7 +376,7 @@ def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
     return merged_gene_ranks_df
 
 
-def check_sample_ordering(expression_file, metadata_file):
+def compare_and_reorder_samples(expression_file, metadata_file):
     """
     This function checks that the ordering of the samples matches
     between the expression file and the metadata file. This
@@ -383,18 +384,18 @@ def check_sample_ordering(expression_file, metadata_file):
     """
     # Check ordering of sample ids is consistent between gene expression data and metadata
     metadata = pd.read_csv(metadata_file, sep="\t", header=0, index_col=0)
-    metadata_sample_ids = list(metadata.index)
+    metadata_sample_ids = metadata.index
 
     expression_data = pd.read_csv(expression_file, sep="\t", header=0, index_col=0)
-    expression_sample_ids = list(expression_data.index)
+    expression_sample_ids = expression_data.index
 
-    if metadata_sample_ids == expression_sample_ids:
+    if metadata_sample_ids.equals(expression_sample_ids):
         print("sample ids are ordered correctly")
         return
     else:
         # Convert gene expression ordering to be the same as
         # metadata sample ordering
         print("sample ids don't match, going to re-order gene expression samples")
-        expression_data = expression_data.loc[metadata_sample_ids]
+        expression_data = expression_data.reindex(metadata_sample_ids)
         expression_data.to_csv(expression_file, sep="\t")
         return

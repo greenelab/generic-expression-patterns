@@ -98,7 +98,7 @@ scaler = pickle.load(open(scaler_file, "rb"))
 # In[4]:
 
 
-# Simulate multiple experiments
+"""# Simulate multiple experiments
 for i in range(num_runs):
     simulate_expression_data.shift_template_experiment(
         normalized_compendium_file,
@@ -109,13 +109,13 @@ for i in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        i)
+        i)"""
 
 
 # In[5]:
 
 
-if os.path.exists(sample_id_metadata_file):
+"""if os.path.exists(sample_id_metadata_file):
     # Read in metadata
     metadata = pd.read_csv(sample_id_metadata_file, sep='\t', header=0, index_col=0)
     
@@ -125,7 +125,7 @@ if os.path.exists(sample_id_metadata_file):
     process.subset_samples(sample_ids_to_drop,
                            num_runs,
                            local_dir,
-                           project_id)
+                           project_id)"""
 
 
 # ### Differential expression analysis
@@ -158,13 +158,13 @@ get_ipython().run_cell_magic('R', '', "library('limma')")
 
 
 # Check ordering of sample ids is consistent between gene expression data and metadata
-process.check_sample_ordering(template_data_file, metadata_file)
+process.compare_and_reorder_samples(template_data_file, metadata_file)
 
 
 # In[10]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats(metadata_file,\n             project_id, \n             template_data_file,\n             "template",\n             local_dir,\n             "real")')
+get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats_limma(metadata_file,\n                   project_id, \n                   template_data_file,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
 # In[11]:
@@ -177,13 +177,13 @@ for i in range(num_runs):
         "pseudo_experiment",
         f"selected_simulated_data_{project_id}_{i}.txt")
         
-    process.check_sample_ordering(simulated_data_file, metadata_file)
+    process.compare_and_reorder_samples(simulated_data_file, metadata_file)
 
 
 # In[12]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_file <- paste(local_dir, \n                                 "pseudo_experiment/selected_simulated_data_",\n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    run_output <- get_DE_stats(metadata_file,\n                               project_id, \n                               simulated_data_file,\n                               "simulated",\n                               local_dir,\n                               i)\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
+get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_file <- paste(local_dir, \n                                 "pseudo_experiment/selected_simulated_data_",\n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    run_output <- get_DE_stats_limma(metadata_file,\n                                     project_id, \n                                     simulated_data_file,\n                                     "simulated",\n                                     local_dir,\n                                     i)\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
 
 
 # ### Rank genes

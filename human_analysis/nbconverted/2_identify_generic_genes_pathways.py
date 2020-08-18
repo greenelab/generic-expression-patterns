@@ -187,7 +187,7 @@ get_ipython().run_cell_magic('R', '', '# Load the DESeq2 library\nsuppressPackag
 
 
 # Check ordering of sample ids is consistent between gene expression data and metadata
-process.check_sample_ordering(template_data_file, metadata_file)
+process.compare_and_reorder_samples(template_data_file, metadata_file)
 
 
 # In[11]:
@@ -221,7 +221,7 @@ for i in range(num_runs):
         "pseudo_experiment",
         f"selected_simulated_data_{project_id}_{i}.txt")
         
-    process.check_sample_ordering(simulated_data_file, metadata_file)
+    process.compare_and_reorder_samples(simulated_data_file, metadata_file)
 
 
 # In[14]:
@@ -390,6 +390,12 @@ selected_template_data = template_data[tp53_genes]
 # In[31]:
 
 
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_file -i num_runs -i statistic', '\nsource(\'../generic_expression_patterns_modules/GSEA_analysis.R\')\n\nfor (i in 0:(num_runs-1)){\n    simulated_DE_stats_file <- paste(local_dir, \n                                 "DE_stats/DE_stats_simulated_data_", \n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    out_file = paste(local_dir, \n                     "GSEA_stats/GSEA_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep="")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_file, statistic) \n    \n    write.table(data.frame(enriched_pathways), file = out_file, row.names = T, sep = "\\t")\n    }')
+
+
+# In[32]:
+
+
 # Load metadata file with grouping assignments for samples
 metadata_file = os.path.join(
     "data",
@@ -404,7 +410,7 @@ metadata = pd.read_csv(
     index_col=0)
 
 
-# In[32]:
+# In[33]:
 
 
 # PCA encode
@@ -418,7 +424,7 @@ template_PCAencoded_df = pd.DataFrame(data=template_PCAencoded ,
                                          columns=['1','2'])
 
 
-# In[33]:
+# In[34]:
 
 
 # Add tumor/normal labels
@@ -428,7 +434,7 @@ template_data_labeled.loc[template_data_labeled['group'] == 2,'source'] = 'Tumor
 template_data_labeled.head()
 
 
-# In[34]:
+# In[35]:
 
 
 # Plot
@@ -453,11 +459,8 @@ fig += guides(colour=guide_legend(override_aes={'alpha': 1}))
 print(fig)
 
 
-# In[37]:
-
-
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_file -i num_runs -i statistic', '\nsource(\'../generic_expression_patterns_modules/GSEA_analysis.R\')\n\nfor (i in 0:(num_runs-1)){\n    simulated_DE_stats_file <- paste(local_dir, \n                                 "DE_stats/DE_stats_simulated_data_", \n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    out_file = paste(local_dir, \n                     "GSEA_stats/GSEA_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep="")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_file, statistic) \n    \n    write.table(data.frame(enriched_pathways), file = out_file, row.names = T, sep = "\\t")\n    }')
-
+# **Validation:**
+# * This PCA plot validates that our gene expression of TP53 genes separates between normal vs tumor samples, as expected so not sure why this pathway is not enriched
 
 # ### Rank pathways 
 
@@ -489,7 +492,7 @@ if compare_genes:
         
     # Drop genes with 0 mean base expression
     # Note: These lowly expressed genes were not pre-filtered before DESeq
-    # (Michael Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of dispersion is difficult 
+    # (Micheal Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of dispersion is difficult 
     # for genes with very, very low average counts. See the methods. 
     # However it doesn't really effect the outcome because these genes have almost no power for detecting 
     # differential expression. Effects runtime though.

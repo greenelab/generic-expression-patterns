@@ -7,12 +7,12 @@
 
 # library('limma')
 
-get_DE_stats <- function(metadata_file, 
-                         experiment_id, 
-                         expression_file,
-                         data_type,
-                         local_dir,
-                         run) {
+get_DE_stats_limma <- function(metadata_file, 
+                               experiment_id, 
+                               expression_file,
+                               data_type,
+                               local_dir,
+                               run) {
   
   # This function performs DE analysis using expression data in expression_file
   # where samples are grouped based on metadata_file
@@ -27,6 +27,7 @@ get_DE_stats <- function(metadata_file,
   #
   # expression_file: str
   #   File containing gene expression data
+  #   Expression data should be of the form sample x gene
   #
   # data_type: str
   #   Either 'template' or 'simulated' to label saved output file
@@ -38,6 +39,7 @@ get_DE_stats <- function(metadata_file,
   #   Used as identifier for different simulated experiments 
   
   # Read in data
+  # Note the expression data is transposed to gene x sample in order to run Limma
   expression_data <- t(as.matrix(read.csv(expression_file, sep="\t", header=TRUE, row.names=1)))
   metadata <- as.matrix(read.csv(metadata_file, sep="\t", header=TRUE, row.names=1))
   
