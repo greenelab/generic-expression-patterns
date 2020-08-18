@@ -8,8 +8,8 @@
 #library(clusterProfiler)
 
 find_enriched_pathways <- function(DE_stats_file,
-                                  pathway_DB,
-                                  statistic){
+                                   pathway_DB,
+                                   statistic){
     # Read in data
     DE_stats_data <- read.table(DE_stats_file, sep="\t", header=TRUE, row.names=NULL)
    
