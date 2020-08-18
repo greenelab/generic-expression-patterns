@@ -489,7 +489,7 @@ if compare_genes:
         
     # Drop genes with 0 mean base expression
     # Note: These lowly expressed genes were not pre-filtered before DESeq
-    # (Micheal Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of dispersion is difficult 
+    # (Michael Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of dispersion is difficult 
     # for genes with very, very low average counts. See the methods. 
     # However it doesn't really effect the outcome because these genes have almost no power for detecting 
     # differential expression. Effects runtime though.
