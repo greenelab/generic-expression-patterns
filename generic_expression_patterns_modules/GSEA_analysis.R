@@ -39,11 +39,6 @@ find_enriched_pathways <- function(DE_stats_file,
 
     pathway_DB_data <- gmtPathways(hallmark_DB_file)
  
-    #enrich_pathways <- GSEA(geneList=rank_genes, 
-    #                        TERM2GENE=pathway_DB_data,
-    #                        nPerm=100000,
-    #                        by='fgsea',
-    #                        verbose=T)
     enrich_pathways <- fgsea(pathways=pathway_DB_data,
                               stats=rank_genes,
                               nperm=10000)

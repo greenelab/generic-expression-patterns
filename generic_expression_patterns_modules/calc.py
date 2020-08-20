@@ -50,7 +50,7 @@ def spearman_ci(ci, gene_rank_df, num_permutations):
     )
 
 
-def aggregate_stats(col_to_rank, simulated_DE_stats_all):
+def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
     """
     Aggregate statistics across all simulated experiments
 
@@ -59,8 +59,10 @@ def aggregate_stats(col_to_rank, simulated_DE_stats_all):
     col_to_rank: str
         The DE statistic to use to rank genes. These are column headers of the DE
         statistics results table.
-    simulated_DE_stats_all: df
+    simulated_stats_all: df
         Dataframe of concatenated simulated experiments
+    data_type: str
+        Either 'DE' or 'GSEA'
 
     Returns
     --------
@@ -71,30 +73,43 @@ def aggregate_stats(col_to_rank, simulated_DE_stats_all):
     For each gene, it also returns the count to tell you the number of simulated
     experiments that were generated.
     """
-    if "adj.P.Val" in simulated_DE_stats_all.columns:
-        if col_to_rank == "adj.P.Val":
-            simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
-                [col_to_rank]
-            ].agg(["median", "mean", "std", "count"])
-        else:
-            simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
-                [col_to_rank, "adj.P.Val"]
-            ].agg(
-                {
-                    col_to_rank: ["median", "mean", "std", "count"],
-                    "adj.P.Val": ["median"],
-                }
-            )
-    else:
+    if data_type.lower() == "gsea":
         if col_to_rank == "padj":
-            simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
+            simulated_summary_stats = simulated_stats_all.groupby(["pathway"])[
                 [col_to_rank]
             ].agg(["median", "mean", "std", "count"])
+
+    if data_type.lower() == "de":
+        if "adj.P.Val" in simulated_stats_all.columns:
+            if col_to_rank == "adj.P.Val":
+                simulated_summary_stats = simulated_stats_all.groupby(["index"])[
+                    [col_to_rank]
+                ].agg(["median", "mean", "std", "count"])
+            else:
+                simulated_summary_stats = simulated_stats_all.groupby(["index"])[
+                    [col_to_rank, "adj.P.Val"]
+                ].agg(
+                    {
+                        col_to_rank: ["median", "mean", "std", "count"],
+                        "adj.P.Val": ["median"],
+                    }
+                )
         else:
-            simulated_DE_summary_stats = simulated_DE_stats_all.groupby(["index"])[
-                [col_to_rank, "padj"]
-            ].agg({col_to_rank: ["median", "mean", "std", "count"], "padj": ["median"]})
-    return simulated_DE_summary_stats
+            if col_to_rank == "padj":
+                simulated_summary_stats = simulated_stats_all.groupby(["index"])[
+                    [col_to_rank]
+                ].agg(["median", "mean", "std", "count"])
+            else:
+                simulated_summary_stats = simulated_stats_all.groupby(["index"])[
+                    [col_to_rank, "padj"]
+                ].agg(
+                    {
+                        col_to_rank: ["median", "mean", "std", "count"],
+                        "padj": ["median"],
+                    }
+                )
+
+    return simulated_summary_stats
 
 
 def rank_genes(col_to_rank, DE_summary_stats, is_template):

@@ -156,7 +156,7 @@ def recast_int(num_runs, local_dir, project_id):
         simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
 
 
-def concat_simulated_data(local_dir, num_runs, project_id):
+def concat_simulated_data(local_dir, num_runs, project_id, data_type):
     """
     This function will concatenate the simulated experiments into a single dataframe
     in order to aggregate statistics across all experiments.
@@ -169,6 +169,8 @@ def concat_simulated_data(local_dir, num_runs, project_id):
         Number of simulated experiments
     project_id: str
         Project id to use to retrieve simulated experiments
+    data_type: str
+        Either 'DE' or 'GSEA'
 
     Returns
     -------
@@ -176,25 +178,32 @@ def concat_simulated_data(local_dir, num_runs, project_id):
 
     """
 
-    simulated_DE_stats_all = pd.DataFrame()
+    simulated_stats_all = pd.DataFrame()
     for i in range(num_runs):
-        simulated_DE_stats_file = os.path.join(
-            local_dir,
-            "DE_stats",
-            "DE_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
-        )
+        if data_type.lower() == "de":
+            simulated_stats_file = os.path.join(
+                local_dir,
+                "DE_stats",
+                "DE_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
+            )
+        elif data_type.lower() == "gsea":
+            simulated_stats_file = os.path.join(
+                local_dir,
+                "GSEA_stats",
+                "GSEA_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
+            )
 
         # Read results
-        simulated_DE_stats = pd.read_csv(
-            simulated_DE_stats_file, header=0, sep="\t", index_col=0
+        simulated_stats = pd.read_csv(
+            simulated_stats_file, header=0, sep="\t", index_col=0
         )
 
-        simulated_DE_stats.reset_index(inplace=True)
+        simulated_stats.reset_index(inplace=True)
 
         # Concatenate df
-        simulated_DE_stats_all = pd.concat([simulated_DE_stats_all, simulated_DE_stats])
+        simulated_stats_all = pd.concat([simulated_stats_all, simulated_stats])
 
-    return simulated_DE_stats_all
+    return simulated_stats_all
 
 
 def abs_value_stats(simulated_DE_stats_all):
