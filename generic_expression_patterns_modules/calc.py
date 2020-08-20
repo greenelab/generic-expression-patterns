@@ -112,7 +112,7 @@ def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
     return simulated_summary_stats
 
 
-def rank_genes(col_to_rank, DE_summary_stats, is_template):
+def rank_genes_or_pathways(col_to_rank, DE_summary_stats, is_template):
     """
     Returns the input dataframe (`DE_summary_stats`) that has been modified such that
     genes are ranked by the selected statistic, `col_to_rank` 

@@ -67,7 +67,7 @@ template_data_file = params['template_data_file']
 original_compendium_file = params['compendium_data_file']
 normalized_compendium_file = params['normalized_compendium_data_file']
 scaler_file = params['scaler_transform_file']
-col_to_rank = params['col_to_rank']
+col_to_rank_genes = params['rank_genes_by']
 compare_genes = params['compare_genes']
 
 gene_summary_file = os.path.join(
@@ -192,7 +192,7 @@ get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i
 
 
 # Concatenate simulated experiments
-simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id)
+simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'DE')
 
 print(simulated_DE_stats_all.shape)
 
@@ -208,8 +208,9 @@ simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
 
 
 # Aggregate statistics across all simulated experiments
-simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank,
-                                                  simulated_DE_stats_all)
+simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank_genes,
+                                                  simulated_DE_stats_all,
+                                                  'DE')
 
 
 # In[16]:
@@ -231,18 +232,18 @@ template_DE_stats = pd.read_csv(
 template_DE_stats = process.abs_value_stats(template_DE_stats)
 
 # Rank genes in template experiment
-template_DE_stats = calc.rank_genes(col_to_rank,
-                                   template_DE_stats,
-                                   True)
+template_DE_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
+                                                template_DE_stats,
+                                                True)
 
 
 # In[17]:
 
 
 # Rank genes in simulated experiments
-simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
-                                            simulated_DE_summary_stats,
-                                            False)
+simulated_DE_summary_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
+                                                         simulated_DE_summary_stats,
+                                                         False)
 
 
 # ### Gene summary table
@@ -252,7 +253,7 @@ simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
 
 summary_gene_ranks = process.generate_summary_table(template_DE_stats,
                                                    simulated_DE_summary_stats,
-                                                   col_to_rank,
+                                                   col_to_rank_genes,
                                                    local_dir)
 
 summary_gene_ranks.head()

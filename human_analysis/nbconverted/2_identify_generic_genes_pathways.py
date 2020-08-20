@@ -292,18 +292,18 @@ template_DE_stats = pd.read_csv(
 template_DE_stats = process.abs_value_stats(template_DE_stats)
 
 # Rank genes in template experiment
-template_DE_stats = calc.rank_genes(col_to_rank_genes,
-                                   template_DE_stats,
-                                   True)
+template_DE_stats = calc.rank_genes_or_pathways(col_to_rank_genes,      
+                                                template_DE_stats,
+                                                True)
 
 
 # In[23]:
 
 
 # Rank genes in simulated experiments
-simulated_DE_summary_stats = calc.rank_genes(col_to_rank_genes,
-                                            simulated_DE_summary_stats,
-                                            False)
+simulated_DE_summary_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
+                                                         simulated_DE_summary_stats,
+                                                         False)
 
 
 # ### Gene summary table
@@ -434,18 +434,18 @@ template_GSEA_stats.set_index('pathway', inplace=True)
 template_GSEA_stats.head()
 
 # Rank genes in template experiment
-template_GSEA_stats = calc.rank_genes(col_to_rank_pathways,
-                                      template_GSEA_stats,
-                                      True)
+template_GSEA_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
+                                                  template_GSEA_stats,
+                                                  True)
 
 
 # In[124]:
 
 
 # Rank genes in simulated experiments
-simulated_GSEA_summary_stats = calc.rank_genes(col_to_rank_pathways,
-                                               simulated_GSEA_summary_stats,
-                                               False)
+simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
+                                                           simulated_GSEA_summary_stats,
+                                                           False)
 
 
 # In[125]:

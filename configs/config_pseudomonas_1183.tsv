@@ -17,5 +17,5 @@ validation_frac	0.25
 project_id	"E-MEXP-1183"
 metadata_colname	'ml_data_source'
 num_simulated	25
-col_to_rank	"logFC"
+rank_genes_by	"logFC"
 compare_genes	0
