@@ -60,7 +60,7 @@ from generic_expression_patterns_modules import calc, process
 np.random.seed(123)
 
 
-# In[79]:
+# In[2]:
 
 
 # Read in config variables
@@ -72,7 +72,7 @@ config_file = os.path.abspath(os.path.join(base_dir,
 params = utils.read_config(config_file)
 
 
-# In[80]:
+# In[3]:
 
 
 # Load params
@@ -86,7 +86,7 @@ template_data_file = params['template_data_file']
 original_compendium_file = params['compendium_data_file']
 normalized_compendium_file = params['normalized_compendium_data_file']
 scaler_file = params['scaler_transform_file']
-col_to_rank_genes = params['rank_gene_by']
+col_to_rank_genes = params['rank_genes_by']
 col_to_rank_pathways = params['rank_pathways_by']
 compare_genes = params['compare_genes']
 statistic = params['gsea_statistic']
@@ -109,7 +109,7 @@ sample_id_metadata_file = os.path.join(
 scaler = pickle.load(open(scaler_file, "rb"))
 
 
-# In[ ]:
+# In[4]:
 
 
 # Output files
@@ -118,7 +118,7 @@ gene_summary_file = os.path.join(
     dataset_name, 
     f"generic_gene_summary_{project_id}.tsv")
 
-gene_summary_file = os.path.join(
+pathway_summary_file = os.path.join(
     base_dir, 
     dataset_name, 
     f"generic_pathway_summary_{project_id}.tsv")
@@ -126,10 +126,10 @@ gene_summary_file = os.path.join(
 
 # ### Simulate experiments using selected template experiment
 
-# In[4]:
+# In[5]:
 
 
-# Simulate multiple experiments
+"""# Simulate multiple experiments
 for i in range(num_runs):
     simulate_expression_data.shift_template_experiment(
         normalized_compendium_file,
@@ -140,15 +140,15 @@ for i in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        i)
+        i)"""
 
 
 # Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](../explore_data/0_explore_input_data.ipynb)
 
-# In[5]:
+# In[6]:
 
 
-if os.path.exists(sample_id_metadata_file):
+"""if os.path.exists(sample_id_metadata_file):
     # Read in metadata
     metadata = pd.read_csv(sample_id_metadata_file, sep='\t', header=0, index_col=0)
     
@@ -158,10 +158,10 @@ if os.path.exists(sample_id_metadata_file):
     process.subset_samples(sample_ids_to_drop,
                            num_runs,
                            local_dir,
-                           project_id)
+                           project_id)"""
 
 
-# In[6]:
+# In[7]:
 
 
 # Round simulated read counts to int in order to run DESeq
@@ -170,7 +170,7 @@ process.recast_int(num_runs, local_dir, project_id)
 
 # ### Differential expression analysis
 
-# In[7]:
+# In[8]:
 
 
 # Load metadata file with grouping assignments for samples
@@ -182,32 +182,32 @@ metadata_file = os.path.join(
     project_id+"_groups.tsv")
 
 
-# In[8]:
+# In[9]:
 
 
 get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("DESeq2")')
 
 
-# In[9]:
+# In[10]:
 
 
 get_ipython().run_cell_magic('R', '', '# Load the DESeq2 library\nsuppressPackageStartupMessages(library("DESeq2"))')
 
 
-# In[10]:
+# In[11]:
 
 
 # Check ordering of sample ids is consistent between gene expression data and metadata
 process.compare_and_reorder_samples(template_data_file, metadata_file)
 
 
-# In[11]:
+# In[12]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats_DESeq(metadata_file,\n             project_id, \n             template_data_file,\n             "template",\n             local_dir,\n             "real")')
 
 
-# In[12]:
+# In[13]:
 
 
 # Check number of DEGs
@@ -222,7 +222,7 @@ selected = template_DE_stats[(template_DE_stats['padj']<0.01) & (abs(template_DE
 print(selected.shape)
 
 
-# In[13]:
+# In[14]:
 
 
 # Check ordering of sample ids is consistent between gene expression data and metadata
@@ -235,7 +235,7 @@ for i in range(num_runs):
     process.compare_and_reorder_samples(simulated_data_file, metadata_file)
 
 
-# In[14]:
+# In[15]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i local_dir -i num_runs', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_file <- paste(local_dir, \n                                 "pseudo_experiment/selected_simulated_data_",\n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    get_DE_stats_DESeq(metadata_file,\n                       project_id, \n                       simulated_data_file,\n                       "simulated",\n                       local_dir,\n                       i)\n}')
@@ -248,7 +248,7 @@ get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i
 
 # ### Rank genes
 
-# In[18]:
+# In[16]:
 
 
 # Concatenate simulated experiments
@@ -257,14 +257,14 @@ simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, proj
 print(simulated_DE_stats_all.shape)
 
 
-# In[19]:
+# In[17]:
 
 
 # Take absolute value of logFC and t statistic
 simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
 
 
-# In[21]:
+# In[18]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -273,7 +273,7 @@ simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank_genes,
                                                   'DE')
 
 
-# In[22]:
+# In[19]:
 
 
 # Load association statistics for template experiment
@@ -297,7 +297,7 @@ template_DE_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
                                                 True)
 
 
-# In[23]:
+# In[20]:
 
 
 # Rank genes in simulated experiments
@@ -308,7 +308,7 @@ simulated_DE_summary_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
 
 # ### Gene summary table
 
-# In[24]:
+# In[21]:
 
 
 summary_gene_ranks = process.generate_summary_table(template_DE_stats,
@@ -319,7 +319,7 @@ summary_gene_ranks = process.generate_summary_table(template_DE_stats,
 summary_gene_ranks.head()
 
 
-# In[25]:
+# In[22]:
 
 
 summary_gene_ranks.to_csv(
@@ -333,19 +333,19 @@ summary_gene_ranks.to_csv(
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
-# In[26]:
+# In[23]:
 
 
 get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("GSA")\n#BiocManager::install("fgsea")')
 
 
-# In[27]:
+# In[24]:
 
 
 get_ipython().run_cell_magic('R', '', 'suppressPackageStartupMessages(library("GSA"))\nsuppressPackageStartupMessages(library("fgsea"))')
 
 
-# In[28]:
+# In[25]:
 
 
 # Load pathway data
@@ -354,20 +354,20 @@ hallmark_DB_file = os.path.join(
     "hallmark_DB.gmt")
 
 
-# In[29]:
+# In[26]:
 
 
 get_ipython().run_cell_magic('R', '-i template_DE_stats_file -i hallmark_DB_file -i statistic -o template_enriched_pathways', "\nsource('../generic_expression_patterns_modules/GSEA_analysis.R')\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_file, hallmark_DB_file, statistic)")
 
 
-# In[30]:
+# In[27]:
 
 
 print(template_enriched_pathways.shape)
 template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj').head()
 
 
-# In[31]:
+# In[28]:
 
 
 template_enriched_pathways[template_enriched_pathways['padj'] >= 0.05].sort_values(by='padj')[:15]
@@ -384,7 +384,7 @@ template_enriched_pathways[template_enriched_pathways['padj'] >= 0.05].sort_valu
 # 
 # * However, there are a few pathways that were not found to be significant but we initially expect to find given this is a cancer dataset: P53, NOTCH_SIGNALING, DNA_REPAIR, HALLMARK_KRAS_SIGNALING_UP. First, we do not think there is an issue with the GSEA implementation, given what we reported above. Second, the original publication did not explicitly mention the p53 pathway. Last, [Tang et. al](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6036325/) found the p53 pathway to be significantly enriched using 80 tumor and 20 normal samples. And [Gibbons et. al.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3925633/) found that p53 mutations was high (46%) in non-small cell lung adenocarcinoma patients. We suspect the reason for the p53 pathway not being significant in this case might be due to the small sample size here (6 paired samples). So for now we will move forward with our GSEA analysis.
 
-# In[108]:
+# In[29]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_file -i num_runs -i statistic', '\nsource(\'../generic_expression_patterns_modules/GSEA_analysis.R\')\n\nfor (i in 0:(num_runs-1)){\n    simulated_DE_stats_file <- paste(local_dir, \n                                 "DE_stats/DE_stats_simulated_data_", \n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    out_file = paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep="")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_file, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")\n    }')
@@ -392,7 +392,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_fil
 
 # ### Rank pathways 
 
-# In[111]:
+# In[30]:
 
 
 # Concatenate simulated experiments
@@ -401,19 +401,19 @@ simulated_GSEA_stats_all.set_index('pathway', inplace=True)
 print(simulated_GSEA_stats_all.shape)
 
 
-# In[112]:
+# In[31]:
 
 
 simulated_GSEA_stats_all.head()
 
 
-# In[116]:
+# In[32]:
 
 
 simulated_GSEA_stats_all.groupby(["pathway"])
 
 
-# In[117]:
+# In[33]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -424,7 +424,7 @@ simulated_GSEA_summary_stats = calc.aggregate_stats(col_to_rank_pathways,
 simulated_GSEA_summary_stats.head()
 
 
-# In[123]:
+# In[34]:
 
 
 # Load association statistics for template experiment
@@ -439,7 +439,7 @@ template_GSEA_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
                                                   True)
 
 
-# In[124]:
+# In[35]:
 
 
 # Rank genes in simulated experiments
@@ -448,13 +448,13 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
                                                            False)
 
 
-# In[125]:
+# In[36]:
 
 
 simulated_GSEA_summary_stats.head()
 
 
-# In[127]:
+# In[37]:
 
 
 template_GSEA_stats.head()
@@ -462,7 +462,7 @@ template_GSEA_stats.head()
 
 # ### Pathway summary table
 
-# In[128]:
+# In[38]:
 
 
 summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
@@ -473,13 +473,13 @@ summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
 summary_pathway_ranks.head()
 
 
-# In[131]:
+# In[39]:
 
 
 summary_pathway_ranks.sort_values(by="Rank (simulated)", ascending=False)
 
 
-# In[129]:
+# In[40]:
 
 
 summary_pathway_ranks.to_csv(
@@ -491,7 +491,7 @@ summary_pathway_ranks.to_csv(
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[34]:
+# In[41]:
 
 
 if compare_genes:
@@ -520,13 +520,14 @@ if compare_genes:
     # Get correlation
     r, p, ci_low, ci_high = calc.spearman_ci(0.95,
                                              shared_gene_rank_scaled_df,
-                                             1000)
+                                             1000,
+                                             'DE')
     print(r, p, ci_low, ci_high)
     
     # Plot our ranking vs published ranking
     fig_file = os.path.join(
         local_dir, 
-        "gene_ranking_"+col_to_rank+".svg")
+        "gene_ranking_"+col_to_rank_genes+".svg")
 
     fig = sns.jointplot(data=shared_gene_rank_scaled_df,
                         x='Rank (simulated)',
@@ -548,58 +549,119 @@ if compare_genes:
 
 # ### Compare pathway ranking
 
-# In[ ]:
+# Studies have found that there are some pathways (gene sets) that are more likely to be significantly enriched in DEGs across a wide range of experimental designs. These generic pathways are not necessarily specific to the biological process being studied but instead represents a more systematic change.
+# 
+# We want to compare the ability to detect these generic pathways using our method vs those found by [Powers et. al.](https://www.biorxiv.org/content/10.1101/259440v1.full.pdf) publication.  Significant gene sets are defined as an FDR < 0.05. Gene sets are ranked by the difference in
+# the fraction of experiments with significant positive and negative enrichment
+# 
+# Using the `Hallmarks_qvalues_GSEAPreranked.csv` file from https://www.synapse.org/#!Synapse:syn11806255 as a reference.
+
+# In[42]:
 
 
-#https://www.synapse.org/#!Synapse:syn11806255
-# https://www.biorxiv.org/content/10.1101/259440v1.full.pdf
-# What pathway ranks to compare against?
+# Load Powers et. al. results file
+powers_rank_file = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    "Hallmarks_qvalues_GSEAPreranked.csv")
+
+
+# In[43]:
+
+
+# Read Powers et. al. data
+# This file contains qvalue results for hallmark pathways across ~400 experiments
+powers_rank_df = pd.read_csv(powers_rank_file, header=0, index_col=0)
+powers_rank_df.drop(['Category'], axis=1, inplace=True)
+print(powers_rank_df.shape)
+powers_rank_df.head()
+
+
+# In[44]:
+
+
+# Count the number of experiments where a given pathway was found to be enriched (qvalue < 0.05)
+total_num_experiments = powers_rank_df.shape[1]
+frac_enriched_pathways = ((powers_rank_df< 0.05).sum(axis=1)/total_num_experiments)
+
+# Rank pathways from 0-50, 50 indicating that the pathways was frequently enriched
+pathway_ranks = frac_enriched_pathways.rank()
+
+powers_rank_stats_df = pd.DataFrame(
+    data={'Fraction enriched': frac_enriched_pathways.values,
+          'Powers Rank':pathway_ranks.values
+         },
+    index=powers_rank_df.index
+)
+powers_rank_stats_df.head()
+
+
+# In[45]:
+
+
+# Save reference file for input into comparison
+powers_rank_processed_file = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    "Hallmarks_qvalues_GSEAPreranked_processed.tsv")
+
+powers_rank_stats_df.to_csv(powers_rank_processed_file, sep="\t", )
+
+
+# In[46]:
+
 
 if compare_genes:
-    # Get generic genes identified by Crow et. al.
-    DE_prior_file = params['reference_gene_file']
-    ref_gene_col = params['reference_gene_name_col']
-    ref_rank_col = params['reference_rank_col']
+    # Get column headers for generic pathways identified by Powers et. al.
+    ref_gene_col='index'
+    ref_rank_col = 'Powers Rank'
     
     # Merge our ranking and reference ranking
-    shared_gene_rank_df = process.merge_ranks_to_compare(
-        summary_gene_ranks,
-        DE_prior_file,
+    shared_pathway_rank_df = process.merge_ranks_to_compare(
+        summary_pathway_ranks,
+        powers_rank_processed_file,
         ref_gene_col,
-        ref_rank_col)
+        ref_rank_col
+        )
     
-    if max(shared_gene_rank_df["Rank (simulated)"]) != max(shared_gene_rank_df[ref_rank_col]):
-        shared_gene_rank_scaled_df = process.scale_reference_ranking(shared_gene_rank_df, ref_rank_col)
+    if max(shared_pathway_rank_df["Rank (simulated)"]) != max(shared_pathway_rank_df[ref_rank_col]):
+        shared_pathway_rank_scaled_df = process.scale_reference_ranking(shared_pathway_rank_df, ref_rank_col)
         
     # Note: These lowly expressed genes were not pre-filtered before DESeq
     # (Micheal Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of dispersion is difficult 
     # for genes with very, very low average counts. See the methods. 
     # However it doesn't really effect the outcome because these genes have almost no power for detecting 
     # differential expression. Effects runtime though.
-    shared_gene_rank_scaled_df = shared_gene_rank_scaled_df[~shared_gene_rank_scaled_df['Rank (simulated)'].isna()]
+    
+    shared_pathway_rank_scaled_df = shared_pathway_rank_scaled_df[~shared_pathway_rank_scaled_df['Rank (simulated)'].isna()]
     
     # Get correlation
     r, p, ci_low, ci_high = calc.spearman_ci(0.95,
-                                             shared_gene_rank_scaled_df,
-                                             1000)
+                                             shared_pathway_rank_scaled_df,
+                                             1000,
+                                             'GSEA')
     print(r, p, ci_low, ci_high)
     
     # Plot our ranking vs published ranking
     fig_file = os.path.join(
         local_dir, 
-        "gene_ranking_"+col_to_rank+".svg")
+        "pathway_ranking_"+col_to_rank_pathways+".svg")
 
-    fig = sns.jointplot(data=shared_gene_rank_scaled_df,
+    fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
                         y=ref_rank_col,
                         kind='hex',
                         marginal_kws={'color':'white'})
-    fig.set_axis_labels("Our preliminary method", "DE prior (Crow et. al. 2019)", fontsize=14)
+    fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
 
     fig.savefig(fig_file,
                 format='svg',
                 bbox_inches="tight",
                 transparent=True,
                 pad_inches=0,
-                dpi=300,)
+                dpi=300)
 
