@@ -3,17 +3,25 @@
 
 # # Identify generic genes and pathways
 # 
-# This notebook performs the following steps to identify generic genes
+# **This notebook performs the following steps to identify generic genes:**
 # 1. Simulates N gene expression experiments using [ponyo](https://github.com/ajlee21/ponyo)
 # 2. Perform DE analysis to get association statistics for each gene
 # 
 # In this case the DE analysis is based on the experimental design of the template experiment, described in the previous [notebook](1_process_recount2_data.ipynb). The template experiment is [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764), which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients. So the DE analysis is comparing tumor vs normal in this case.
 # 
 # 3. For each gene, aggregate statsitics across all simulated experiments 
-# 4. Rank genes based on this aggregated statistic
+# 4. Rank genes based on this aggregated statistic (i.e. log fold change, or p-value)
+# 
+# 
+# **This notebook performs the following steps to identify generic gene sets (pathways):**
+# 1. Using the same simulated experiments from above, perform GSEA analysis. This analysis will determine whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list of genes, where genes are ranked by say log fold change, indicating a correlation with change in expression.
+# 2. For each gene set (pathway), aggregate statistics across all simulated experiments
+# 3. Rank gene sets based on this aggregated statistic
 # 
 # **Evaluation:**
-# We want to compare our ranking using ponyo, compared to the ranking found from Crow et. al.
+# * We want to compare the ranking of genes identified using the above method compared to the ranking found from Crow et. al., which identified a set of genes as generic based on their ranking
+# * We want to compare the ranking of pathways identified using the above method compared to the ranking found from Powers et. al., which identified a set of pathways as generic based on their ranking
+# * This comparison will validate our method being used as a way to automatically identify generic genes and pathways.
 
 # In[1]:
 
@@ -407,12 +415,6 @@ print(simulated_GSEA_stats_all.shape)
 simulated_GSEA_stats_all.head()
 
 
-# In[32]:
-
-
-simulated_GSEA_stats_all.groupby(["pathway"])
-
-
 # In[33]:
 
 
@@ -612,7 +614,7 @@ powers_rank_processed_file = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_file, sep="\t", )
 
 
-# In[46]:
+# In[49]:
 
 
 if compare_genes:
@@ -630,6 +632,8 @@ if compare_genes:
     
     if max(shared_pathway_rank_df["Rank (simulated)"]) != max(shared_pathway_rank_df[ref_rank_col]):
         shared_pathway_rank_scaled_df = process.scale_reference_ranking(shared_pathway_rank_df, ref_rank_col)
+    else:
+        shared_pathway_rank_scaled_df = shared_pathway_rank_df
         
     # Note: These lowly expressed genes were not pre-filtered before DESeq
     # (Micheal Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of dispersion is difficult 
@@ -664,4 +668,80 @@ if compare_genes:
                 transparent=True,
                 pad_inches=0,
                 dpi=300)
+
+
+# The above shows that there is no correlation between our ranking (where pathways were ranked using median adjusted p-value score across simulated experiments) vs Powers et. al. ranking (where pathways were ranked based on the fraction of experiments they had adjusted p-value < 0.05). This is using the same workflow used to compare ranking of genes
+
+# ### Try a new ranking method
+# Keep track of padj for each simulated experiment
+
+# In[100]:
+
+
+simulated_GSEA_stats_all["significant"] = simulated_GSEA_stats_all['padj']<0.05
+simulated_GSEA_stats_all["Rank (simulated)"] = (simulated_GSEA_stats_all.groupby(['pathway'])["significant"].sum()/25).rank()
+
+simulated_GSEA_stats_all.head()
+
+
+# In[101]:
+
+
+if compare_genes:
+    # Get column headers for generic pathways identified by Powers et. al.
+    ref_gene_col='index'
+    ref_rank_col = 'Powers Rank'
+    
+    # Merge our ranking and reference ranking
+    shared_pathway_rank_df = process.merge_ranks_to_compare(
+        simulated_GSEA_stats_all,
+        powers_rank_processed_file,
+        ref_gene_col,
+        ref_rank_col
+        )
+    
+    if max(shared_pathway_rank_df["Rank (simulated)"]) != max(shared_pathway_rank_df[ref_rank_col]):
+        shared_pathway_rank_scaled_df = process.scale_reference_ranking(shared_pathway_rank_df, ref_rank_col)
+    else:
+        shared_pathway_rank_scaled_df = shared_pathway_rank_df
+        
+    # Note: These lowly expressed genes were not pre-filtered before DESeq
+    # (Micheal Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of dispersion is difficult 
+    # for genes with very, very low average counts. See the methods. 
+    # However it doesn't really effect the outcome because these genes have almost no power for detecting 
+    # differential expression. Effects runtime though.
+    
+    shared_pathway_rank_scaled_df = shared_pathway_rank_scaled_df[~shared_pathway_rank_scaled_df['Rank (simulated)'].isna()]
+    
+    # Get correlation
+    r, p, ci_low, ci_high = calc.spearman_ci(0.95,
+                                             shared_pathway_rank_scaled_df,
+                                             1000,
+                                             'GSEA')
+    print(r, p, ci_low, ci_high)
+    
+    # Plot our ranking vs published ranking
+    fig_file = os.path.join(
+        local_dir, 
+        "pathway_ranking_"+col_to_rank_pathways+".svg")
+
+    fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
+                        x='Rank (simulated)',
+                        y=ref_rank_col,
+                        kind='hex',
+                        marginal_kws={'color':'white'})
+    fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
+
+    fig.savefig(fig_file,
+                format='svg',
+                bbox_inches="tight",
+                transparent=True,
+                pad_inches=0,
+                dpi=300)
+
+
+# In[103]:
+
+
+sns.scatterplot(shared_pathway_rank_scaled_df['Rank (simulated)'], shared_pathway_rank_scaled_df['Powers Rank'])
 
