@@ -415,7 +415,7 @@ print(simulated_GSEA_stats_all.shape)
 simulated_GSEA_stats_all.head()
 
 
-# In[33]:
+# In[32]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -426,7 +426,7 @@ simulated_GSEA_summary_stats = calc.aggregate_stats(col_to_rank_pathways,
 simulated_GSEA_summary_stats.head()
 
 
-# In[34]:
+# In[33]:
 
 
 # Load association statistics for template experiment
@@ -441,7 +441,7 @@ template_GSEA_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
                                                   True)
 
 
-# In[35]:
+# In[34]:
 
 
 # Rank genes in simulated experiments
@@ -450,13 +450,13 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
                                                            False)
 
 
-# In[36]:
+# In[35]:
 
 
 simulated_GSEA_summary_stats.head()
 
 
-# In[37]:
+# In[36]:
 
 
 template_GSEA_stats.head()
@@ -464,7 +464,7 @@ template_GSEA_stats.head()
 
 # ### Pathway summary table
 
-# In[38]:
+# In[37]:
 
 
 summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
@@ -475,13 +475,13 @@ summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
 summary_pathway_ranks.head()
 
 
-# In[39]:
+# In[38]:
 
 
 summary_pathway_ranks.sort_values(by="Rank (simulated)", ascending=False)
 
 
-# In[40]:
+# In[39]:
 
 
 summary_pathway_ranks.to_csv(
@@ -493,7 +493,7 @@ summary_pathway_ranks.to_csv(
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[41]:
+# In[40]:
 
 
 if compare_genes:
@@ -549,16 +549,16 @@ if compare_genes:
 # **Takeaway:**
 # Based on the correlation plot, we can see that our simulation method is very good at capturing variability in genes that are very low or very high in the DE rank (i.e. are significantly differentially expressed often across different studies). These results serve to validate that our method can be used to identify these generic genes, as we were able to recapitulate the some of the generic genes as those identified by Crow et. al. Additionally, our method extends the Crow et. al. work, which used array data, and since here we used RNA-seq.
 
-# ### Compare pathway ranking
+# ### Compare pathway ranking try 1
 
 # Studies have found that there are some pathways (gene sets) that are more likely to be significantly enriched in DEGs across a wide range of experimental designs. These generic pathways are not necessarily specific to the biological process being studied but instead represents a more systematic change.
 # 
-# We want to compare the ability to detect these generic pathways using our method vs those found by [Powers et. al.](https://www.biorxiv.org/content/10.1101/259440v1.full.pdf) publication.  Significant gene sets are defined as an FDR < 0.05. Gene sets are ranked by the difference in
-# the fraction of experiments with significant positive and negative enrichment
+# We want to compare the ability to detect these generic pathways using our method vs those found by [Powers et. al.](https://www.biorxiv.org/content/10.1101/259440v1.full.pdf) publication.  We will use the `Hallmarks_qvalues_GSEAPreranked.csv` file from https://www.synapse.org/#!Synapse:syn11806255 as a reference. The file contains the q-value (adjusted p-value) for the test: given the enrichment score (ES) of the experiment is significant compared to the null distribution of enrichment scores, where the null set is generated from permuted gene sets. For each gene set (pathway) they calculate the q-value using this test. 
 # 
-# Using the `Hallmarks_qvalues_GSEAPreranked.csv` file from https://www.synapse.org/#!Synapse:syn11806255 as a reference.
+# 
+# To get a `reference ranking`, we calculate the fraction of experiments that a given pathway was significant (q-value <0.05) and use this rank pathways. `Our ranking` is to rank pathways based on the median q-value across the simulated experiments. We can then compare `our ranking` versus the `reference ranking.`
 
-# In[42]:
+# In[43]:
 
 
 # Load Powers et. al. results file
@@ -570,7 +570,7 @@ powers_rank_file = os.path.join(
     "Hallmarks_qvalues_GSEAPreranked.csv")
 
 
-# In[43]:
+# In[44]:
 
 
 # Read Powers et. al. data
@@ -581,7 +581,7 @@ print(powers_rank_df.shape)
 powers_rank_df.head()
 
 
-# In[44]:
+# In[45]:
 
 
 # Count the number of experiments where a given pathway was found to be enriched (qvalue < 0.05)
@@ -600,7 +600,7 @@ powers_rank_stats_df = pd.DataFrame(
 powers_rank_stats_df.head()
 
 
-# In[45]:
+# In[46]:
 
 
 # Save reference file for input into comparison
@@ -614,7 +614,7 @@ powers_rank_processed_file = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_file, sep="\t", )
 
 
-# In[49]:
+# In[47]:
 
 
 if compare_genes:
@@ -658,33 +658,26 @@ if compare_genes:
     fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
                         y=ref_rank_col,
-                        kind='hex',
-                        marginal_kws={'color':'white'})
+                        kind='hex'
+                       )
     fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
 
-    fig.savefig(fig_file,
-                format='svg',
-                bbox_inches="tight",
-                transparent=True,
-                pad_inches=0,
-                dpi=300)
 
+# The above shows that there is no correlation between our ranking (where pathways were ranked using median adjusted p-value score across simulated experiments) vs Powers et. al. ranking (where pathways were ranked based on the fraction of experiments they had adjusted p-value < 0.05). This is using the same workflow used to compare ranking of genes. Next let's try to use the fraction of adjusted p-value < 0.05 for our method and re-compare.
 
-# The above shows that there is no correlation between our ranking (where pathways were ranked using median adjusted p-value score across simulated experiments) vs Powers et. al. ranking (where pathways were ranked based on the fraction of experiments they had adjusted p-value < 0.05). This is using the same workflow used to compare ranking of genes
-
-# ### Try a new ranking method
-# Keep track of padj for each simulated experiment
-
-# In[100]:
+# In[48]:
 
 
 simulated_GSEA_stats_all["significant"] = simulated_GSEA_stats_all['padj']<0.05
-simulated_GSEA_stats_all["Rank (simulated)"] = (simulated_GSEA_stats_all.groupby(['pathway'])["significant"].sum()/25).rank()
+simulated_GSEA_stats_all_new = (simulated_GSEA_stats_all.groupby(['pathway'])["significant"].
+                                sum()/num_runs).to_frame(name="Fraction enriched")
+simulated_GSEA_stats_all_new["Rank (simulated)"] = simulated_GSEA_stats_all_new.rank()
 
-simulated_GSEA_stats_all.head()
+print(simulated_GSEA_stats_all_new.shape)
+simulated_GSEA_stats_all_new.head()
 
 
-# In[101]:
+# In[49]:
 
 
 if compare_genes:
@@ -694,7 +687,7 @@ if compare_genes:
     
     # Merge our ranking and reference ranking
     shared_pathway_rank_df = process.merge_ranks_to_compare(
-        simulated_GSEA_stats_all,
+        simulated_GSEA_stats_all_new,
         powers_rank_processed_file,
         ref_gene_col,
         ref_rank_col
@@ -728,20 +721,152 @@ if compare_genes:
     fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
                         y=ref_rank_col,
-                        kind='hex',
-                        marginal_kws={'color':'white'})
+                        kind='hex'
+                       )
     fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
 
-    fig.savefig(fig_file,
-                format='svg',
-                bbox_inches="tight",
-                transparent=True,
-                pad_inches=0,
-                dpi=300)
+
+# **Conclusion:**
+# * If we compare the our ranking (`Rank (simulated)` column of the `summary_pathway_ranks` dataframe, we see that our highlight ranked pathways (rank >30) are consistent with those found to be generic (pathways found to be significantly enriched in >20% of experiments, figure 4A) in [Powers et. al.](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793) (EF2, TNFA, MYC_TARGET_V1/2, P53, HYPOXIA, INFLAMMATORY, APOPTOSIS, COAGULATION, KRAS) 
+# 
+# * Despite the eye ball consistency above, there is not a correlation between our method ranking and Powers et. al. ranking. The comparison we're doing here is not a precise match because our ranking is ES(pathway) from a null set while the Powers et. al. ranking is based on ES(pathway) vs null set. So the Powers et. al. ranking is corrected for my this null set. Though the comparision is not ideal we'd still expect a correlation in the ranking
+# 
+# Instead we will try to use the normalized ES (NES) values to rank the pathways for this next try.
+
+# ## Compare rank pathways try 2
+
+# In[50]:
 
 
-# In[103]:
+# Aggregate statistics across all simulated experiments
+simulated_GSEA_summary_stats = calc.aggregate_stats('NES',
+                                                    simulated_GSEA_stats_all,
+                                                    'GSEA')
+
+simulated_GSEA_summary_stats.head()
 
 
-sns.scatterplot(shared_pathway_rank_scaled_df['Rank (simulated)'], shared_pathway_rank_scaled_df['Powers Rank'])
+# In[51]:
+
+
+# Rank genes in template experiment
+template_GSEA_stats = calc.rank_genes_or_pathways('NES',
+                                                  template_GSEA_stats,
+                                                  True)
+
+
+# In[52]:
+
+
+# Rank genes in simulated experiments
+simulated_GSEA_summary_stats = calc.rank_genes_or_pathways('NES',
+                                                           simulated_GSEA_summary_stats,
+                                                           False)
+
+
+# In[53]:
+
+
+summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
+                                                       simulated_GSEA_summary_stats,
+                                                       'NES',
+                                                       local_dir)
+
+summary_pathway_ranks.head()
+
+
+# In[56]:
+
+
+# Load Powers et. al. results file
+powers_rank_file = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    "Hallmarks_NES_GSEAPreranked.csv")
+
+
+# In[57]:
+
+
+# Read Powers et. al. data
+# This file contains qvalue results for hallmark pathways across ~400 experiments
+powers_rank_df = pd.read_csv(powers_rank_file, header=0, index_col=0)
+powers_rank_df.drop(['Category'], axis=1, inplace=True)
+print(powers_rank_df.shape)
+powers_rank_df.head()
+
+
+# In[65]:
+
+
+# Rank pathways by NES score per experiment
+# Get median rank per pathway
+powers_rank_stats_df = powers_rank_df.rank().median(axis=1).to_frame('Powers Rank')
+
+powers_rank_stats_df.head()
+
+
+# In[66]:
+
+
+# Save reference file for input into comparison
+powers_rank_processed_file = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    "Hallmarks_NES_GSEAPreranked_processed.tsv")
+
+powers_rank_stats_df.to_csv(powers_rank_processed_file, sep="\t", )
+
+
+# In[67]:
+
+
+if compare_genes:
+    # Get column headers for generic pathways identified by Powers et. al.
+    ref_gene_col='index'
+    ref_rank_col = 'Powers Rank'
+    
+    # Merge our ranking and reference ranking
+    shared_pathway_rank_df = process.merge_ranks_to_compare(
+        summary_pathway_ranks,
+        powers_rank_processed_file,
+        ref_gene_col,
+        ref_rank_col
+        )
+    
+    if max(shared_pathway_rank_df["Rank (simulated)"]) != max(shared_pathway_rank_df[ref_rank_col]):
+        shared_pathway_rank_scaled_df = process.scale_reference_ranking(shared_pathway_rank_df, ref_rank_col)
+    else:
+        shared_pathway_rank_scaled_df = shared_pathway_rank_df
+        
+    # Note: These lowly expressed genes were not pre-filtered before DESeq
+    # (Micheal Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of dispersion is difficult 
+    # for genes with very, very low average counts. See the methods. 
+    # However it doesn't really effect the outcome because these genes have almost no power for detecting 
+    # differential expression. Effects runtime though.
+    
+    shared_pathway_rank_scaled_df = shared_pathway_rank_scaled_df[~shared_pathway_rank_scaled_df['Rank (simulated)'].isna()]
+    
+    # Get correlation
+    r, p, ci_low, ci_high = calc.spearman_ci(0.95,
+                                             shared_pathway_rank_scaled_df,
+                                             1000,
+                                             'GSEA')
+    print(r, p, ci_low, ci_high)
+    
+    # Plot our ranking vs published ranking
+    fig_file = os.path.join(
+        local_dir, 
+        "pathway_ranking_"+col_to_rank_pathways+".svg")
+
+    fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
+                        x='Rank (simulated)',
+                        y=ref_rank_col,
+                        kind='hex'
+                       )
+    fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
 

@@ -90,6 +90,11 @@ def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
                 [col_to_rank]
             ].agg(["median", "mean", "std", "count"])
 
+        else:
+            simulated_summary_stats = simulated_stats_all.groupby(["pathway"])[
+                [col_to_rank, "padj"]
+            ].agg({col_to_rank: ["median", "mean", "std", "count"], "padj": ["median"]})
+
     if data_type.lower() == "de":
         if "adj.P.Val" in simulated_stats_all.columns:
             if col_to_rank == "adj.P.Val":
