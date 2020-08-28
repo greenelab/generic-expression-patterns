@@ -217,12 +217,14 @@ def abs_value_stats(simulated_DE_stats_all):
     """
     if "logFC" in simulated_DE_stats_all.columns:
         simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
-    else:
+    elif "log2FoldChange" in simulated_DE_stats_all.columns:
         simulated_DE_stats_all["log2FoldChange"] = simulated_DE_stats_all[
             "log2FoldChange"
         ].abs()
-    if "t" in simulated_DE_stats_all.columns:
+    elif "t" in simulated_DE_stats_all.columns:
         simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
+    elif "NES" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["NES"] = simulated_DE_stats_all["NES"].abs()
     return simulated_DE_stats_all
 
 
@@ -345,7 +347,7 @@ def merge_ranks_to_compare(
     if reference_name_col == "index":
         shared_gene_rank_df = pd.merge(
             your_rank_df,
-            reference_ranks_df[["Fraction enriched", reference_rank_col]],
+            reference_ranks_df[[reference_rank_col]],
             left_index=True,
             right_index=True,
         )

@@ -558,7 +558,7 @@ if compare_genes:
 # 
 # To get a `reference ranking`, we calculate the fraction of experiments that a given pathway was significant (q-value <0.05) and use this rank pathways. `Our ranking` is to rank pathways based on the median q-value across the simulated experiments. We can then compare `our ranking` versus the `reference ranking.`
 
-# In[43]:
+# In[41]:
 
 
 # Load Powers et. al. results file
@@ -570,7 +570,7 @@ powers_rank_file = os.path.join(
     "Hallmarks_qvalues_GSEAPreranked.csv")
 
 
-# In[44]:
+# In[42]:
 
 
 # Read Powers et. al. data
@@ -581,7 +581,7 @@ print(powers_rank_df.shape)
 powers_rank_df.head()
 
 
-# In[45]:
+# In[43]:
 
 
 # Count the number of experiments where a given pathway was found to be enriched (qvalue < 0.05)
@@ -600,7 +600,7 @@ powers_rank_stats_df = pd.DataFrame(
 powers_rank_stats_df.head()
 
 
-# In[46]:
+# In[44]:
 
 
 # Save reference file for input into comparison
@@ -614,7 +614,7 @@ powers_rank_processed_file = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_file, sep="\t", )
 
 
-# In[47]:
+# In[45]:
 
 
 if compare_genes:
@@ -655,17 +655,21 @@ if compare_genes:
         local_dir, 
         "pathway_ranking_"+col_to_rank_pathways+".svg")
 
-    fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
+    #fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
+    #                    x='Rank (simulated)',
+    #                    y=ref_rank_col,
+    #                    kind='hex'
+    #                   )
+    #fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
+    fig = sns.scatterplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
-                        y=ref_rank_col,
-                        kind='hex'
+                        y=ref_rank_col
                        )
-    fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
 
 
 # The above shows that there is no correlation between our ranking (where pathways were ranked using median adjusted p-value score across simulated experiments) vs Powers et. al. ranking (where pathways were ranked based on the fraction of experiments they had adjusted p-value < 0.05). This is using the same workflow used to compare ranking of genes. Next let's try to use the fraction of adjusted p-value < 0.05 for our method and re-compare.
 
-# In[48]:
+# In[46]:
 
 
 simulated_GSEA_stats_all["significant"] = simulated_GSEA_stats_all['padj']<0.05
@@ -677,7 +681,7 @@ print(simulated_GSEA_stats_all_new.shape)
 simulated_GSEA_stats_all_new.head()
 
 
-# In[49]:
+# In[47]:
 
 
 if compare_genes:
@@ -718,12 +722,16 @@ if compare_genes:
         local_dir, 
         "pathway_ranking_"+col_to_rank_pathways+".svg")
 
-    fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
+    #fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
+    #                    x='Rank (simulated)',
+    #                    y=ref_rank_col,
+    #                    kind='hex'
+    #                   )
+    #fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
+    fig = sns.scatterplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
-                        y=ref_rank_col,
-                        kind='hex'
+                        y=ref_rank_col
                        )
-    fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
 
 
 # **Conclusion:**
@@ -735,7 +743,14 @@ if compare_genes:
 
 # ## Compare rank pathways try 2
 
-# In[50]:
+# In[59]:
+
+
+# Take absolute value of logFC and t statistic
+simulated_GSEA_stats_all = process.abs_value_stats(simulated_GSEA_stats_all)
+
+
+# In[60]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -746,8 +761,11 @@ simulated_GSEA_summary_stats = calc.aggregate_stats('NES',
 simulated_GSEA_summary_stats.head()
 
 
-# In[51]:
+# In[61]:
 
+
+# Take absolute value of logFC and t statistic
+template_GSEA_stats = process.abs_value_stats(template_GSEA_stats)
 
 # Rank genes in template experiment
 template_GSEA_stats = calc.rank_genes_or_pathways('NES',
@@ -755,7 +773,7 @@ template_GSEA_stats = calc.rank_genes_or_pathways('NES',
                                                   True)
 
 
-# In[52]:
+# In[62]:
 
 
 # Rank genes in simulated experiments
@@ -764,7 +782,7 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways('NES',
                                                            False)
 
 
-# In[53]:
+# In[63]:
 
 
 summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
@@ -775,7 +793,7 @@ summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
 summary_pathway_ranks.head()
 
 
-# In[56]:
+# In[64]:
 
 
 # Load Powers et. al. results file
@@ -787,7 +805,7 @@ powers_rank_file = os.path.join(
     "Hallmarks_NES_GSEAPreranked.csv")
 
 
-# In[57]:
+# In[65]:
 
 
 # Read Powers et. al. data
@@ -798,7 +816,7 @@ print(powers_rank_df.shape)
 powers_rank_df.head()
 
 
-# In[65]:
+# In[66]:
 
 
 # Rank pathways by NES score per experiment
@@ -808,7 +826,7 @@ powers_rank_stats_df = powers_rank_df.rank().median(axis=1).to_frame('Powers Ran
 powers_rank_stats_df.head()
 
 
-# In[66]:
+# In[67]:
 
 
 # Save reference file for input into comparison
@@ -822,7 +840,7 @@ powers_rank_processed_file = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_file, sep="\t", )
 
 
-# In[67]:
+# In[69]:
 
 
 if compare_genes:
@@ -863,10 +881,15 @@ if compare_genes:
         local_dir, 
         "pathway_ranking_"+col_to_rank_pathways+".svg")
 
-    fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
+    #fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
+    #                    x='Rank (simulated)',
+    #                    y=ref_rank_col,
+    #                    kind='hex'
+    #                   )
+    #fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
+    
+    fig = sns.scatterplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
-                        y=ref_rank_col,
-                        kind='hex'
+                        y=ref_rank_col
                        )
-    fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
 
