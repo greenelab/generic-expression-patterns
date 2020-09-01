@@ -409,12 +409,6 @@ simulated_GSEA_stats_all.set_index('pathway', inplace=True)
 print(simulated_GSEA_stats_all.shape)
 
 
-# In[31]:
-
-
-simulated_GSEA_stats_all.head()
-
-
 # In[32]:
 
 
@@ -453,12 +447,14 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
 # In[35]:
 
 
+## CHECK high rank = low padj (common pathways)
 simulated_GSEA_summary_stats.head()
 
 
 # In[36]:
 
 
+## CHECK high rank = low padj (common pathways)
 template_GSEA_stats.head()
 
 
@@ -603,6 +599,13 @@ powers_rank_stats_df.head()
 # In[44]:
 
 
+## CHECK high rank = high fraction of low padj (common pathways)
+powers_rank_stats_df.sort_values(by='Powers Rank')
+
+
+# In[45]:
+
+
 # Save reference file for input into comparison
 powers_rank_processed_file = os.path.join(
     base_dir,
@@ -614,7 +617,7 @@ powers_rank_processed_file = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_file, sep="\t", )
 
 
-# In[45]:
+# In[46]:
 
 
 if compare_genes:
@@ -669,9 +672,10 @@ if compare_genes:
 
 # The above shows that there is no correlation between our ranking (where pathways were ranked using median adjusted p-value score across simulated experiments) vs Powers et. al. ranking (where pathways were ranked based on the fraction of experiments they had adjusted p-value < 0.05). This is using the same workflow used to compare ranking of genes. Next let's try to use the fraction of adjusted p-value < 0.05 for our method and re-compare.
 
-# In[46]:
+# In[47]:
 
 
+## CHECK high rank = low padj (common pathways)
 simulated_GSEA_stats_all["significant"] = simulated_GSEA_stats_all['padj']<0.05
 simulated_GSEA_stats_all_new = (simulated_GSEA_stats_all.groupby(['pathway'])["significant"].
                                 sum()/num_runs).to_frame(name="Fraction enriched")
@@ -681,7 +685,7 @@ print(simulated_GSEA_stats_all_new.shape)
 simulated_GSEA_stats_all_new.head()
 
 
-# In[47]:
+# In[48]:
 
 
 if compare_genes:
@@ -743,14 +747,27 @@ if compare_genes:
 
 # ## Compare rank pathways try 2
 
-# In[59]:
+# In[49]:
+
+
+## Check abs 
+simulated_GSEA_stats_all.head()
+
+
+# In[50]:
 
 
 # Take absolute value of logFC and t statistic
 simulated_GSEA_stats_all = process.abs_value_stats(simulated_GSEA_stats_all)
 
 
-# In[60]:
+# In[51]:
+
+
+simulated_GSEA_stats_all.head()
+
+
+# In[52]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -761,7 +778,20 @@ simulated_GSEA_summary_stats = calc.aggregate_stats('NES',
 simulated_GSEA_summary_stats.head()
 
 
-# In[61]:
+# In[53]:
+
+
+simulated_GSEA_summary_stats.sort_values(by=("NES", "median"))
+
+
+# In[54]:
+
+
+## Check abs
+template_GSEA_stats.head()
+
+
+# In[55]:
 
 
 # Take absolute value of logFC and t statistic
@@ -773,7 +803,14 @@ template_GSEA_stats = calc.rank_genes_or_pathways('NES',
                                                   True)
 
 
-# In[62]:
+# In[56]:
+
+
+## CHECK high rank = high NES (common pathways)
+template_GSEA_stats.sort_values(by='NES')
+
+
+# In[57]:
 
 
 # Rank genes in simulated experiments
@@ -782,7 +819,14 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways('NES',
                                                            False)
 
 
-# In[63]:
+# In[58]:
+
+
+## CHECK high rank = high NES  (common pathways)
+simulated_GSEA_summary_stats.sort_values(by=('NES','median'))
+
+
+# In[59]:
 
 
 summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
@@ -793,7 +837,7 @@ summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
 summary_pathway_ranks.head()
 
 
-# In[64]:
+# In[60]:
 
 
 # Load Powers et. al. results file
@@ -805,7 +849,7 @@ powers_rank_file = os.path.join(
     "Hallmarks_NES_GSEAPreranked.csv")
 
 
-# In[65]:
+# In[61]:
 
 
 # Read Powers et. al. data
@@ -816,17 +860,24 @@ print(powers_rank_df.shape)
 powers_rank_df.head()
 
 
-# In[66]:
+# In[62]:
 
 
 # Rank pathways by NES score per experiment
 # Get median rank per pathway
-powers_rank_stats_df = powers_rank_df.rank().median(axis=1).to_frame('Powers Rank')
+powers_rank_stats_df = powers_rank_df.abs().rank().median(axis=1).to_frame('Powers Rank')
 
 powers_rank_stats_df.head()
 
 
-# In[67]:
+# In[63]:
+
+
+## CHECK high rank = high NES (common pathways)
+powers_rank_stats_df.sort_values(by='Powers Rank')
+
+
+# In[64]:
 
 
 # Save reference file for input into comparison
@@ -840,7 +891,7 @@ powers_rank_processed_file = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_file, sep="\t", )
 
 
-# In[69]:
+# In[65]:
 
 
 if compare_genes:
@@ -892,4 +943,154 @@ if compare_genes:
                         x='Rank (simulated)',
                         y=ref_rank_col
                        )
+
+
+# In[66]:
+
+
+## Check pathways that are well correlated
+shared_pathway_rank_scaled_df.sort_values(by='Rank (simulated)')
+
+
+# Try ranking NES for each simulated experiment
+
+# In[67]:
+
+
+def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
+    """
+    This function will concatenate the simulated experiments into a single dataframe
+    in order to aggregate statistics across all experiments.
+
+    Arguments
+    ---------
+    local_dir: str
+        Local directory containing simulated experiments
+    num_runs: int
+        Number of simulated experiments
+    project_id: str
+        Project id to use to retrieve simulated experiments
+    data_type: str
+        Either 'DE' or 'GSEA'
+
+    Returns
+    -------
+    Dataframe containing all simulated experiments concatenated together
+
+    """
+
+    simulated_stats_all = pd.DataFrame()
+    for i in range(num_runs):
+        if data_type.lower() == "de":
+            simulated_stats_file = os.path.join(
+                local_dir,
+                "DE_stats",
+                "DE_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
+            )
+        elif data_type.lower() == "gsea":
+            simulated_stats_file = os.path.join(
+                local_dir,
+                "GSEA_stats",
+                "GSEA_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
+            )
+
+        # Read results
+        simulated_stats = pd.read_csv(
+            simulated_stats_file, header=0, sep="\t", index_col=0
+        )
+
+        #simulated_stats.reset_index(inplace=True)
+
+        # Concatenate df
+        simulated_stats_all = pd.concat([simulated_stats_all, simulated_stats["NES"]], axis=1)
+    simulated_stats_all.index = simulated_stats.index
+
+    return simulated_stats_all
+
+
+# In[68]:
+
+
+# Concatenate simulated experiments
+simulated_GSEA_stats_all = concat_simulated_data_columns(local_dir, num_runs, project_id, 'GSEA')
+#simulated_GSEA_stats_all.set_index('pathway', inplace=True)
+print(simulated_GSEA_stats_all.shape)
+simulated_GSEA_stats_all.head()
+
+
+# In[69]:
+
+
+# Rank pathways by NES score per experiment
+# Get median rank per pathway
+simulated_rank_stats_df = simulated_GSEA_stats_all.abs().rank().median(axis=1).to_frame('Rank (simulated)')
+
+simulated_rank_stats_df.head()
+
+
+# In[70]:
+
+
+simulated_rank_stats_df.sort_values(by="Rank (simulated)")
+
+
+# In[71]:
+
+
+if compare_genes:
+    # Get column headers for generic pathways identified by Powers et. al.
+    ref_gene_col='index'
+    ref_rank_col = 'Powers Rank'
+    
+    # Merge our ranking and reference ranking
+    shared_pathway_rank_df = process.merge_ranks_to_compare(
+        simulated_rank_stats_df,
+        powers_rank_processed_file,
+        ref_gene_col,
+        ref_rank_col
+        )
+    
+    if max(shared_pathway_rank_df["Rank (simulated)"]) != max(shared_pathway_rank_df[ref_rank_col]):
+        shared_pathway_rank_scaled_df = process.scale_reference_ranking(shared_pathway_rank_df, ref_rank_col)
+    else:
+        shared_pathway_rank_scaled_df = shared_pathway_rank_df
+        
+    # Note: These lowly expressed genes were not pre-filtered before DESeq
+    # (Micheal Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of dispersion is difficult 
+    # for genes with very, very low average counts. See the methods. 
+    # However it doesn't really effect the outcome because these genes have almost no power for detecting 
+    # differential expression. Effects runtime though.
+    
+    shared_pathway_rank_scaled_df = shared_pathway_rank_scaled_df[~shared_pathway_rank_scaled_df['Rank (simulated)'].isna()]
+    
+    # Get correlation
+    r, p, ci_low, ci_high = calc.spearman_ci(0.95,
+                                             shared_pathway_rank_scaled_df,
+                                             1000,
+                                             'GSEA')
+    print(r, p, ci_low, ci_high)
+    
+    # Plot our ranking vs published ranking
+    fig_file = os.path.join(
+        local_dir, 
+        "pathway_ranking_"+col_to_rank_pathways+".svg")
+
+    #fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
+    #                    x='Rank (simulated)',
+    #                    y=ref_rank_col,
+    #                    kind='hex'
+    #                   )
+    #fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
+    
+    fig = sns.scatterplot(data=shared_pathway_rank_scaled_df,
+                        x='Rank (simulated)',
+                        y=ref_rank_col
+                       )
+
+
+# In[72]:
+
+
+## Check pathways that are well correlated
+shared_pathway_rank_scaled_df.sort_values(by='Rank (simulated)')
 
