@@ -444,20 +444,6 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
                                                            False)
 
 
-# In[35]:
-
-
-## CHECK high rank = low padj (common pathways)
-simulated_GSEA_summary_stats.head()
-
-
-# In[36]:
-
-
-## CHECK high rank = low padj (common pathways)
-template_GSEA_stats.head()
-
-
 # ### Pathway summary table
 
 # In[37]:
@@ -469,12 +455,6 @@ summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
                                                        local_dir)
 
 summary_pathway_ranks.head()
-
-
-# In[38]:
-
-
-summary_pathway_ranks.sort_values(by="Rank (simulated)", ascending=False)
 
 
 # In[39]:
@@ -596,13 +576,6 @@ powers_rank_stats_df = pd.DataFrame(
 powers_rank_stats_df.head()
 
 
-# In[44]:
-
-
-## CHECK high rank = high fraction of low padj (common pathways)
-powers_rank_stats_df.sort_values(by='Powers Rank')
-
-
 # In[45]:
 
 
@@ -658,12 +631,6 @@ if compare_genes:
         local_dir, 
         "pathway_ranking_"+col_to_rank_pathways+".svg")
 
-    #fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
-    #                    x='Rank (simulated)',
-    #                    y=ref_rank_col,
-    #                    kind='hex'
-    #                   )
-    #fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
     fig = sns.scatterplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
                         y=ref_rank_col
@@ -675,7 +642,7 @@ if compare_genes:
 # In[47]:
 
 
-## CHECK high rank = low padj (common pathways)
+# Rank pathways based on the proportion of times they appear significant
 simulated_GSEA_stats_all["significant"] = simulated_GSEA_stats_all['padj']<0.05
 simulated_GSEA_stats_all_new = (simulated_GSEA_stats_all.groupby(['pathway'])["significant"].
                                 sum()/num_runs).to_frame(name="Fraction enriched")
@@ -726,12 +693,6 @@ if compare_genes:
         local_dir, 
         "pathway_ranking_"+col_to_rank_pathways+".svg")
 
-    #fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
-    #                    x='Rank (simulated)',
-    #                    y=ref_rank_col,
-    #                    kind='hex'
-    #                   )
-    #fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
     fig = sns.scatterplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
                         y=ref_rank_col
@@ -747,24 +708,11 @@ if compare_genes:
 
 # ## Compare rank pathways try 2
 
-# In[49]:
-
-
-## Check abs 
-simulated_GSEA_stats_all.head()
-
-
 # In[50]:
 
 
 # Take absolute value of logFC and t statistic
 simulated_GSEA_stats_all = process.abs_value_stats(simulated_GSEA_stats_all)
-
-
-# In[51]:
-
-
-simulated_GSEA_stats_all.head()
 
 
 # In[52]:
@@ -778,36 +726,16 @@ simulated_GSEA_summary_stats = calc.aggregate_stats('NES',
 simulated_GSEA_summary_stats.head()
 
 
-# In[53]:
-
-
-simulated_GSEA_summary_stats.sort_values(by=("NES", "median"))
-
-
-# In[54]:
-
-
-## Check abs
-template_GSEA_stats.head()
-
-
 # In[55]:
 
 
-# Take absolute value of logFC and t statistic
+# Take absolute value of NES
 template_GSEA_stats = process.abs_value_stats(template_GSEA_stats)
 
 # Rank genes in template experiment
 template_GSEA_stats = calc.rank_genes_or_pathways('NES',
                                                   template_GSEA_stats,
                                                   True)
-
-
-# In[56]:
-
-
-## CHECK high rank = high NES (common pathways)
-template_GSEA_stats.sort_values(by='NES')
 
 
 # In[57]:
@@ -817,13 +745,6 @@ template_GSEA_stats.sort_values(by='NES')
 simulated_GSEA_summary_stats = calc.rank_genes_or_pathways('NES',
                                                            simulated_GSEA_summary_stats,
                                                            False)
-
-
-# In[58]:
-
-
-## CHECK high rank = high NES  (common pathways)
-simulated_GSEA_summary_stats.sort_values(by=('NES','median'))
 
 
 # In[59]:
@@ -868,13 +789,6 @@ powers_rank_df.head()
 powers_rank_stats_df = powers_rank_df.abs().rank().median(axis=1).to_frame('Powers Rank')
 
 powers_rank_stats_df.head()
-
-
-# In[63]:
-
-
-## CHECK high rank = high NES (common pathways)
-powers_rank_stats_df.sort_values(by='Powers Rank')
 
 
 # In[64]:
@@ -931,13 +845,6 @@ if compare_genes:
     fig_file = os.path.join(
         local_dir, 
         "pathway_ranking_"+col_to_rank_pathways+".svg")
-
-    #fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
-    #                    x='Rank (simulated)',
-    #                    y=ref_rank_col,
-    #                    kind='hex'
-    #                   )
-    #fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
     
     fig = sns.scatterplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
@@ -945,14 +852,7 @@ if compare_genes:
                        )
 
 
-# In[66]:
-
-
-## Check pathways that are well correlated
-shared_pathway_rank_scaled_df.sort_values(by='Rank (simulated)')
-
-
-# Try ranking NES for each simulated experiment
+# Try ranking pathways by NES for each simulated experiment and then having the final rank be the median(rank across simulated experiments)
 
 # In[67]:
 
@@ -1013,7 +913,6 @@ def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
 
 # Concatenate simulated experiments
 simulated_GSEA_stats_all = concat_simulated_data_columns(local_dir, num_runs, project_id, 'GSEA')
-#simulated_GSEA_stats_all.set_index('pathway', inplace=True)
 print(simulated_GSEA_stats_all.shape)
 simulated_GSEA_stats_all.head()
 
@@ -1026,12 +925,6 @@ simulated_GSEA_stats_all.head()
 simulated_rank_stats_df = simulated_GSEA_stats_all.abs().rank().median(axis=1).to_frame('Rank (simulated)')
 
 simulated_rank_stats_df.head()
-
-
-# In[70]:
-
-
-simulated_rank_stats_df.sort_values(by="Rank (simulated)")
 
 
 # In[71]:
@@ -1074,13 +967,6 @@ if compare_genes:
     fig_file = os.path.join(
         local_dir, 
         "pathway_ranking_"+col_to_rank_pathways+".svg")
-
-    #fig = sns.jointplot(data=shared_pathway_rank_scaled_df,
-    #                    x='Rank (simulated)',
-    #                    y=ref_rank_col,
-    #                    kind='hex'
-    #                   )
-    #fig.set_axis_labels("Our preliminary method", "Gene set rank (Powers et. al. 2018)", fontsize=14)
     
     fig = sns.scatterplot(data=shared_pathway_rank_scaled_df,
                         x='Rank (simulated)',
@@ -1088,9 +974,13 @@ if compare_genes:
                        )
 
 
-# In[72]:
-
-
-## Check pathways that are well correlated
-shared_pathway_rank_scaled_df.sort_values(by='Rank (simulated)')
-
+# **Conclusion:**
+# * Our top 20 pathways (out of a total of 50 pathways) are consistent with those found in Powers et. al. to be generic
+# * However, there is no correlation between our ranking vs Powers et. al ranking using adjusted p-values or NES values
+# * This lack of correlation doesn't make sense to me, but not sure other things to try
+# 
+# Already verified:
+# * Confirming that high rank = common pathways = low adjusted p-value, high NES
+# * Confirm that high rank in our method is consistent with high rank in Powers et. al.
+# * Increased number of simulated experiments to 100 
+# * Verify that absolute value was taken before stats aggregated across simulated
