@@ -1,9 +1,9 @@
 local_dir	"Generic_expression_paterns_test/"
 dataset_name	"tests"
-template_data_file	"data/input/recount2_template_data.tsv"
-compendium_data_file	"data/input/recount2_compendium_data.tsv"
+template_data_file	"Generic_expression_paterns_test/recount2_template_data.tsv"
+compendium_data_file	"Generic_expression_paterns_test/recount2_compendium_data.tsv"
 normalized_compendium_data_file	"Generic_expression_paterns_test/normalized_recount2_compendium_data.tsv"
-shared_genes_file	"data/input/shared_genes_human.pickle"
+shared_genes_file	"Generic_expression_paterns_test/shared_genes_human.pickle"
 scaler_transform_file	"Generic_expression_paterns_test/scaler_transform_human.pickle"
 reference_gene_file	"https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
 reference_gene_name_col	"Gene_Name"
@@ -20,6 +20,6 @@ validation_frac	0.1
 project_id	"SRP012656"
 metadata_colname	'run'
 num_simulated	2
-rank_genes_by	"logFC"
-num_recount2_experiments	2
+rank_genes_by	"log2FoldChange"
+num_recount2_experiments_to_download	3
 compare_genes	1
