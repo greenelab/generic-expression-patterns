@@ -193,7 +193,7 @@ metadata_file = os.path.join(
 # In[9]:
 
 
-get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("DESeq2")')
+get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\nBiocManager::install("DESeq2")')
 
 
 # In[10]:
@@ -341,19 +341,19 @@ summary_gene_ranks.to_csv(
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
-# In[23]:
+# In[28]:
 
 
-get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("GSA")\n#BiocManager::install("fgsea")')
+get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\nBiocManager::install("GSA")\nBiocManager::install("fgsea")')
 
 
-# In[24]:
+# In[29]:
 
 
 get_ipython().run_cell_magic('R', '', 'suppressPackageStartupMessages(library("GSA"))\nsuppressPackageStartupMessages(library("fgsea"))')
 
 
-# In[25]:
+# In[30]:
 
 
 # Load pathway data
@@ -362,20 +362,20 @@ hallmark_DB_file = os.path.join(
     "hallmark_DB.gmt")
 
 
-# In[26]:
+# In[31]:
 
 
 get_ipython().run_cell_magic('R', '-i template_DE_stats_file -i hallmark_DB_file -i statistic -o template_enriched_pathways', "\nsource('../generic_expression_patterns_modules/GSEA_analysis.R')\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_file, hallmark_DB_file, statistic)")
 
 
-# In[27]:
+# In[32]:
 
 
 print(template_enriched_pathways.shape)
 template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj').head()
 
 
-# In[28]:
+# In[33]:
 
 
 template_enriched_pathways[template_enriched_pathways['padj'] >= 0.05].sort_values(by='padj')[:15]
@@ -392,7 +392,7 @@ template_enriched_pathways[template_enriched_pathways['padj'] >= 0.05].sort_valu
 # 
 # * However, there are a few pathways that were not found to be significant but we initially expect to find given this is a cancer dataset: P53, NOTCH_SIGNALING, DNA_REPAIR, HALLMARK_KRAS_SIGNALING_UP. First, we do not think there is an issue with the GSEA implementation, given what we reported above. Second, the original publication did not explicitly mention the p53 pathway. Last, [Tang et. al](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6036325/) found the p53 pathway to be significantly enriched using 80 tumor and 20 normal samples. And [Gibbons et. al.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3925633/) found that p53 mutations was high (46%) in non-small cell lung adenocarcinoma patients. We suspect the reason for the p53 pathway not being significant in this case might be due to the small sample size here (6 paired samples). So for now we will move forward with our GSEA analysis.
 
-# In[29]:
+# In[34]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_file -i num_runs -i statistic', '\nsource(\'../generic_expression_patterns_modules/GSEA_analysis.R\')\n\nfor (i in 0:(num_runs-1)){\n    simulated_DE_stats_file <- paste(local_dir, \n                                 "DE_stats/DE_stats_simulated_data_", \n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    out_file = paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep="")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_file, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")\n    }')
@@ -400,7 +400,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_fil
 
 # ### Rank pathways 
 
-# In[30]:
+# In[35]:
 
 
 # Concatenate simulated experiments
@@ -409,7 +409,7 @@ simulated_GSEA_stats_all.set_index('pathway', inplace=True)
 print(simulated_GSEA_stats_all.shape)
 
 
-# In[32]:
+# In[36]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -420,7 +420,7 @@ simulated_GSEA_summary_stats = calc.aggregate_stats(col_to_rank_pathways,
 simulated_GSEA_summary_stats.head()
 
 
-# In[33]:
+# In[37]:
 
 
 # Load association statistics for template experiment
@@ -435,7 +435,7 @@ template_GSEA_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
                                                   True)
 
 
-# In[34]:
+# In[38]:
 
 
 # Rank genes in simulated experiments
@@ -446,7 +446,7 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(col_to_rank_pathways,
 
 # ### Pathway summary table
 
-# In[37]:
+# In[39]:
 
 
 summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
@@ -457,7 +457,7 @@ summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
 summary_pathway_ranks.head()
 
 
-# In[39]:
+# In[40]:
 
 
 summary_pathway_ranks.to_csv(
@@ -469,7 +469,7 @@ summary_pathway_ranks.to_csv(
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[40]:
+# In[41]:
 
 
 if compare_genes:
@@ -501,6 +501,11 @@ if compare_genes:
                                              1000,
                                              'DE')
     print(r, p, ci_low, ci_high)
+    assert(np.all(np.isclose([r,p],
+                             [0.29042052623541864, 0.0]
+                            )
+                 )
+          )
     
     # Plot our ranking vs published ranking
     fig_file = os.path.join(
@@ -534,7 +539,7 @@ if compare_genes:
 # 
 # To get a `reference ranking`, we calculate the fraction of experiments that a given pathway was significant (q-value <0.05) and use this rank pathways. `Our ranking` is to rank pathways based on the median q-value across the simulated experiments. We can then compare `our ranking` versus the `reference ranking.`
 
-# In[41]:
+# In[42]:
 
 
 # Load Powers et. al. results file
@@ -546,7 +551,7 @@ powers_rank_file = os.path.join(
     "Hallmarks_qvalues_GSEAPreranked.csv")
 
 
-# In[42]:
+# In[43]:
 
 
 # Read Powers et. al. data
@@ -557,7 +562,7 @@ print(powers_rank_df.shape)
 powers_rank_df.head()
 
 
-# In[43]:
+# In[44]:
 
 
 # Count the number of experiments where a given pathway was found to be enriched (qvalue < 0.05)
@@ -708,14 +713,14 @@ if compare_genes:
 
 # ## Compare rank pathways try 2
 
-# In[50]:
+# In[49]:
 
 
 # Take absolute value of logFC and t statistic
 simulated_GSEA_stats_all = process.abs_value_stats(simulated_GSEA_stats_all)
 
 
-# In[52]:
+# In[50]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -726,7 +731,7 @@ simulated_GSEA_summary_stats = calc.aggregate_stats('NES',
 simulated_GSEA_summary_stats.head()
 
 
-# In[55]:
+# In[51]:
 
 
 # Take absolute value of NES
@@ -738,7 +743,7 @@ template_GSEA_stats = calc.rank_genes_or_pathways('NES',
                                                   True)
 
 
-# In[57]:
+# In[52]:
 
 
 # Rank genes in simulated experiments
@@ -747,7 +752,7 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways('NES',
                                                            False)
 
 
-# In[59]:
+# In[53]:
 
 
 summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
@@ -758,7 +763,7 @@ summary_pathway_ranks = process.generate_summary_table(template_GSEA_stats,
 summary_pathway_ranks.head()
 
 
-# In[60]:
+# In[54]:
 
 
 # Load Powers et. al. results file
@@ -770,7 +775,7 @@ powers_rank_file = os.path.join(
     "Hallmarks_NES_GSEAPreranked.csv")
 
 
-# In[61]:
+# In[55]:
 
 
 # Read Powers et. al. data
@@ -781,7 +786,7 @@ print(powers_rank_df.shape)
 powers_rank_df.head()
 
 
-# In[62]:
+# In[56]:
 
 
 # Rank pathways by NES score per experiment
@@ -791,7 +796,7 @@ powers_rank_stats_df = powers_rank_df.abs().rank().median(axis=1).to_frame('Powe
 powers_rank_stats_df.head()
 
 
-# In[64]:
+# In[57]:
 
 
 # Save reference file for input into comparison
@@ -805,7 +810,7 @@ powers_rank_processed_file = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_file, sep="\t", )
 
 
-# In[65]:
+# In[58]:
 
 
 if compare_genes:
@@ -854,7 +859,7 @@ if compare_genes:
 
 # Try ranking pathways by NES for each simulated experiment and then having the final rank be the median(rank across simulated experiments)
 
-# In[67]:
+# In[59]:
 
 
 def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
@@ -908,7 +913,7 @@ def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
     return simulated_stats_all
 
 
-# In[68]:
+# In[60]:
 
 
 # Concatenate simulated experiments
@@ -917,7 +922,7 @@ print(simulated_GSEA_stats_all.shape)
 simulated_GSEA_stats_all.head()
 
 
-# In[69]:
+# In[61]:
 
 
 # Rank pathways by NES score per experiment
@@ -927,7 +932,7 @@ simulated_rank_stats_df = simulated_GSEA_stats_all.abs().rank().median(axis=1).t
 simulated_rank_stats_df.head()
 
 
-# In[71]:
+# In[62]:
 
 
 if compare_genes:
