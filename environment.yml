@@ -8,6 +8,7 @@ dependencies:
 - r::r=3.6.0
 - r::r-devtools 
 - bioconda::bioconductor-limma
+- bioconda::bioconductor-deseq2
 - bioconda::bioconductor-recount
 - conda-forge::python=3.7
 - conda-forge::scikit-learn

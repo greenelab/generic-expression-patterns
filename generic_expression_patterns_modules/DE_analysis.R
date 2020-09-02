@@ -143,5 +143,4 @@ get_DE_stats_DESeq <- function(metadata_file,
     out_file = paste(local_dir, "DE_stats/DE_stats_simulated_data_", experiment_id,"_", run, ".txt", sep="")
   }  
   write.table(deseq_results_df, file = out_file, row.names = T, sep = "\t", quote = F)
-  return("done")
 }
