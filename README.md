@@ -103,6 +103,7 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | epsilon_std | float: Standard deviation of Normal distribution to sample latent space|
 | num_simulated| int: Simulate a compendia with these many experiments, created by shifting the template experiment these many times|
 | project_id | str:  Experiment id to use as a template experiment|
-| col_to_rank | str:  Name of column header from DE association statistic results. This column will be use to rank genes. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
-| num_recount2_experiments | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
+| rank_genes_by | str:  Name of column header from DE association statistic results. This column will be use to rank genes. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
+| rank_pathways_by | str:  Name of column header from GSEA association statistic results. This column will be use to rank pathways. Select `NES`, `padj` if using DESeq to rank genes.|
+| num_recount2_experiments_to_download | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
 | compare_genes | bool:  1 if comparing gene ranks with reference gene ranks. 0 if just identifying generic genes and gene sets but not comparing against a reference.|

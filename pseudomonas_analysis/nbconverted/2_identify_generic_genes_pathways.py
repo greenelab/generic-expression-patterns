@@ -67,7 +67,7 @@ template_data_file = params['template_data_file']
 original_compendium_file = params['compendium_data_file']
 normalized_compendium_file = params['normalized_compendium_data_file']
 scaler_file = params['scaler_transform_file']
-col_to_rank = params['col_to_rank']
+col_to_rank_genes = params['rank_genes_by']
 compare_genes = params['compare_genes']
 
 gene_summary_file = os.path.join(
@@ -192,7 +192,7 @@ get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i
 
 
 # Concatenate simulated experiments
-simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id)
+simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'DE')
 
 print(simulated_DE_stats_all.shape)
 
@@ -208,8 +208,9 @@ simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
 
 
 # Aggregate statistics across all simulated experiments
-simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank,
-                                                  simulated_DE_stats_all)
+simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank_genes,
+                                                  simulated_DE_stats_all,
+                                                  'DE')
 
 
 # In[16]:
@@ -231,18 +232,18 @@ template_DE_stats = pd.read_csv(
 template_DE_stats = process.abs_value_stats(template_DE_stats)
 
 # Rank genes in template experiment
-template_DE_stats = calc.rank_genes(col_to_rank,
-                                   template_DE_stats,
-                                   True)
+template_DE_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
+                                                template_DE_stats,
+                                                True)
 
 
 # In[17]:
 
 
 # Rank genes in simulated experiments
-simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
-                                            simulated_DE_summary_stats,
-                                            False)
+simulated_DE_summary_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
+                                                         simulated_DE_summary_stats,
+                                                         False)
 
 
 # ### Gene summary table
@@ -252,7 +253,7 @@ simulated_DE_summary_stats = calc.rank_genes(col_to_rank,
 
 summary_gene_ranks = process.generate_summary_table(template_DE_stats,
                                                    simulated_DE_summary_stats,
-                                                   col_to_rank,
+                                                   col_to_rank_genes,
                                                    local_dir)
 
 summary_gene_ranks.head()
@@ -336,50 +337,3 @@ summary_gene_ranks.to_csv(
 # ### Rank pathways 
 
 # ### Pathway summary table
-
-# ### Compare gene rankings
-
-# In[25]:
-
-
-if compare_genes:
-    # Get generic genes identified by Crow et. al.
-    DE_prior_file = params['reference_gene_file']
-    ref_gene_col = params['reference_gene_name_col']
-    ref_rank_col = params['reference_rank_col']
-    
-    # Merge our ranking and reference ranking
-    shared_gene_rank_df = process.merge_ranks_to_compare(
-        summary_gene_ranks,
-        DE_prior_file,
-        ref_gene_col,
-        ref_rank_col)
-    
-    if max(shared_gene_rank_df["Rank (simulated)"]) != max(shared_gene_rank_df[ref_rank_col]):
-        shared_gene_rank_scaled_df = process.scale_reference_ranking(shared_gene_rank_df, ref_rank_col)
-        
-    # Get correlation
-    r, p, ci_high, ci_low = calc.spearman_ci(0.95,
-                                             shared_gene_rank_scaled_df,
-                                             1000)
-    print(r, p, ci_high, ci_low)
-    
-    # Plot our ranking vs published ranking
-    fig_file = os.path.join(
-        local_dir, 
-        "gene_ranking_"+col_to_rank+".svg")
-
-    fig = sns.jointplot(data=shared_gene_rank_scaled_df,
-                        x='Rank (simulated)',
-                        y=ref_rank_col,
-                        kind='hex',
-                        marginal_kws={'color':'white'})
-    fig.set_axis_labels("Our preliminary method", "Reference Name", fontsize=14)
-
-    fig.savefig(fig_file,
-                format='svg',
-                bbox_inches="tight",
-                transparent=True,
-                pad_inches=0,
-                dpi=300,)
-

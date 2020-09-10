@@ -156,7 +156,7 @@ def recast_int(num_runs, local_dir, project_id):
         simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
 
 
-def concat_simulated_data(local_dir, num_runs, project_id):
+def concat_simulated_data(local_dir, num_runs, project_id, data_type):
     """
     This function will concatenate the simulated experiments into a single dataframe
     in order to aggregate statistics across all experiments.
@@ -169,6 +169,8 @@ def concat_simulated_data(local_dir, num_runs, project_id):
         Number of simulated experiments
     project_id: str
         Project id to use to retrieve simulated experiments
+    data_type: str
+        Either 'DE' or 'GSEA'
 
     Returns
     -------
@@ -176,25 +178,32 @@ def concat_simulated_data(local_dir, num_runs, project_id):
 
     """
 
-    simulated_DE_stats_all = pd.DataFrame()
+    simulated_stats_all = pd.DataFrame()
     for i in range(num_runs):
-        simulated_DE_stats_file = os.path.join(
-            local_dir,
-            "DE_stats",
-            "DE_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
-        )
+        if data_type.lower() == "de":
+            simulated_stats_file = os.path.join(
+                local_dir,
+                "DE_stats",
+                "DE_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
+            )
+        elif data_type.lower() == "gsea":
+            simulated_stats_file = os.path.join(
+                local_dir,
+                "GSEA_stats",
+                "GSEA_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
+            )
 
         # Read results
-        simulated_DE_stats = pd.read_csv(
-            simulated_DE_stats_file, header=0, sep="\t", index_col=0
+        simulated_stats = pd.read_csv(
+            simulated_stats_file, header=0, sep="\t", index_col=0
         )
 
-        simulated_DE_stats.reset_index(inplace=True)
+        simulated_stats.reset_index(inplace=True)
 
         # Concatenate df
-        simulated_DE_stats_all = pd.concat([simulated_DE_stats_all, simulated_DE_stats])
+        simulated_stats_all = pd.concat([simulated_stats_all, simulated_stats])
 
-    return simulated_DE_stats_all
+    return simulated_stats_all
 
 
 def abs_value_stats(simulated_DE_stats_all):
@@ -208,12 +217,14 @@ def abs_value_stats(simulated_DE_stats_all):
     """
     if "logFC" in simulated_DE_stats_all.columns:
         simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
-    else:
+    elif "log2FoldChange" in simulated_DE_stats_all.columns:
         simulated_DE_stats_all["log2FoldChange"] = simulated_DE_stats_all[
             "log2FoldChange"
         ].abs()
-    if "t" in simulated_DE_stats_all.columns:
+    elif "t" in simulated_DE_stats_all.columns:
         simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
+    elif "NES" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["NES"] = simulated_DE_stats_all["NES"].abs()
     return simulated_DE_stats_all
 
 
@@ -283,24 +294,22 @@ def generate_summary_table(
 
 
 def merge_ranks_to_compare(
-    your_summary_gene_ranks_df,
-    reference_gene_ranks_file,
-    reference_gene_name_col,
-    reference_rank_col,
+    your_summary_ranks_df, reference_ranks_file, reference_name_col, reference_rank_col,
 ):
     """
-    Given dataframes of your ranking of genes and reference ranking
-    of genes. This function merges the ranking into one dataframe
+    Given dataframes of your ranking of genes or pathways
+    and reference ranking of genes or pathways.
+    This function merges the ranking into one dataframe
     to be able to compare, `shared_gene_rank_df`
 
     Arguments
     ---------
-    your_summary_gene_ranks_df: df
-        dataframe containing your rank per gene
-    reference_gene_ranks_file: file
-        file contining reference ranks per gene
-    reference_gene_name_col: str
-        column header containing the reference genes
+    your_summary_ranks_df: df
+        dataframe containing your rank per gene or pathway
+    reference_ranks_file: file
+        file contining reference ranks per gene or pathway
+    reference_name_col: str
+        column header containing the reference genes or pathway
     reference_rank_col: str
         column header containing the reference rank
 
@@ -309,30 +318,46 @@ def merge_ranks_to_compare(
     Dataframe containing your ranking and the reference ranking per gene
 
     """
-    # Read in reference gene ranks file
-    reference_gene_ranks_df = pd.read_csv(reference_gene_ranks_file, header=0, sep="\t")
+    # Read in reference ranks file
+    reference_ranks_df = pd.read_csv(
+        reference_ranks_file, header=0, index_col=0, sep="\t"
+    )
 
-    # Get list of our genes
-    gene_ids = list(your_summary_gene_ranks_df.index)
+    # Get list of our genes or pathways
+    gene_or_pathway_ids = list(your_summary_ranks_df.index)
 
-    # Get list of published generic genes
-    published_generic_genes = list(reference_gene_ranks_df[reference_gene_name_col])
+    # Get list of published generic genes or pathways
+    if reference_name_col == "index":
+        published_generic_genes_or_pathways = list(reference_ranks_df.index)
+    else:
+        published_generic_genes_or_pathways = list(
+            reference_ranks_df[reference_name_col]
+        )
+    # Get intersection of gene or pathway lists
+    shared_genes_or_pathways = set(gene_or_pathway_ids).intersection(
+        published_generic_genes_or_pathways
+    )
 
-    # Get intersection of gene lists
-    shared_genes = set(gene_ids).intersection(published_generic_genes)
-
-    # Get rank of shared genes
-    your_gene_rank_df = pd.DataFrame(
-        your_summary_gene_ranks_df.loc[shared_genes, "Rank (simulated)"]
+    # Get your rank of shared genes
+    your_rank_df = pd.DataFrame(
+        your_summary_ranks_df.loc[shared_genes_or_pathways, "Rank (simulated)"]
     )
 
     # Merge published ranking
-    shared_gene_rank_df = pd.merge(
-        your_gene_rank_df,
-        reference_gene_ranks_df[[reference_rank_col, reference_gene_name_col]],
-        left_index=True,
-        right_on=reference_gene_name_col,
-    )
+    if reference_name_col == "index":
+        shared_gene_rank_df = pd.merge(
+            your_rank_df,
+            reference_ranks_df[[reference_rank_col]],
+            left_index=True,
+            right_index=True,
+        )
+    else:
+        shared_gene_rank_df = pd.merge(
+            your_rank_df,
+            reference_ranks_df[[reference_rank_col, reference_name_col]],
+            left_index=True,
+            right_on=reference_name_col,
+        )
 
     return shared_gene_rank_df
 

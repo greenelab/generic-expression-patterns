@@ -19,8 +19,9 @@ epsilon_std	1.0
 validation_frac	0.25
 project_id	"SRP012656"
 metadata_colname	'run'
-num_simulated	25
-col_to_rank	"log2FoldChange"
-num_recount2_experiments	200
+num_simulated	100
+rank_genes_by	"log2FoldChange"
+rank_pathways_by	"padj"
+num_recount2_experiments_to_download	200
 gsea_statistic	'log2FoldChange'
 compare_genes	1
