@@ -137,7 +137,7 @@ pathway_summary_file = os.path.join(
 # In[5]:
 
 
-"""# Simulate multiple experiments
+# Simulate multiple experiments
 for i in range(num_runs):
     simulate_expression_data.shift_template_experiment(
         normalized_compendium_file,
@@ -148,7 +148,7 @@ for i in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        i)"""
+        i)
 
 
 # Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](../explore_data/0_explore_input_data.ipynb)
@@ -156,7 +156,7 @@ for i in range(num_runs):
 # In[6]:
 
 
-"""if os.path.exists(sample_id_metadata_file):
+if os.path.exists(sample_id_metadata_file):
     # Read in metadata
     metadata = pd.read_csv(sample_id_metadata_file, sep='\t', header=0, index_col=0)
     
@@ -166,7 +166,7 @@ for i in range(num_runs):
     process.subset_samples(sample_ids_to_drop,
                            num_runs,
                            local_dir,
-                           project_id)"""
+                           project_id)
 
 
 # In[7]:
@@ -980,7 +980,7 @@ if compare_genes:
 
 
 # **Conclusion:**
-# * Our top 20 pathways (out of a total of 50 pathways) are consistent with those found in Powers et. al. to be generic
+# * Our top 20 pathways (out of a total of 50 pathways) are consistent with those found in Powers et. al. to be generic. If we don't consider the ranking of the pathways, our top 20 pathways overlap with those found to be frequently enriched in figure 4A of the Powers et. al. publication.
 # * However, there is no correlation between our ranking vs Powers et. al ranking using adjusted p-values or NES values
 # * This lack of correlation doesn't make sense to me, but not sure other things to try
 # 
