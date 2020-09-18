@@ -130,7 +130,7 @@ get_recount2_subset_compendium <- function(template_project_id,
 
 # This function downloads all recount2 `rse_gene.Rdata` files and generates a
 # transposed data count file (`t_data_counts.tsv`) based on each `rse_gene.Rdata`.
-function download_all_recount2(metadata_dir, download_dir) {
+download__all_recount2 <- function (metadata_dir, download_dir) {
   # Download metadata file
   metadata <- all_metadata()
   write.table(
