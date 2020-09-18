@@ -6,7 +6,7 @@ channels:
 - bioconda
 dependencies:
 - r::r=3.6.0
-- r::r-devtools 
+- r::r-devtools
 - bioconda::bioconductor-limma
 - bioconda::bioconductor-deseq2
 - bioconda::bioconductor-recount
@@ -22,6 +22,7 @@ dependencies:
 - conda-forge::gxx_linux-64
 - conda-forge::rpy2=2.9.4
 - conda-forge::libiconv=1.15
+- conda-forge::r-biocmanager
 - pip=19.2.1
 - pip:
   - matplotlib==3.0.0
