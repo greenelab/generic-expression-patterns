@@ -58,7 +58,7 @@ get_recount2_subset_compendium <- function(template_project_id,
   metadata <- all_metadata()
   write.table(
     metadata,
-    paste(base_dir, '/human_analysis/data/metadata/recount2_metadata.tsv', sep=""),
+    paste(base_dir, '/human_analysis/data/metadata/recount2_metadata.tsv', sep = ""),
     sep = '\t',
     row.names = FALSE
   )

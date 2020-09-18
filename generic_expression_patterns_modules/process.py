@@ -416,23 +416,21 @@ def compare_and_reorder_samples(expression_file, metadata_file):
 
     if metadata_sample_ids.equals(expression_sample_ids):
         print("sample ids are ordered correctly")
-        return
     else:
         # Convert gene expression ordering to be the same as
         # metadata sample ordering
         print("sample ids don't match, going to re-order gene expression samples")
         expression_data = expression_data.reindex(metadata_sample_ids)
         expression_data.to_csv(expression_file, sep="\t")
-        return
 
 
-# 4 minutes and 20 sec on Jade
 def create_all_recount2_compendium(download_dir, output_filename):
     """
     Concatenate `t_data_counts.tsv` in each project directory and create the
     single recount2 commpendium file in TSV format.
     The first row in each `t_data_counts.tsv` is a header line that includes
-    column names, so only the header in the first `t_data_counts.tsv` is kept.
+    column names, so only the header in the first `t_data_counts.tsv` is copied
+    to the output file.
 
     Arguments:
       - download_dir: the dirname that hosts all downloaded projects data
