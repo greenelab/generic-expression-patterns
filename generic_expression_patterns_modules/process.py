@@ -3,13 +3,14 @@ Author: Alexandra Lee
 Date Created: 16 June 2020
 
 These scripts provide supporting functions to run analysis notebooks.
-These scripts include: replacing ensembl gene ids with hgnc symbols. 
+These scripts include: replacing ensembl gene ids with hgnc symbols.
 """
 
 import pandas as pd
 import os
 import numpy as np
 import sklearn
+from glob import glob
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -88,8 +89,8 @@ def replace_ensembl_ids(expression_df, gene_id_mapping):
 def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
     """
     Removes user selected samples from the simulated experiments. This function
-    overwrites the data in the simulated gene expression data files. 
-    
+    overwrites the data in the simulated gene expression data files.
+
     Arguments
     ---------
     samples_to_remove: lst
@@ -124,8 +125,8 @@ def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
 
 def recast_int(num_runs, local_dir, project_id):
     """
-    Re-casts simulated experiment data to integer to use DESeq. 
-    
+    Re-casts simulated experiment data to integer to use DESeq.
+
     Arguments
     ---------
     num_runs: int
@@ -416,11 +417,40 @@ def compare_and_reorder_samples(expression_file, metadata_file):
 
     if metadata_sample_ids.equals(expression_sample_ids):
         print("sample ids are ordered correctly")
-        return
     else:
         # Convert gene expression ordering to be the same as
         # metadata sample ordering
         print("sample ids don't match, going to re-order gene expression samples")
         expression_data = expression_data.reindex(metadata_sample_ids)
         expression_data.to_csv(expression_file, sep="\t")
-        return
+
+
+def create_all_recount2_compendium(download_dir, output_filename):
+    """
+    Concatenate `t_data_counts.tsv` in each project directory and create the
+    single recount2 commpendium file in TSV format.
+    The first row in each `t_data_counts.tsv` is a header line that includes
+    column names, so only the header in the first `t_data_counts.tsv` is copied
+    to the output file.
+
+    Arguments:
+      - download_dir: the dirname that hosts all downloaded projects data
+      - output_filename: the filename of the output single compendium data
+    """
+
+    data_counts_filenames = glob(f"{download_dir}/*/t_data_counts.tsv")
+    data_counts_filenames.sort()
+
+    compendium_header = None
+    with open(output_filename, 'w') as ofh:
+        for filename in data_counts_filenames:
+            with open(filename) as ifh:
+                file_header = ifh.readline()
+                if compendium_header is None:
+                    compendium_header = file_header
+                    ofh.write(compendium_header)
+                elif file_header != compendium_header:
+                    raise Exception(f"Inconsistent header in {filename}")
+
+                file_content = ifh.read()
+                ofh.write(file_content)
