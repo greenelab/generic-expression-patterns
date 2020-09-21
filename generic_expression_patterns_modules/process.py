@@ -10,6 +10,7 @@ import pandas as pd
 import os
 import numpy as np
 import sklearn
+from glob import glob
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -437,7 +438,6 @@ def create_all_recount2_compendium(download_dir, output_filename):
       - output_filename: the filename of the output single compendium data
     """
 
-    from glob import glob
     data_counts_filenames = glob(f"{download_dir}/*/t_data_counts.tsv")
     data_counts_filenames.sort()
 
