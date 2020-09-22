@@ -509,17 +509,19 @@ def get_renamed_columns(
 ):
     """
     Find the new column names and corresponding column indexes.
-    Returns a tuple that includes two entries. The first entry is a list
-    of hgnc gene symbols (which will be the new column names in remapped
-    recount2 data file; The second entry is a dict whose keys are hgnc gene
-    symbols and values are lists of the corresponding indexes of columns in
-    the raw recount2 data file (most lists include only one column index.)
 
     Arguments:
     - raw_ensembl_ids: list of strings (ensembl gene IDs), which are columns
                        names in raw recount2 data file;
     - merged_gene_id_mapping: DataFrame of merged gene ID mapping;
     - manual_mapping: dict of manual mapping (key: ensembl_id, value: gene symbol)
+
+    Returns a tuple that includes two entries. The first entry is a list
+    of hgnc gene symbols (which will be the new column names in remapped
+    recount2 data file; The second entry is a dict whose keys are hgnc gene
+    symbols and values are lists of the corresponding indexes of columns in
+    the raw recount2 data file (most lists include only one column index.)
+
     """
 
     updated_mapping = merged_gene_id_mapping.loc[
