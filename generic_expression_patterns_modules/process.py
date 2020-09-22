@@ -454,3 +454,254 @@ def create_all_recount2_compendium(download_dir, output_filename):
 
                 file_content = ifh.read()
                 ofh.write(file_content)
+
+
+def get_published_generic_genes(filename):
+    """Get generic genes based on input filename, which could be a URL."""
+
+    df = pd.read_csv(filename, header=0, sep="\t")
+    published_generic_genes = list(df['Gene_Name'])
+    return published_generic_genes
+
+
+def get_merged_gene_id_mapping(gene_id_filename, raw_ensembl_genes):
+    """
+    Merge genes in input gene_id file with the raw ensembl gene IDs.
+
+    Arguments:
+    - gene_id_filename: filename of input gene IDs;
+    - raw_ensembl_genes: list of strings (ensembl gene IDs)
+    """
+
+    original_gene_id_mapping = pd.read_csv(
+        gene_id_filename, header=0, sep='\t', index_col=0
+    )
+
+    # Get mapping between ensembl ids with and without version numbers.
+    # The genes in `ensembl_genes` has version numbers at the end.
+    ensembl_gene_ids = pd.DataFrame(
+        data={
+            'ensembl_version': raw_ensembl_genes,
+            'ensembl_parsed': [gene_id.split('.')[0] for gene_id in raw_ensembl_genes]
+        }
+    )
+
+    # Map ensembl gene ids with version number to gene_id_mapping
+    merged_gene_id_mapping = pd.merge(
+        original_gene_id_mapping,
+        ensembl_gene_ids,
+        left_on='ensembl_gene_id',
+        right_on='ensembl_parsed',
+        how='outer'
+    )
+
+    # Set `ensembl_version` column as the index
+    merged_gene_id_mapping.set_index('ensembl_version', inplace=True)
+
+    return merged_gene_id_mapping
+
+
+def get_renamed_columns(
+        raw_ensembl_ids,
+        merged_gene_id_mapping,
+        manual_mapping,
+        DE_prior_filename
+):
+    """
+    Find the new column names and corresponding column indexes.
+    Returns a tuple that includes two entries. The first entry is a list
+    of hgnc gene symbols (which will be the new column names in remapped
+    recount2 data file; The second entry is a dict whose keys are hgnc gene
+    symbols and values are lists of the corresponding indexes of columns in
+    the raw recount2 data file (most lists include only one column index.)
+
+    Arguments:
+    - raw_ensembl_ids: list of strings (ensembl gene IDs), which are columns
+                       names in raw recount2 data file;
+    - merged_gene_id_mapping: DataFrame of merged gene ID mapping;
+    - manual_mapping: dict of manual mapping (key: ensembl_id, value: gene symbol)
+    """
+
+    updated_mapping = merged_gene_id_mapping.loc[
+        ~merged_gene_id_mapping.index.duplicated(keep="first")
+    ]
+    for ensembl_id, gene_symbol in manual_mapping.items():
+        updated_mapping.loc[ensembl_id].hgnc_symbol = gene_symbol
+
+    # Build a dict that maps hgnc symbols to column indexes in raw recount2 data
+    hgnc_to_cols = dict()
+    for col_idx, ensembl_id in enumerate(raw_ensembl_ids):
+        # Skip paralogs (whose ensembl_id includes "PAR_Y")
+        if "PAR_Y" in ensembl_id:
+            continue
+
+        hgnc_symbol = updated_mapping.loc[ensembl_id].hgnc_symbol
+
+        # Skip hgnc gene symbols that are `float` type (NaN) or empty strings
+        if type(hgnc_symbol) == float or len(hgnc_symbol) == 0:
+            continue
+
+        if hgnc_symbol in hgnc_to_cols:
+            hgnc_to_cols[hgnc_symbol].append(col_idx)
+        else:
+            hgnc_to_cols[hgnc_symbol] = [col_idx]
+
+    our_gene_ids_hgnc = list(hgnc_to_cols.keys())
+
+    published_generic_genes = get_published_generic_genes(DE_prior_filename)
+    shared_genes_hgnc = list(
+        set(our_gene_ids_hgnc).intersection(published_generic_genes)
+    )
+
+    # In Python, the order of elements in a list that is converted from a set
+    # is non-deterministic, so it is sorted here to have reproducible result.
+    shared_genes_hgnc.sort()
+
+    return (shared_genes_hgnc, hgnc_to_cols)
+
+
+def map_recount2_data(
+        raw_filename,
+        gene_id_filename,
+        manual_mapping,
+        DE_prior_filename,
+        new_filename
+):
+    """
+    Map the ensembl gene IDs in `raw_filename` to hgnc gene symbols based
+    on the header line in `template_filename`, and save the new  header
+    and corresponding data columns to `new_filename`.
+    """
+
+    # Read the header line of `raw_filename` to get its column names:
+    raw_header_df = pd.read_csv(raw_filename, header=0, sep="\t", nrows=1)
+    raw_ensembl_ids = list(raw_header_df.columns)
+    if raw_ensembl_ids[0] == 'Unnamed: 0':
+        del raw_ensembl_ids[0]
+
+    merged_gene_id_mapping = get_merged_gene_id_mapping(
+        gene_id_filename, raw_ensembl_ids
+    )
+
+    shared_genes_hgnc, hgnc_to_cols = get_renamed_columns(
+        raw_ensembl_ids, merged_gene_id_mapping, manual_mapping, DE_prior_filename
+    )
+
+    col_indexes = list()
+    for hgnc in shared_genes_hgnc:
+        col_indexes += hgnc_to_cols[hgnc]
+
+    output_cols = [""]
+    for hgnc in shared_genes_hgnc:
+        output_cols += [hgnc] * len(hgnc_to_cols[hgnc])
+    output_header = "\t".join(output_cols) + "\n"
+
+    with open(new_filename, 'w') as ofh:
+        ofh.write(output_header)
+        with open(raw_filename) as ifh:
+            for line_num, line in enumerate(ifh):
+                if line_num == 0:
+                    continue
+                tokens = line.strip('\n').split('\t')
+                sample_id = tokens[0].strip('"')
+                input_values = tokens[1:]
+                output_values = list()
+                for idx in col_indexes:
+                    output_values.append(input_values[idx])
+                ofh.write(sample_id + "\t" + "\t".join(output_values) + "\n")
+
+
+def process_raw_template(
+        raw_filename,
+        gene_id_filename,
+        manual_mapping,
+        DE_prior_filename,
+        mapped_filename,
+        sample_id_metadata_filename,
+        processed_filename
+):
+    """
+    Create mapped recount2 template data file based on input raw template
+    data file (`raw_filename`), drop sample rows if needed, and save updated
+    template data on disk.
+    """
+
+    # Create mapped recount2 template data file
+    map_recount2_data(
+        raw_filename,
+        gene_id_filename,
+        manual_mapping,
+        DE_prior_filename,
+        mapped_filename
+    )
+
+    # Drop sample rows
+    if os.path.exists(sample_id_metadata_filename):
+        # Read in metadata and get samples to be dropped:
+        metadata = pd.read_csv(
+            sample_id_metadata_filename, sep='\t', header=0, index_col=0
+        )
+        sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
+
+        template_df = pd.read_csv(mapped_filename, sep='\t', header=0, index_col=0)
+        template_df = template_df.drop(sample_ids_to_drop)
+        template_df.to_csv(processed_filename, sep='\t')
+
+
+def normalize_compendium(mapped_filename, normalized_filename):
+    """
+    Read the mapped compendium file into memor, normalize it, then save
+    the normalized compendium as a tsv file, and pickle the scaler.
+    """
+
+    # Read mapped compendium file: ~4 minutes (17 GB of RAM)
+    mapped_compendium_df = pd.read_table(
+        mapped_filename,
+        header=0,
+        sep='\t',
+        index_col=0
+    )
+
+    # 0-1 normalize per gene
+    scaler = MinMaxScaler()
+
+    # Fitting (2 minutes, ~8 GB of RAM)
+    normalized_compendium = scaler.fit_transform(mapped_compendium_df)
+    normalized_compendium_df = pd.DataFrame(
+        normalized_compendium,
+        columns=processed_compendium.columns,
+        index=processed_compendium.index
+    )
+
+    # Save normalized data on disk: ~17.5 minutes
+    normalized_compendium_df.to_csv(
+        normalized_filename, float_format='%.3f', sep='\t'
+    )
+
+
+def process_raw_compendium(
+        raw_filename,
+        gene_id_filename,
+        manual_mapping,
+        DE_prior_filename,
+        mapped_filename,
+        normalized_filename
+):
+    """
+    Create mapped recount2 compendium data file based on raw compendium
+    data file (`raw_filename`), then normalize the mapped compendium and
+    save the data on disk.
+    """
+
+    # Create mapped recount2 compendium data file
+    map_recount2_data(
+        raw_filename,
+        gene_id_filename,
+        manual_mapping,
+        DE_prior_filename,
+        mapped_filename,
+        DE_prior_filename
+    )
+
+    # Normalize mapped recount2 compendium data and save it on disk
+    normalize_compendium(mapped_filename, normalized_filename)
