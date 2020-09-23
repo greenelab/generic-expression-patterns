@@ -433,9 +433,12 @@ def create_all_recount2_compendium(download_dir, output_filename):
     column names, so only the header in the first `t_data_counts.tsv` is copied
     to the output file.
 
-    Arguments:
-      - download_dir: the dirname that hosts all downloaded projects data
-      - output_filename: the filename of the output single compendium data
+    Arguments
+    ---------
+    download_dir: str
+        the dirname that hosts all downloaded projects data
+    output_filename: str
+        the filename of the output single compendium data
     """
 
     data_counts_filenames = glob(f"{download_dir}/*/t_data_counts.tsv")
@@ -457,7 +460,14 @@ def create_all_recount2_compendium(download_dir, output_filename):
 
 
 def get_published_generic_genes(filename):
-    """Get generic genes based on input filename, which could be a URL."""
+    """
+    Get generic genes based on input filename, which could be a URL.
+
+    Arguments
+    ---------
+    filename: str
+        name of the file that includes published generic genes
+    """
 
     df = pd.read_csv(filename, header=0, sep="\t")
     published_generic_genes = list(df['Gene_Name'])
@@ -468,9 +478,16 @@ def get_merged_gene_id_mapping(gene_id_filename, raw_ensembl_genes):
     """
     Merge genes in input gene_id file with the raw ensembl gene IDs.
 
-    Arguments:
-    - gene_id_filename: filename of input gene IDs;
-    - raw_ensembl_genes: list of strings (ensembl gene IDs)
+    Arguments
+    ---------
+    gene_id_filename: str
+        filename of input gene IDs;
+    raw_ensembl_genes: list
+        list of strings (ensembl gene IDs)
+
+    Returns
+    -------
+    Mapping between ensembl ids and hgnc symbols
     """
 
     original_gene_id_mapping = pd.read_csv(
@@ -510,13 +527,19 @@ def get_renamed_columns(
     """
     Find the new column names and corresponding column indexes.
 
-    Arguments:
-    - raw_ensembl_ids: list of strings (ensembl gene IDs), which are columns
-                       names in raw recount2 data file;
-    - merged_gene_id_mapping: DataFrame of merged gene ID mapping;
-    - manual_mapping: dict of manual mapping (key: ensembl_id, value: gene symbol)
+    Arguments
+    ---------
+    raw_ensembl_ids:
+        list of strings (ensembl gene IDs), which are columns names in
+        raw recount2 data file;
+    merged_gene_id_mapping: DataFrame
+        merged gene ID mapping;
+    manual_mapping: dict
+        dict of manual mapping (key: ensembl_id, value: gene symbol)
 
-    Returns a tuple that includes two entries. The first entry is a list
+    Returns
+    -------
+    A tuple that includes two entries. The first entry is a list
     of hgnc gene symbols (which will be the new column names in remapped
     recount2 data file; The second entry is a dict whose keys are hgnc gene
     symbols and values are lists of the corresponding indexes of columns in
@@ -628,7 +651,7 @@ def process_raw_template(
     template data on disk.
     """
 
-    # Create mapped recount2 template data file
+    # Write the intermediate mapped recount2 template data file on disk
     map_recount2_data(
         raw_filename,
         gene_id_filename,
@@ -637,17 +660,20 @@ def process_raw_template(
         mapped_filename
     )
 
-    # Drop sample rows
+    sample_ids_to_drop = set()
     if os.path.exists(sample_id_metadata_filename):
         # Read in metadata and get samples to be dropped:
         metadata = pd.read_csv(
             sample_id_metadata_filename, sep='\t', header=0, index_col=0
         )
-        sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
+        sample_ids_to_drop = set(metadata[metadata["processing"] == "drop"].index)
 
-        template_df = pd.read_csv(mapped_filename, sep='\t', header=0, index_col=0)
-        template_df = template_df.drop(sample_ids_to_drop)
-        template_df.to_csv(processed_filename, sep='\t')
+    # Write the processed recount2 template output file on disk
+    with open(mapped_filename) as ifh, open(processed_filename, "w") as ofh:
+        for idx, line in enumerate(ifh):
+            sample_id = line.split('\t')[0]
+            if idx == 0 or sample_id not in sample_ids_to_drop:
+                ofh.write(line)
 
 
 def normalize_compendium(mapped_filename, normalized_filename):
@@ -671,8 +697,8 @@ def normalize_compendium(mapped_filename, normalized_filename):
     normalized_compendium = scaler.fit_transform(mapped_compendium_df)
     normalized_compendium_df = pd.DataFrame(
         normalized_compendium,
-        columns=processed_compendium.columns,
-        index=processed_compendium.index
+        columns=mapped_compendium_df.columns,
+        index=mapped_compendium_df.index
     )
 
     # Save normalized data on disk: ~17.5 minutes
@@ -701,8 +727,7 @@ def process_raw_compendium(
         gene_id_filename,
         manual_mapping,
         DE_prior_filename,
-        mapped_filename,
-        DE_prior_filename
+        mapped_filename
     )
 
     # Normalize mapped recount2 compendium data and save it on disk
