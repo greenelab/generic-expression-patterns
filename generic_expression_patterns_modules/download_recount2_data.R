@@ -9,12 +9,14 @@ library('recount')
 
 set.seed(123)
 
-get_recount2_template_experiment <- function(project_id, local_dir) {
+get_recount2_template_experiment <- function(project_id,
+                                             template_download_dir,
+                                             raw_template_filename) {
   # This function downloads the gene expression data associated
   # with the input project_id and saves it in the local_dir
 
   # Reset working directory to `local_dir`
-  setwd(local_dir)
+  setwd(template_download_dir)
 
   ## Data
 
@@ -28,7 +30,6 @@ get_recount2_template_experiment <- function(project_id, local_dir) {
   load(file.path(project_id, 'rse_gene.Rdata'), verbose=TRUE)
 
   # Counts are the number of reads that map that each gene
-
   rse_gene_scaled <- scale_counts(rse_gene)
   rse_gene_counts <- assays(rse_gene_scaled)$counts
   data_counts <- t(rse_gene_counts)
@@ -36,7 +37,7 @@ get_recount2_template_experiment <- function(project_id, local_dir) {
   ## Save counts matrix to file
   write.table(
     data_counts,
-    paste(local_dir, '/recount2_template_data.tsv', sep = ""),
+    raw_template_filename,
     sep = '\t',
     row.names = TRUE,
     col.names = NA
@@ -45,7 +46,7 @@ get_recount2_template_experiment <- function(project_id, local_dir) {
 }
 
 
-get_recount2_subset_compendium <- function(template_project_id,
+get_recount2_sra_subset <- function(template_project_id,
                                            num_experiments,
                                            local_dir,
                                            base_dir) {
@@ -128,11 +129,12 @@ get_recount2_subset_compendium <- function(template_project_id,
   )
 }
 
-# This function downloads all recount2 `rse_gene.Rdata` files and generates a
-# transposed data count file (`t_data_counts.tsv`) based on each `rse_gene.Rdata`.
+# This function downloads `rse_gene.Rdata` files for all recount2 SRA data and
+# generates a transposed data count file (`t_data_counts.tsv`) based on each
+# `rse_gene.Rdata`.
 # Note: Downloading may take 30 minutes to a few hours, depending on the speed
 #       of your network.
-download__all_recount2 <- function (metadata_dir, download_dir) {
+download_recount2_sra <- function (metadata_dir, download_dir) {
   # Download metadata file
   metadata <- all_metadata()
   write.table(

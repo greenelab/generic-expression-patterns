@@ -425,7 +425,7 @@ def compare_and_reorder_samples(expression_file, metadata_file):
         expression_data.to_csv(expression_file, sep="\t")
 
 
-def create_all_recount2_compendium(download_dir, output_filename):
+def create_recount2_compendium(download_dir, output_filename):
     """
     Concatenate `t_data_counts.tsv` in each project directory and create the
     single recount2 commpendium file in TSV format.
