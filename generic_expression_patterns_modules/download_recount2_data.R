@@ -15,10 +15,11 @@ get_recount2_template_experiment <- function(project_id,
   # This function downloads the gene expression data associated
   # with the input project_id and saves it in the local_dir
 
-  # Reset working directory to `local_dir`
-  setwd(template_download_dir)
+  # Save current working directory
+  original_wd = getwd()
 
-  ## Data
+  # Change working directory to `template_download_dir
+  setwd(template_download_dir)
 
   # Get data associated with project ids
   # Download the RSE (RangedSummarizedExperiment) object.
@@ -43,6 +44,8 @@ get_recount2_template_experiment <- function(project_id,
     col.names = NA
   )
 
+  # Set working directory back
+  setwd(original_wd)
 }
 
 
@@ -85,11 +88,6 @@ get_recount2_sra_subset <- function(template_project_id,
 
   # Add user selected project id
   selected_project_ids <- append(selected_project_ids, template_project_id)
-
-  # Reset working directory to `local_dir`
-  setwd(local_dir)
-
-  ## Data
 
   # Get data associated with project ids
   # Download the RangedSummarizedExperiment object
@@ -159,7 +157,10 @@ download_recount2_sra <- function (metadata_dir, download_dir) {
   metadata <- metadata[metadata[, "read_count_as_reported_by_sra"] > 0,]
   project_ids <- unique(metadata$project)
 
-  # Reset working directory to `download_dir`
+  # Save current working directory
+  original_wd = getwd()
+
+  # Change working directory to `download_dir`
   setwd(download_dir)
 
   for (idx in 1:length(project_ids)) {
@@ -181,4 +182,6 @@ download_recount2_sra <- function (metadata_dir, download_dir) {
     )
   }
 
+  # Set working directory back
+  setwd(original_wd)
 }

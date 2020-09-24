@@ -1,5 +1,7 @@
 # Functions to proces gene names
 
+library("biomaRt")
+
 convert_ensembl_to_symbol <- function(ensembl.genes) {
   require(biomaRt)
   ensembl = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
