@@ -1,389 +1,230 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Process recount2 data
 # This notebook does the following:
 # 
-# 1. Selects template experiment
-# 2. Download and process subset of recount2 data, including the template experiment (subset of random experiments + 1 template experiment)
+# 1. Select template experiment. This template experiment will be used in the next [notebook](2_identify_generic_genes_pathways.ipynb) to simulate experiments with the same experimental design but testing a different biological process.
 # 
-# Recount2 data processing:
-# 2a. Download recount2 as RangedSummarizedExperiment(rse) object for each project id provided. Raw reads were mapped to genes using Rail-RNA, which includes exon-exon splice junctions. RSE contains counts summarized at the **gene level** using the **Gencode v25 (GRCh38.p7, CHR) annotation** as provided by Gencode. 
 # 
-# 2b. These rse objects return [coverage counts](https://www.bioconductor.org/packages/devel/workflows/vignettes/recountWorkflow/inst/doc/recount-workflow.html) as opposed to read counts and therefore we need to apply [scale_counts](https://rdrr.io/bioc/recount/man/scale_counts.html) to scale by **sample coverage** (average number of reads mapped per nucleotide)
+# 2. Download and process SRA data in recount2
+#   
+#   2a. Download SRA data in recount2 as RangedSummarizedExperiment (rse) object for each project id provided. Raw reads were mapped to genes using Rail-RNA, which includes exon-exon splice junctions. RSE contains counts summarized at the **gene level** using the **Gencode v25 (GRCh38.p7, CHR) annotation** as provided by Gencode.
+#   
+#   2b. These rse objects return [coverage counts](https://www.bioconductor.org/packages/devel/workflows/vignettes/recountWorkflow/inst/doc/recount-workflow.html) as   opposed to read counts and therefore we need to apply [scale_counts](https://rdrr.io/bioc/recount/man/scale_counts.html) to scale by **sample coverage** (average number of reads mapped per nucleotide)
+#   
+#   2c. DESeq performs an internal normalization where geometric mean is calculated for each gene across all samples. The counts for a gene in each sample is then divided by this mean. The median of these ratios in a sample is the size factor for that sample. This procedure corrects for **library size** (i.e. sequencing depth = total number of reads sequenced for a given sample) and RNA composition bias. DESeq expects [un-normalized](http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#input-data) data.
 # 
-# 2c. DESeq contains performs an internal normalization where geometric mean is calculated for each gene across all samples. The counts for a gene in each sample is then divided by this mean. The median of these ratios in a sample is the size factor for that sample. This procedure corrects for **library size** (i.e. sequencing depth = total number of reads sequenced for a given sample) and RNA composition bias. DESeq expects [un-normalized](http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#input-data) data.
 # 
-# 3. Train VAE on subset of recount2 data
+# 3. Train VAE on recount2 data
 
-# In[1]:
+# In[ ]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('load_ext', 'rpy2.ipython')
 get_ipython().run_line_magic('autoreload', '2')
 
+
+# In[ ]:
+
+
 import os
-import sys
-import pandas as pd
-import numpy as np
-import rpy2
-import seaborn as sns
-from sklearn import preprocessing
-import pickle
-
 from ponyo import utils, train_vae_modules
-from generic_expression_patterns_modules import process, calc
-
-np.random.seed(123)
+from generic_expression_patterns_modules import process
 
 
-# In[2]:
+# ### Set parameters for data processing
+# 
+# Most parameters are read from `config_filename`. We manually selected bioproject [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764) as the template experiment, which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients with 2 replicates each.
 
+# In[ ]:
+
+
+base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 # Read in config variables
-base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
+config_filename = os.path.abspath(
+    os.path.join(base_dir, "configs", "config_human.tsv")
+)
 
-config_file = os.path.abspath(os.path.join(base_dir,
-                                           "configs",
-                                           "config_human.tsv"))
-params = utils.read_config(config_file)
+params = utils.read_config(config_filename)
 
-
-# ### Select template experiment
-# 
-# We manually selected bioproject [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764), which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients with 2 replicates each.
-
-# In[3]:
-
-
-# Load params
 local_dir = params["local_dir"]
-dataset_name = params['dataset_name']
-NN_architecture = params['NN_architecture']
-project_id = params['project_id']
-num_recount2_experiments = params['num_recount2_experiments']
-template_data_file = params['template_data_file']
-original_compendium_file = params['compendium_data_file']
-normalized_data_file = params['normalized_compendium_data_file']
-shared_genes_file = params['shared_genes_file']
-scaler_file = params['scaler_transform_file']
+dataset_name = params["dataset_name"]
 
-# Load metadata file with grouping assignments for samples
-sample_id_metadata_file = os.path.join(
+# File that contains generic genes identified by Crow et. al.
+DE_prior_filename = params['reference_gene_file']
+
+# Template experiment ID
+project_id = params['project_id']
+
+# Output file: pickled list of shared genes(generated during gene ID mapping)
+shared_genes_filename = params['shared_genes_filename']
+
+# Output files of recount2 template experiment data
+raw_template_filename = params['raw_template_filename']
+mapped_template_filename = params['mapped_template_filename']
+processed_template_filename = params['processed_template_filename']
+
+# Output files of recount2 compendium data
+raw_compendium_filename = params['raw_compendium_filename']
+mapped_compendium_filename = params['mapped_compendium_filename']
+normalized_compendium_filename = params['normalized_compendium_filename']
+
+# Output file: pickled scaler (generated during compendium normalization)
+scaler_filename = params['scaler_filename']
+
+
+# ### Download template experiment's expression data and generate raw template data file
+
+# In[ ]:
+
+
+# Directory where the downloaded files of template experiment will be saved into
+template_download_dir = os.path.join(local_dir, "template_download")
+
+# Make sure this directory already exists
+os.makedirs(template_download_dir, exist_ok=True)
+
+
+# In[ ]:
+
+
+get_ipython().run_cell_magic('R', '-i project_id -i template_download_dir -i raw_template_filename', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_template_experiment(project_id, template_download_dir, raw_template_filename)")
+
+
+# ### Download all recount2 SRA data
+
+# In[ ]:
+
+
+# Directory where the recount2 SRA data files are saved into
+compendium_download_dir = os.path.join(local_dir, "compendium_download")
+# Make sure this directory already exists
+os.makedirs(compendium_download_dir, exist_ok=True)
+
+metadata_dir = local_dir
+
+
+# In[ ]:
+
+
+get_ipython().run_cell_magic('R', '-i metadata_dir -i compendium_download_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\ndownload_recount2_sra(metadata_dir, compendium_download_dir)")
+
+
+# ### Create raw recount2 compendium data file
+# Compile data in individual projects together into a single raw compendium file. 
+
+# In[ ]:
+
+
+# Output file: `raw_compendium_filename`
+process.create_recount2_compendium(compendium_download_dir, raw_compendium_filename)
+
+
+# ### Subset genes and convert gene names
+# For our downstream analysis, we will be comparing our set of differentially expression genes against the set found in [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf), therefore we will limit our genes to include only those genes shared between our starting set of genes and those in publication. 
+
+# In[ ]:
+
+
+# File mapping ensembl ids to hgnc symbols
+gene_id_filename = os.path.join(local_dir, "ensembl_hgnc_mapping.tsv")
+
+
+# In[ ]:
+
+
+get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename', '\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n# Input: raw_template_filename, output: gene_id_filename\n\nsource(\'../generic_expression_patterns_modules/process_names.R\')\n\n# Note: This mapping file from ensembl ids to hgnc symbols is based on the library("biomaRt")\n# that gets updated. In order to get the most up-to-date version, you can delete the \n# ensembl_hgnc_mapping file to re-run the script that generates this mapping.\n\nif (file.exists(gene_id_filename) == FALSE) {\n  get_ensembl_symbol_mapping(raw_template_filename, gene_id_filename)\n}')
+
+
+# ### Map ensembl gene IDs in template experiment data
+# This step will map the ensembl gene IDs in raw template data file to hgnc gene symbols, and delete certain columns (genes) and rows (samples). 
+# 
+# Output files generated in this step: 
+# - `shared_genes_filename`: pickled list of shared genes (created only if it doesn't exist yet)
+# - `mapped_template_filename`: template data with column names mapped to hgnc gene symbols
+# - `processed_template_filename`: template data with some sample rows dropped
+
+# In[ ]:
+
+
+manual_mapping = {                                                                                  
+    "ENSG00000187510.7": "PLEKHG7",       
+    "ENSG00000230417.11": "LINC00595",                      
+    "ENSG00000276085.1": "CCL3L1",                     
+    "ENSG00000255374.3": "TAS2R45",                       
+}
+
+# metadata file with grouping assignments for samples
+sample_id_metadata_filename = os.path.join(
     base_dir,
     dataset_name,
     "data",
     "metadata",
-    f"{project_id}_process_samples.tsv")
-
-
-# ### Download subset of recount2 to use as a compendium
-# The compendium will be composed of random experiments + the selected template experiment
-
-# In[4]:
-
-
-get_ipython().run_cell_magic('R', '', '# Select 59\n# Select a\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("derfinder")\n#BiocManager::install("recount")')
-
-
-# In[5]:
-
-
-get_ipython().run_cell_magic('R', '', "suppressPackageStartupMessages(library('recount'))")
-
-
-# In[6]:
-
-
-get_ipython().run_cell_magic('R', '-i project_id -i num_recount2_experiments -i local_dir -i base_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_compendium(project_id, num_recount2_experiments, local_dir, base_dir)")
-
-
-# ### Download expression data for selected project id
-
-# In[7]:
-
-
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_template_experiment(project_id, local_dir)")
-
-
-# ### Subset genes and convert gene names
-# For our downstream analysis we will be comparing our set of differentially expression genes against the set found in [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf), therefore we will limit our genes to include only those genes shared between our starting set of genes and those in publication. 
-
-# In[8]:
-
-
-# Get generic genes identified by Crow et. al.
-DE_prior_file = "https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
-
-DE_prior = pd.read_csv(DE_prior_file,
-                       header=0,
-                       sep="\t")
-
-DE_prior.head()
-
-
-# In[9]:
-
-
-# Get list of published generic genes
-published_generic_genes = list(DE_prior['Gene_Name'])
-
-
-# In[10]:
-
-
-# Get list of our genes
-
-# Read template data
-template_data = pd.read_csv(
-    template_data_file,
-    header=0,
-    sep='\t',
-    index_col=0)
-
-our_gene_ids = list(template_data.columns)
-
-
-# In[11]:
-
-
-# File mapping ensembl ids to hgnc symbols
-gene_id_file = os.path.join(
-    local_dir,
-    "ensembl_hgnc_mapping.tsv")
-
-
-# In[12]:
-
-
-get_ipython().run_cell_magic('R', '', 'suppressWarnings(library("biomaRt"))')
-
-
-# In[13]:
-
-
-get_ipython().run_cell_magic('R', '-i template_data_file -i gene_id_file', "\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n\nsource('../generic_expression_patterns_modules/process_names.R')\n\nif (file.exists(gene_id_file) == FALSE){\n    gene_id_mapping <- get_ensembl_symbol_mapping(template_data_file, gene_id_file)\n}")
-
-
-# In[14]:
-
-
-# Read gene id mapping
-gene_id_mapping = pd.read_csv(
-        gene_id_file,
-        header=0,
-        sep='\t',
-        index_col=0)
-
-print(gene_id_mapping.shape)
-gene_id_mapping.head()
-
-
-# In[15]:
-
-
-# Get mapping between ensembl ids with and without version numbers
-# Expressiond data uses ensembl gene ids with version number 
-ensembl_gene_ids = pd.DataFrame(data={'ensembl_version': our_gene_ids,
-                                      'ensembl_parsed': [gene_id.split('.')[0] for gene_id in our_gene_ids]})
-
-print(ensembl_gene_ids.shape)
-ensembl_gene_ids.head()
-
-
-# In[16]:
-
-
-# Map ensembl ids with version number to gene_id_mapping_df
-gene_id_mapping = pd.merge(gene_id_mapping, 
-                           ensembl_gene_ids, 
-                           left_on='ensembl_gene_id',
-                           right_on='ensembl_parsed', 
-                           how='outer')
-
-print(gene_id_mapping.shape)
-gene_id_mapping.set_index('ensembl_version', inplace=True)
-gene_id_mapping.head()
-
-
-# Since this experiment contains both RNA-seq and smRNA-seq samples which are in different ranges so we will drop smRNA samples so that samples are within the same range. The analysis identifying these two subsets of samples can be found in this [notebook](../explore_data/viz_template_experiment.ipynb)
-
-# In[17]:
-
-
-# Replace ensembl ids with gene symbols
-template_data = process.replace_ensembl_ids(template_data,
-                                            gene_id_mapping)
-
-
-# In[18]:
-
-
-template_data.head()
-
-
-# In[19]:
-
-
-# Get intersection of gene lists
-our_gene_ids_hgnc = template_data.columns
-shared_genes_hgnc = list(set(our_gene_ids_hgnc).intersection(published_generic_genes))
-print(len(shared_genes_hgnc))
-
-
-# In[20]:
-
-
-# Save shared genes
-outfile = open(shared_genes_file,'wb')
-pickle.dump(shared_genes_hgnc,outfile)
-outfile.close()
-
-
-# In[21]:
-
-
-if os.path.exists(sample_id_metadata_file):
-    # Read in metadata
-    metadata = pd.read_csv(sample_id_metadata_file, sep='\t', header=0, index_col=0)
-    
-    # Get samples to be dropped
-    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
-
-    template_data = template_data.drop(sample_ids_to_drop)
-    
-    if project_id == "SRP012656":
-        assert(template_data.shape[0] == 24)
-
-
-# In[22]:
-
-
-# Drop genes
-template_data = template_data[shared_genes_hgnc]
-
-print(template_data.shape)
-template_data.head()
-
-
-# In[23]:
-
-
-# Round read counts to int
-template_data = template_data.astype(int)
-
-
-# In[24]:
-
-
-print(len(template_data.columns) - len(shared_genes_hgnc))
-
-
-# *Note:* There is a difference in the number of `shared_genes_hgnc` and genes in the template experiment because 3 genes have 2 different ensembl gene ids have map to the same hgnc symbol (one forward, one reverse)
-
-# ### Normalize compendium 
-
-# In[25]:
-
-
-# Read data
-original_compendium = pd.read_table(
-    original_compendium_file,
-    header=0,
-    sep='\t',
-    index_col=0)
-
-print(original_compendium.shape)
-original_compendium.head()
-
-
-# In[26]:
-
-
-# Replace ensembl ids with gene symbols
-original_compendium = process.replace_ensembl_ids(original_compendium,
-                                                gene_id_mapping)
-
-
-# In[27]:
-
-
-# Drop genes
-original_compendium = original_compendium[shared_genes_hgnc]
-
-original_compendium.head()
-
-
-# In[28]:
-
-
-# Round compendium read counts to int
-original_compendium = original_compendium.astype(int)
-
-
-# In[29]:
-
-
-# 0-1 normalize per gene
-scaler = preprocessing.MinMaxScaler()
-original_data_scaled = scaler.fit_transform(original_compendium)
-original_data_scaled_df = pd.DataFrame(original_data_scaled,
-                                columns=original_compendium.columns,
-                                index=original_compendium.index)
-
-print(original_data_scaled_df.shape)
-original_data_scaled_df.head()
-
-
-# In[30]:
-
-
-# Save data
-template_data.to_csv(
-    template_data_file, float_format='%.5f', sep='\t')
-
-original_compendium.to_csv(
-    original_compendium_file, float_format='%.3f', sep='\t')
-
-original_data_scaled_df.to_csv(
-    normalized_data_file, float_format='%.3f', sep='\t')
-
-# Save scaler transform
-outfile = open(scaler_file,'wb')
-pickle.dump(scaler,outfile)
-outfile.close()
+    f"{project_id}_process_samples.tsv"
+)
+
+process.process_raw_template(
+    raw_template_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    mapped_template_filename,
+    sample_id_metadata_filename,
+    processed_template_filename
+)
+
+
+# ### Map ensembl gene IDs in raw compendium file and normalize it
+# The mapping process in this step is similar to the one when processing template data. 
+# 
+# Output files generated in this step:
+# - `shared_genes_filename`: pickled list of shared genes (created only if it doesn't exist yet)
+# - `mapped_compendium_filename`: compendium data with column names mapped to hgnc gene symbols
+# - `normalized_compendium_filename`: normalized compendium data
+# - `scaler_filename`: pickled scaler
+
+# In[ ]:
+
+
+process.process_raw_compendium(
+    raw_compendium_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    mapped_compendium_filename,
+    normalized_compendium_filename, 
+    scaler_filename
+)
 
 
 # ### Train VAE 
 # Performed exploratory analysis of compendium data [here](../explore_data/viz_recount2_compendium.ipynb) to help interpret loss curve.
 
-# In[31]:
+# In[ ]:
 
 
-# Setup directories
-# Create VAE directories
-output_dirs = [os.path.join(base_dir, dataset_name, "models"),
-               os.path.join(base_dir, dataset_name, "logs")]
+# Create VAE directories if needed
+output_dirs = [
+    os.path.join(base_dir, dataset_name, "models"),
+    os.path.join(base_dir, dataset_name, "logs")
+]
 
-# Check if analysis output directory exist otherwise create
-for each_dir in output_dirs:
-    if os.path.exists(each_dir) == False:
-        print('creating new directory: {}'.format(each_dir))
-        os.makedirs(each_dir, exist_ok=True)
+NN_architecture = params['NN_architecture']
 
 # Check if NN architecture directory exist otherwise create
 for each_dir in output_dirs:
-    new_dir = os.path.join(each_dir, NN_architecture)
-    if os.path.exists(new_dir) == False:
-        print('creating new directory: {}'.format(new_dir))
-        os.makedirs(new_dir, exist_ok=True)
+    sub_dir = os.path.join(each_dir, NN_architecture)
+    os.makedirs(sub_dir, exist_ok=True)
 
 
-# In[32]:
+# In[ ]:
 
 
 # Train VAE on new compendium data
-train_vae_modules.train_vae(config_file,
-                   normalized_data_file)
+train_vae_modules.train_vae(config_filename, normalized_compendium_filename)
 

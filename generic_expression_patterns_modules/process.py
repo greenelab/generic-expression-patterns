@@ -6,9 +6,10 @@ These scripts provide supporting functions to run analysis notebooks.
 These scripts include: replacing ensembl gene ids with hgnc symbols.
 """
 
-import pandas as pd
 import os
+import pickle
 import numpy as np
+import pandas as pd
 import sklearn
 from glob import glob
 from sklearn.preprocessing import MinMaxScaler
@@ -425,7 +426,7 @@ def compare_and_reorder_samples(expression_file, metadata_file):
         expression_data.to_csv(expression_file, sep="\t")
 
 
-def create_all_recount2_compendium(download_dir, output_filename):
+def create_recount2_compendium(download_dir, output_filename):
     """
     Concatenate `t_data_counts.tsv` in each project directory and create the
     single recount2 commpendium file in TSV format.
@@ -436,9 +437,9 @@ def create_all_recount2_compendium(download_dir, output_filename):
     Arguments
     ---------
     download_dir: str
-        the dirname that hosts all downloaded projects data
+        dirname that hosts all downloaded projects data
     output_filename: str
-        the filename of the output single compendium data
+        filename of output single compendium data
     """
 
     data_counts_filenames = glob(f"{download_dir}/*/t_data_counts.tsv")
@@ -522,7 +523,8 @@ def get_renamed_columns(
         raw_ensembl_ids,
         merged_gene_id_mapping,
         manual_mapping,
-        DE_prior_filename
+        DE_prior_filename,
+        shared_genes_filename
 ):
     """
     Find the new column names and corresponding column indexes.
@@ -536,6 +538,10 @@ def get_renamed_columns(
         merged gene ID mapping;
     manual_mapping: dict
         dict of manual mapping (key: ensembl_id, value: gene symbol)
+    DE_prior_filename: str
+        input filename that includes symbols of published generic genes
+    shared_genes_filename: str
+        name of output pickled file (a list of shared gene symbols)
 
     Returns
     -------
@@ -582,6 +588,11 @@ def get_renamed_columns(
     # is non-deterministic, so it is sorted here to have reproducible result.
     shared_genes_hgnc.sort()
 
+    # Pickle `shared_genes_hgnc` and save as `shared_genes_filename`
+    if not os.path.exists(shared_genes_filename):
+        with open(shared_genes_filename, 'wb') as pkl_fh:
+            pickle.dump(shared_genes_hgnc, pkl_fh)
+
     return (shared_genes_hgnc, hgnc_to_cols)
 
 
@@ -590,6 +601,7 @@ def map_recount2_data(
         gene_id_filename,
         manual_mapping,
         DE_prior_filename,
+        shared_genes_filename,
         new_filename
 ):
     """
@@ -609,7 +621,11 @@ def map_recount2_data(
     )
 
     shared_genes_hgnc, hgnc_to_cols = get_renamed_columns(
-        raw_ensembl_ids, merged_gene_id_mapping, manual_mapping, DE_prior_filename
+        raw_ensembl_ids,
+        merged_gene_id_mapping,
+        manual_mapping,
+        DE_prior_filename,
+        shared_genes_filename
     )
 
     col_indexes = list()
@@ -641,6 +657,7 @@ def process_raw_template(
         gene_id_filename,
         manual_mapping,
         DE_prior_filename,
+        shared_genes_filename,
         mapped_filename,
         sample_id_metadata_filename,
         processed_filename
@@ -657,6 +674,7 @@ def process_raw_template(
         gene_id_filename,
         manual_mapping,
         DE_prior_filename,
+        shared_genes_filename,
         mapped_filename
     )
 
@@ -676,10 +694,14 @@ def process_raw_template(
                 ofh.write(line)
 
 
-def normalize_compendium(mapped_filename, normalized_filename):
+def normalize_compendium(
+        mapped_filename,
+        normalized_filename,
+        scaler_filename,
+):
     """
-    Read the mapped compendium file into memor, normalize it, then save
-    the normalized compendium as a tsv file, and pickle the scaler.
+    Read the mapped compendium file into memor, normalize it, and save
+    both normalized compendium data and pickled scaler on disk.
     """
 
     # Read mapped compendium file: ~4 minutes (17 GB of RAM)
@@ -706,19 +728,24 @@ def normalize_compendium(mapped_filename, normalized_filename):
         normalized_filename, float_format='%.3f', sep='\t'
     )
 
+    # Pickle `scaler` as `scaler_filename` on disk
+    with open(scaler_filename, 'wb') as pkl_fh:
+        pickle.dump(scaler, pkl_fh)
+
 
 def process_raw_compendium(
         raw_filename,
         gene_id_filename,
         manual_mapping,
         DE_prior_filename,
+        shared_genes_filename,
         mapped_filename,
-        normalized_filename
+        normalized_filename,
+        scaler_filename
 ):
     """
     Create mapped recount2 compendium data file based on raw compendium
-    data file (`raw_filename`), then normalize the mapped compendium and
-    save the data on disk.
+    data file (`raw_filename`), and normalize the mapped compendium.
     """
 
     # Create mapped recount2 compendium data file
@@ -727,8 +754,13 @@ def process_raw_compendium(
         gene_id_filename,
         manual_mapping,
         DE_prior_filename,
+        shared_genes_filename,
         mapped_filename
     )
 
-    # Normalize mapped recount2 compendium data and save it on disk
-    normalize_compendium(mapped_filename, normalized_filename)
+    # Normalize mapped recount2 compendium data
+    normalize_compendium(
+        mapped_filename,
+        normalized_filename,
+        scaler_filename
+    )
