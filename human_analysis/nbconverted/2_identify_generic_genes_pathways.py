@@ -193,7 +193,7 @@ metadata_file = os.path.join(
 # In[9]:
 
 
-get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\nBiocManager::install("DESeq2")')
+get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("DESeq2")')
 
 
 # In[10]:
@@ -344,7 +344,7 @@ summary_gene_ranks.to_csv(
 # In[28]:
 
 
-get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\nBiocManager::install("GSA")\nBiocManager::install("fgsea")')
+get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\nrequireNamespace("BiocManager", quietly = TRUE)\nBiocManager::install("GSA")\nBiocManager::install("fgsea")')
 
 
 # In[29]:
