@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Process recount2 data
@@ -30,18 +30,13 @@ get_ipython().run_line_magic('autoreload', '2')
 
 
 import os
-import sys
-import pandas as pd
-import numpy as np
-import pickle
-
 from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process
 
 
 # ### Set parameters for data processing
 # 
-# Most parameters are read from `config_file`. We manually selected bioproject [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764) as the template experiment, which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients with 2 replicates each.
+# Most parameters are read from `config_filename`. We manually selected bioproject [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764) as the template experiment, which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients with 2 replicates each.
 
 # In[ ]:
 
@@ -49,11 +44,11 @@ from generic_expression_patterns_modules import process
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 # Read in config variables
-config_file = os.path.abspath(
+config_filename = os.path.abspath(
     os.path.join(base_dir, "configs", "config_human.tsv")
 )
 
-params = utils.read_config(config_file)
+params = utils.read_config(config_filename)
 
 local_dir = params["local_dir"]
 dataset_name = params["dataset_name"]
@@ -64,19 +59,21 @@ DE_prior_filename = params['reference_gene_file']
 # Template experiment ID
 project_id = params['project_id']
 
-# Output files for recount2 template experiment
+# Output file: pickled list of shared genes(generated during gene ID mapping)
+shared_genes_filename = params['shared_genes_filename']
+
+# Output files of recount2 template experiment data
 raw_template_filename = params['raw_template_filename']
 mapped_template_filename = params['mapped_template_filename']
 processed_template_filename = params['processed_template_filename']
 
-# Output files for recount2 compendium data
+# Output files of recount2 compendium data
 raw_compendium_filename = params['raw_compendium_filename']
 mapped_compendium_filename = params['mapped_compendium_filename']
 normalized_compendium_filename = params['normalized_compendium_filename']
 
-# Are these two pickle files for debugging only?
-shared_genes_file = params['shared_genes_file']
-scaler_file = params['scaler_transform_file']
+# Output file: pickled scaler (generated during compendium normalization)
+scaler_filename = params['scaler_filename']
 
 
 # ### Download template experiment's expression data and generate raw template data file
@@ -139,19 +136,16 @@ gene_id_filename = os.path.join(local_dir, "ensembl_hgnc_mapping.tsv")
 # In[ ]:
 
 
-get_ipython().run_cell_magic('R', '', 'suppressWarnings(library("biomaRt"))')
-
-
-# In[ ]:
-
-
 get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename', '\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n# Input: raw_template_filename, output: gene_id_filename\n\nsource(\'../generic_expression_patterns_modules/process_names.R\')\n\n# Note: This mapping file from ensembl ids to hgnc symbols is based on the library("biomaRt")\n# that gets updated. In order to get the most up-to-date version, you can delete the \n# ensembl_hgnc_mapping file to re-run the script that generates this mapping.\n\nif (file.exists(gene_id_filename) == FALSE) {\n  get_ensembl_symbol_mapping(raw_template_filename, gene_id_filename)\n}')
 
 
 # ### Map ensembl gene IDs in template experiment data
 # This step will map the ensembl gene IDs in raw template data file to hgnc gene symbols, and delete certain columns (genes) and rows (samples). 
 # 
-# Two output files will be generated in this step: `mapped_template_filename` and `processed_template_filename`.
+# Output files generated in this step: 
+# - `shared_genes_filename`: pickled list of shared genes (created only if it doesn't exist yet)
+# - `mapped_template_filename`: template data with column names mapped to hgnc gene symbols
+# - `processed_template_filename`: template data with some sample rows dropped
 
 # In[ ]:
 
@@ -177,6 +171,7 @@ process.process_raw_template(
     gene_id_filename,
     manual_mapping,
     DE_prior_filename,
+    shared_genes_filename,
     mapped_template_filename,
     sample_id_metadata_filename,
     processed_template_filename
@@ -186,7 +181,11 @@ process.process_raw_template(
 # ### Map ensembl gene IDs in raw compendium file and normalize it
 # The mapping process in this step is similar to the one when processing template data. 
 # 
-# Two output files will be generated in this step: `mapped_compendium_filename` and `normalized_compendium_filename`.
+# Output files generated in this step:
+# - `shared_genes_filename`: pickled list of shared genes (created only if it doesn't exist yet)
+# - `mapped_compendium_filename`: compendium data with column names mapped to hgnc gene symbols
+# - `normalized_compendium_filename`: normalized compendium data
+# - `scaler_filename`: pickled scaler
 
 # In[ ]:
 
@@ -196,8 +195,10 @@ process.process_raw_compendium(
     gene_id_filename,
     manual_mapping,
     DE_prior_filename,
+    shared_genes_filename,
     mapped_compendium_filename,
-    normalized_compendium_filename
+    normalized_compendium_filename, 
+    scaler_filename
 )
 
 
@@ -217,13 +218,13 @@ NN_architecture = params['NN_architecture']
 
 # Check if NN architecture directory exist otherwise create
 for each_dir in output_dirs:
-    new_dir = os.path.join(each_dir, NN_architecture)
-    os.makedirs(new_dir, exist_ok=True)
+    sub_dir = os.path.join(each_dir, NN_architecture)
+    os.makedirs(sub_dir, exist_ok=True)
 
 
 # In[ ]:
 
 
 # Train VAE on new compendium data
-train_vae_modules.train_vae(config_file, normalized_compendium_filename)
+train_vae_modules.train_vae(config_filename, normalized_compendium_filename)
 
