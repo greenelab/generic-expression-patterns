@@ -6,7 +6,7 @@
 
 **University of Pennsylvania, University of Colorado Anschutz Medical Campus**
 
-**Rationale**: People performing differential expression (DE) analysis find that some genes and subsequent pathways are more likely to be differentially expressed even across a wide range of experimental designs.[Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793 ); [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491). 
+**Rationale**: People performing differential expression (DE) analysis find that some genes and subsequent pathways are more likely to be differentially expressed even across a wide range of experimental designs ([Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793 ); [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491)). 
 
 Given that there exists these commonly DE genes and subsequent pathways, it is important to be able to distinguish between genes that are generic versus experiment or condition-specific. These specific genes may point to, say, those genes that are disease-specific and may reveal new insights into pathogenic mechanisms that might have gotten overlooked by examining all the DE genes in aggregate. And these disease-specific genes can also help to prioritize DEGs for follow-up wet experiments/functional experiments. For example, [Swindell et. al.](https://www.sciencedirect.com/science/article/pii/S0022202X16312465#fig3) identified IL-17A as an inducer of DEGs most uniquely elevated in psoriasis lesions compared to other skin diseases. Furthermore, clinical data demonstrating efficacy of anti-IL-17A therapy for moderate-to-severe psoriasis. In general being able to distinguish between generic vs context-specific signals is important to learning gene function and revealing insights into mechanism of disease.
 
@@ -54,9 +54,10 @@ pip install -e .
 ```
 6. Navigate to either the `pseudomonas_analysis` or `human_analysis` directories and run the notebooks in order.
 
-Note: 
-* The data used for the analysis in the publication can be found [here](https://recount2.s3.amazonaws.com/normalized_recount2_compendium_data.tsv). 
-* The VAE trained models used in the publication can be found [here](human_analysis/models/)
+*Note:* Running the `human_analysis/1_process_recount2_data.ipynb` notebook can take a while since the dataset is very large. If you would like to run only the analysis  (`2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations: 
+* The normalized compendium data used for the analysis in the publication can be found [here](https://recount2.s3.amazonaws.com/normalized_recount2_compendium_data.tsv). 
+* The mapped template file can be found ____
+* The scaler file can be found ____
 
 ## How to run using your own data
 
@@ -102,9 +103,12 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | :--- | :---------- |
 | local_dir| str: Parent directory on local machine to store intermediate results|
 | dataset_name| str: Name for analysis directory, which contains the notebooks being run. For our analysis its named "human_analysis"|
-| template_data_file | str: Path on your local machine where to write and store template gene expression data file|
-| compendium_data_file | str: Path on your local machine where to write and store compendium gene expression data file|
-| normalized_compendium_data_file | str: Path on your local machine where to write and store normalized compendium gene expression data file|
+| raw_template_filename | str: Downloaded template gene expression data file|
+| mapped_template_filename | str: Template gene expression data file after replacing gene ids in header|
+| processed_template_filename | str: Template gene expression data file after removing samples and genes|
+| raw_compendium_filename | str: Downloaded compendium gene expression data file|
+| mapped_compendium_filename | str: Compendium gene expression data file after replacing gene ids in header|
+| normalized_compendium_filename | str: Normalized compendium gene expression data file|
 | shared_genes_file | str: Path on your local machine where to write and store genes that will be examined. These genes are the intersection of genes in your dataset versus a reference to ensure that there are not Nans in downstream analysis|
 | scaler_transform_file | str: Path on your local machine where to write and store normalization transform to be used to process data for visualization|
 | reference_gene_file* | str: Path to file that contains reference genes and their rank|
