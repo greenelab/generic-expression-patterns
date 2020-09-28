@@ -6,40 +6,44 @@
 
 **University of Pennsylvania, University of Colorado Anschutz Medical Campus**
 
-**Background** (from [Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793)) 
-* Gene Set Enrichment Analysis (GSEA) was developed to help with the analysis and interpretation of the long lists of genes produced from high-throughput transcriptomic experiments. 
-* By summarizing genome-wide gene expression changes into gene sets (groups of functionally related genes) a user can gain insight into how biological pathways and processes are affected under the tested experimental conditions. 
-* The power of GSEA lies in its use of gene sets, which provide a more stable and interpretable measure of biological functions compared to individual genes that can show greater experimental and technical variation
-* The underlying hypothesis of GSEA is that genes involved in a similar biological process or pathway (grouped into gene sets) are coordinately regulated. Thus, if an experimental perturbation activates a pathway, the genes in the associated gene set will be coordinately up-regulated (i.e. there will be an overrepresentation of genes in the gene set in the set of DEGs) and this pattern can be identified using statistical tests. The enrichment score, which reflects the degree to which genes in a gene set are over-represented at either end of a ranked gene list
+**Rationale**: People performing differential expression (DE) analysis find that some genes and subsequent pathways are more likely to be differentially expressed even across a wide range of experimental designs.[Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793 ); [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491). 
 
-**Rationale**: People performing differential expression (DE) analysis find that some genes and subsequent pathways are more likely to be differentially expressed even across a wide range of experimental designs.[Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793 ); [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491). Powers et. al. developped a tool, [Explorer-InContext](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793) with corresponding [app](https://www.biorxiv.org/content/10.1101/659847v1.full.pdf), to try to correct for these commonly enriched gene sets by comparing gene set ranks from a target experiment with a null set of experiments (called "context"). In other words, the gene set ranks obtained from the target experiment are compared against the gene set ranks from the null experiments to determine if high rank gene sets from the target experiment are significant given the distribution of their rank in the null set. This method required a large manual curation effort to: collect a large set of samples with corresponding metadata (metadata is used to group samples per experiment and perform DE analysis to get ranked list of genes)
+Given that there exists these commonly DE genes and subsequent pathways, it is important to be able to distinguish between genes that are generic versus experiment or condition-specific. These specific genes may point to, say, those genes that are disease-specific and may reveal new insights into pathogenic mechanisms that might have gotten overlooked by examining all the DE genes in aggregate. And these disease-specific genes can also help to prioritize DEGs for follow-up wet experiments/functional experiments. For example, [Swindell et. al.](https://www.sciencedirect.com/science/article/pii/S0022202X16312465#fig3) identified IL-17A as an inducer of DEGs most uniquely elevated in psoriasis lesions compared to other skin diseases. Furthermore, clinical data demonstrating efficacy of anti-IL-17A therapy for moderate-to-severe psoriasis. In general being able to distinguish between generic vs context-specific signals is important to learning gene function and revealing insights into mechanism of disease.
 
-**Importance:**
-Why is it important to identify generic genes and pathways?
 
 **Challenge**: 
-Identification of generic genes and pathways required a large manual curation effort. If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require a lot of manual effort. Similarly, using a different statistical method will require re-curation effort
+Current methods, including Powers et. al. and Crow et. al., to identify generic genes and pathways rely on manual curation. This curation effort included collecting a large set of samples with corresponding metadata, process data and perform DE analysis to get ranked list of genes.
+
+If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require a lot of manual effort. Similarly, using a different statistical method will require re-curation effort
+
 
 **Goal of this study:**
 * To show that our compendia simulation method, [ponyo](https://github.com/greenelab/ponyo) can automatically identify generic genes and pathways
-* We can extend our method to analyze RNA-seq data which would otherwise have required a re-curation effort
-* We can extend our method to analyze data from a different organism which would otherwise required a re-curation effort
 
-**Approach**:
-1. Select binary case-control experiment from recount2 or pseudomonas dataset
-2. Simulate 25 new experiments using experiment (1) as template
-3. Perform DE analysis to get association statistics
-4. Perform enrichment analysis using DE stats
-5. Rank DEGs and pathways based on aggregated statistics across the simulated experiments
+**Results:**
+* We found a set of general generic genes (i.e. genes found to be generic in both recount2 and crow et. al., which contain a mix of experiments)
+* We developed a method to automatically identify generic genes in different contexts without having to perform experiments and curate. 
+
 
 ## How to run notebooks from generic-expression-patterns
+
+**Operating Systems:** Mac OS, Linux
 
 In order to run this simulation on your own gene expression data the following steps should be performed:
 
 First you need to set up your local repository: 
-1. Clone the `generic-expression-patterns` repository
+1. Download and install [github's large file tracker](https://git-lfs.github.com/).
 2. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
-3. Set up conda environment by running the following command in the terminal:
+3. Clone the `generic-expression-patterns` repository by running the following command in the terminal:
+```
+git clone https://github.com/greenelab/generic-expression-patterns.git
+```
+Note: Git automatically detects the LFS-tracked files and clones them via http.
+4. Navigate into cloned repo by running the following command in the terminal:
+```
+cd generic-expression-patterns
+```
+5. Set up conda environment by running the following command in the terminal:
 ```bash
 # conda version 4.6.12
 conda env create -f environment.yml
@@ -48,16 +52,29 @@ conda activate generic_expression
 
 pip install -e .
 ```
-4. Navigate to either the `human_analysis` or `pseudomonas_analysis` directories and run the notebooks.
+6. Navigate to either the `pseudomonas_analysis` or `human_analysis` directories and run the notebooks in order.
+
+Note: 
+* The data used for the analysis in the publication can be found [here](https://recount2.s3.amazonaws.com/normalized_recount2_compendium_data.tsv). 
+* The VAE trained models used in the publication can be found [here](human_analysis/models/)
 
 ## How to run using your own data
 
 In order to run this simulation on your own gene expression data the following steps should be performed:
 
-First you need to set up your local repository and environment: 
-1. Clone the `generic-expression-patterns` repository
+First you need to set up your local repository: 
+1. Download and install [github's large file tracker](https://git-lfs.github.com/).
 2. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
-3. Set up conda environment by running the following command in the terminal:
+3. Clone the `generic-expression-patterns` repository by running the following command in the terminal:
+```
+git clone https://github.com/greenelab/generic-expression-patterns.git
+```
+Note: Git automatically detects the LFS-tracked files and clones them via http.
+4. Navigate into cloned repo by running the following command in the terminal:
+```
+cd generic-expression-patterns
+```
+5. Set up conda environment by running the following command in the terminal:
 ```bash
 # conda version 4.6.12
 conda env create -f environment.yml
@@ -66,15 +83,15 @@ conda activate generic_expression
 
 pip install -e .
 ```
-4. Create a new analysis folder in the main directory. This is equivalent to the `human_analysis` directory
-5. Copy jupyter notebooks (1_process_data.ipynb, 2_identify_generic_genes_pathways.ipynb) into analysis directory.
-6. Customize `1_process_data.ipynb` to generate the following saved files: 1) compendium of gene expression data, 2) template experiment data, 3) normalized gene expression compendium. See examples of this processing in `human_analysis/` and `pseudomonas_analysis/`.
-7. Required data files:
+5. Create a new analysis folder in the main directory. This is equivalent to the `human_analysis` directory
+6. Copy jupyter notebooks (1_process_data.ipynb, 2_identify_generic_genes_pathways.ipynb) into analysis directory.
+7. Customize `1_process_data.ipynb` to generate the following saved files: 1) compendium of gene expression data, 2) template experiment data, 3) normalized gene expression compendium. See examples of this processing in `human_analysis/` and `pseudomonas_analysis/`.
+8. Required data files:
 * Gene expression compendium to use as input data. Specify path of data file in config file.
 * Metadata matrix (sample x experimental metadata) with sample id as index. Add file to `analysis_dir/data/metadata/`. Specify path of metadata file in config file.
 * Sample grouping matrix (sample x group) with group = [1 if control; 2 if case]. Add file to `analysis_dir/data/metadata/<project_id>_groups.tsv`.
-8. `2_identify_generic_genes_pathways.ipynb` will need to include `Compare gene ranking` cells as seen in `human_analysis/` if you would like to compare genes/genes sets with some reference ranking. 
-9. Update config file (see below)
+9. `2_identify_generic_genes_pathways.ipynb` will need to include `Compare gene ranking` cells as seen in `human_analysis/` if you would like to compare genes/genes sets with some reference ranking. 
+10. Update config file (see below)
 
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking.
@@ -106,4 +123,5 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | rank_genes_by | str:  Name of column header from DE association statistic results. This column will be use to rank genes. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
 | rank_pathways_by | str:  Name of column header from GSEA association statistic results. This column will be use to rank pathways. Select `NES`, `padj` if using DESeq to rank genes.|
 | num_recount2_experiments_to_download | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
+| gsea_statistic| str:  Statistic to use to rank genes for GSEA analysis. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
 | compare_genes | bool:  1 if comparing gene ranks with reference gene ranks. 0 if just identifying generic genes and gene sets but not comparing against a reference.|
