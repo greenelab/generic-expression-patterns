@@ -111,7 +111,7 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | normalized_compendium_filename | str: Normalized compendium gene expression data file|
 | shared_genes_filename | str: Pickle file on your local machine where to write and store genes that will be examined. These genes are the intersection of genes in your dataset versus a reference to ensure that there are not Nans in downstream analysis|
 | scaler_transform_filename | str: Pickle file on your local machine where to write and store normalization transform to be used to process data for visualization|
-| reference_gene_file* | str: Path to file that contains reference genes and their rank|
+| reference_gene_filename* | str: File that contains reference genes and their rank|
 | refrence_gene_name_col| str: Name of the column header that contains the reference genes. This is found in reference_gene_file*|
 | reference_rank_col | str: Name of the column header that contains the reference gene ranks. This is found in reference_gene_file*|
 | NN_architecture | str: Name of neural network architecture to use. Format 'NN_<intermediate layer>_<latent layer>'|
