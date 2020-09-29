@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Process recount2 data
@@ -53,8 +53,8 @@ params = utils.read_config(config_filename)
 local_dir = params["local_dir"]
 dataset_name = params["dataset_name"]
 
-# File that contains generic genes identified by Crow et. al.
-DE_prior_filename = params['reference_gene_file']
+# File that contains gene ranks identified by Crow et. al.
+DE_prior_filename = params['reference_gene_filename']
 
 # Template experiment ID
 project_id = params['project_id']
