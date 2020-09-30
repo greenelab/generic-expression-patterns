@@ -778,6 +778,20 @@ def get_shared_rank_scaled(
     """
     Returns shared rank scaled dataframe based on input `summary_df` and
     other parameters.
+    
+    Arguments
+    ------------
+    summary_df: dataframe
+        Dataframe containing our ranking per gene along with other statistics associated with that gene.
+    reference_filename: str
+        File containing gene ranks from reference publication (Crow et. al.)
+    ref_gene_col: str
+        Name of column header containing reference gene symbols
+    ref_rank_col: str
+        Name of column header containing reference ranks of genes
+    data_type: str
+        Either 'DE' or 'GSEA'
+    
     """
     # Merge our ranking and reference ranking
     shared_rank_df = merge_ranks_to_compare(
