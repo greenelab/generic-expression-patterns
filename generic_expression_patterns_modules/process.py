@@ -892,6 +892,13 @@ def compare_gene_ranking(
 def compare_pathway_ranking(summary_df, reference_filename):
     """
     Compare pathway ranking.
+    
+    Arguments
+    ------------
+    summary_df: dataframe
+        Dataframe containing our ranking per pathway along with other statistics associated with that pathway
+    reference_filename:
+        File containing pathway ranks from reference publication (Powers et. al.)
     """
 
     # Column headers for generic pathways identified by Powers et. al.
