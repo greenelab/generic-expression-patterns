@@ -15,7 +15,7 @@
 # 
 # 
 # **This notebook performs the following steps to identify generic gene sets (pathways):**
-# 1. Using the same simulated experiments from above, perform GSEA analysis. This analysis will determine whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list of genes, where genes are ranked by say log fold change, indicating a correlation with change in expression.
+# 1. Using the same simulated experiments from above, perform GSEA analysis. This analysis will determine whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list of genes, where genes are ranked by log fold change, indicating a correlation with change in expression.
 # 2. For each gene set (pathway), aggregate statistics across all simulated experiments
 # 3. Rank gene sets based on this aggregated statistic
 # 
@@ -339,7 +339,7 @@ hallmark_DB_filename = os.path.join(local_dir, "hallmark_DB.gmt")
 # In[ ]:
 
 
-get_ipython().run_cell_magic('R', '-i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways', "\nsource('../generic_expression_patterns_modules/GSEA_analysis.R')\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)")
+get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways', "\nsource(paste(base_dir, 'generic_expression_patterns_modules/GSEA_analysis.R', sep='/'))\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)")
 
 
 # In[ ]:
