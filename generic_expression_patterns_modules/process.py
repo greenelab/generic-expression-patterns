@@ -11,9 +11,11 @@ import pickle
 import numpy as np
 import pandas as pd
 import sklearn
+import seaborn as sns
+
 from glob import glob
 from sklearn.preprocessing import MinMaxScaler
-
+from generic_expression_patterns_modules import calc
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
     """
@@ -764,3 +766,203 @@ def process_raw_compendium(
         normalized_filename,
         scaler_filename
     )
+
+
+def get_shared_rank_scaled(
+        summary_df,
+        reference_filename,
+        ref_gene_col,
+        ref_rank_col,
+        data_type
+):
+    """
+    Returns shared rank scaled dataframe based on input `summary_df` and
+    other parameters.
+    
+    Arguments
+    ------------
+    summary_df: dataframe
+        Dataframe containing our ranking per gene along with other statistics associated with that gene.
+    reference_filename: str
+        File containing gene ranks from reference publication (Crow et. al.)
+    ref_gene_col: str
+        Name of column header containing reference gene symbols
+    ref_rank_col: str
+        Name of column header containing reference ranks of genes
+    data_type: str
+        Either 'DE' or 'GSEA'
+    
+    """
+    # Merge our ranking and reference ranking
+    shared_rank_df = merge_ranks_to_compare(
+        summary_df,
+        reference_filename,
+        ref_gene_col,
+        ref_rank_col
+    )
+
+    if max(shared_rank_df["Rank (simulated)"]) != max(shared_rank_df[ref_rank_col]):
+        shared_rank_scaled_df = scale_reference_ranking(
+            shared_rank_df,
+            ref_rank_col
+        )
+    else:
+        shared_rank_scaled_df = shared_rank_df
+
+    # Note: These lowly expressed genes were not pre-filtered before DESeq
+    # (Micheal Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of
+    # dispersion is difficult for genes with very, very low average counts. See the methods.
+    # However, it doesn't really effect the outcome because these genes have almost no power for
+    # detecting differential expression. Effects runtime though.
+    shared_rank_scaled_df = shared_rank_scaled_df[
+        ~shared_rank_scaled_df['Rank (simulated)'].isna()
+    ]
+
+    # Get correlation
+    r, p, ci_low, ci_high = calc.spearman_ci(
+        0.95,
+        shared_rank_scaled_df,
+        1000,
+        data_type
+    )
+    print(f"r = {r}")
+    print(f"p = {p}")
+    print(f"ci_low = {ci_low}")
+    print(f"ci_high = {ci_high}")
+
+    return shared_rank_scaled_df
+
+
+def compare_gene_ranking(
+        summary_df,
+        reference_filename,
+        ref_gene_col,
+        ref_rank_col,
+        output_figure_filename
+):
+    """
+    Compare gene ranking and generate a SVG figure.
+    
+        Arguments
+        ------------
+        summary_df: dataframe
+            Dataframe containing our ranking per gene along with other statistics associated with that gene.
+        reference_filename: str
+            File containing gene ranks from reference publication (Crow et. al.)
+        ref_gene_col: str
+            Name of column header containing reference gene symbols
+        ref_rank_col: str
+            Name of column header containing reference ranks of genes
+        output_figure_filename: str
+            Filename to output figure to
+    """
+
+    shared_gene_rank_scaled_df = get_shared_rank_scaled(
+        summary_df,
+        reference_filename,
+        ref_gene_col,
+        ref_rank_col,
+        data_type="DE"
+    )
+
+    fig = sns.jointplot(
+        data=shared_gene_rank_scaled_df,
+        x='Rank (simulated)',
+        y=ref_rank_col,
+        kind='hex',
+        marginal_kws={'color':'white'}
+    )
+
+    fig.set_axis_labels(
+        "Our preliminary method",
+        "DE prior (Crow et. al. 2019)",
+        fontsize=14
+    )
+
+    fig.savefig(
+        output_figure_filename,
+        format='svg',
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )
+
+
+def compare_pathway_ranking(summary_df, reference_filename):
+    """
+    Compare pathway ranking.
+    
+    Arguments
+    ------------
+    summary_df: dataframe
+        Dataframe containing our ranking per pathway along with other statistics associated with that pathway
+    reference_filename:
+        File containing pathway ranks from reference publication (Powers et. al.)
+    """
+
+    # Column headers for generic pathways identified by Powers et. al.
+    ref_gene_col = 'index'
+    ref_rank_col = 'Powers Rank'
+
+    shared_pathway_rank_scaled_df = get_shared_rank_scaled(
+        summary_df,
+        reference_filename,
+        ref_gene_col,
+        ref_rank_col,
+        data_type="GSEA"
+    )
+
+    fig = sns.scatterplot(
+        data=shared_pathway_rank_scaled_df,
+        x='Rank (simulated)',
+        y=ref_rank_col
+    )
+
+
+def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
+    """
+    This function will concatenate the simulated experiments into a single dataframe
+    in order to aggregate statistics across all experiments.
+
+    Arguments
+    ---------
+    local_dir: str
+        Local directory containing simulated experiments
+    num_runs: int
+        Number of simulated experiments
+    project_id: str
+        Project id to use to retrieve simulated experiments
+    data_type: str
+        Either 'DE' or 'GSEA'
+
+    Returns
+    -------
+    Dataframe containing all simulated experiments concatenated together
+
+    """
+
+    # Only "DE" and "GSEA" data types are supported.
+    if data_type not in ['DE', 'GSEA']:
+        raise Exception(f"Unknown data_type: {data_type}")
+
+    simulated_stats_all = pd.DataFrame()
+    for i in range(num_runs):
+        simulated_stats_filename = os.path.join(
+            local_dir,
+            f"{data_type}_stats",
+            f"{data_type}_stats_simulated_data_{project_id}_{i}.txt",
+        )
+        # Read results
+        simulated_stats = pd.read_csv(
+            simulated_stats_filename, header=0, sep="\t", index_col=0
+        )
+
+        # Concatenate df
+        simulated_stats_all = pd.concat(
+            [simulated_stats_all, simulated_stats["NES"]],
+            axis=1
+        )
+
+    simulated_stats_all.index = simulated_stats.index
+    return simulated_stats_all

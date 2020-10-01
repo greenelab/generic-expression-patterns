@@ -11,6 +11,7 @@ dependencies:
 - bioconda::bioconductor-limma
 - bioconda::bioconductor-deseq2
 - bioconda::bioconductor-recount
+- bioconda::bioconductor-fgsea
 - conda-forge::python=3.7
 - conda-forge::scikit-learn
 - conda-forge::pandas=0.23.4
@@ -24,6 +25,8 @@ dependencies:
 - conda-forge::rpy2=2.9.4
 - conda-forge::libiconv=1.15
 - conda-forge::r-biocmanager
+- conda-forge::r-gsa
+
 - pip=19.2.1
 - pip:
   - matplotlib==3.0.0
