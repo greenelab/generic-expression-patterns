@@ -54,10 +54,11 @@ pip install -e .
 ```
 6. Navigate to either the `pseudomonas_analysis` or `human_analysis` directories and run the notebooks in order.
 
-*Note:* Running the `human_analysis/1_process_recount2_data.ipynb` notebook can take a while since the dataset is very large. If you would like to run only the analysis  (`2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations: 
+*Note:* Running the `human_analysis/1_process_recount2_data.ipynb` notebook can take a couple days to run since the dataset is very large. If you would like to run only the analysis notebook (`2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations: 
 * The normalized compendium data used for the analysis in the publication can be found [here](https://recount2.s3.amazonaws.com/normalized_recount2_compendium_data.tsv). 
-* The mapped template file can be found ____
-* The scaler file can be found ____
+* The Hallmark pathway database can be found [here](human_analysis/data/metadata/hallmark_DB.gmt)
+* The mapped template file can be found [here](human_analysis/data/processed_recount2_template.tsv)
+* The scaler file can be found [here](human_analysis/data/scaler_transform_human.pickle)
 
 ## How to run using your own data
 
