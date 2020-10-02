@@ -33,7 +33,7 @@ def replace_ensembl_ids(expression_df, gene_id_mapping):
     -----
     This function is deprecated due to large memory usage: when `expression_df`
     is a large data frame, manuipulating it inside the moemory becomes very slow
-    (and sometimes even impossible due to large memory consumption.
+    (and sometimes even impossible) due to large memory consumption.
 
     The same functionality has been refactored into `get_renamed_columns()` and
     `map_recount2_data()` functions in this module.
