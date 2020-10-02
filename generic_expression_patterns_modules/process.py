@@ -779,13 +779,14 @@ def get_shared_rank_scaled(
         data_type
 ):
     """
-    Returns shared rank scaled dataframe based on input `summary_df` and
-    other parameters.
+    Returns shared rank scaled dataframe and correlation values based on
+    input `summary_df` and other parameters.
 
     Arguments
     ------------
     summary_df: dataframe
-        Dataframe containing our ranking per gene along with other statistics associated with that gene.
+        Dataframe containing our ranking per gene along with other statistics
+        associated with that gene.
     reference_filename: str
         File containing gene ranks from reference publication (Crow et. al.)
     ref_gene_col: str
@@ -794,6 +795,11 @@ def get_shared_rank_scaled(
         Name of column header containing reference ranks of genes
     data_type: str
         Either 'DE' or 'GSEA'
+
+    Returns
+    -------
+    A touple that includes two entries: the first is the shared rank scaled
+    dataframe, the second is a dict of correlation values (r, p, ci_low, ci_high).
 
     """
     # Merge our ranking and reference ranking
@@ -828,12 +834,19 @@ def get_shared_rank_scaled(
         1000,
         data_type
     )
-    print(f"r = {r}")
-    print(f"p = {p}")
-    print(f"ci_low = {ci_low}")
-    print(f"ci_high = {ci_high}")
 
-    return shared_rank_scaled_df
+    correlations = {
+        "r": r,
+        "p": p,
+        "ci_low": ci_low,
+        "ci_high": ci_high
+    }
+
+    # Print out correlation values
+    for k, v in correlations.items():
+        print(k, "=", v)
+
+    return (shared_rank_scaled_df, correlations)
 
 
 def compare_gene_ranking(
@@ -845,11 +858,13 @@ def compare_gene_ranking(
 ):
     """
     Compare gene ranking and generate a SVG figure.
+    Returns correlations to make debugging easier.
 
         Arguments
         ------------
         summary_df: dataframe
-            Dataframe containing our ranking per gene along with other statistics associated with that gene.
+            Dataframe containing our ranking per gene along with other statistics
+            associated with that gene.
         reference_filename: str
             File containing gene ranks from reference publication (Crow et. al.)
         ref_gene_col: str
@@ -857,10 +872,10 @@ def compare_gene_ranking(
         ref_rank_col: str
             Name of column header containing reference ranks of genes
         output_figure_filename: str
-            Filename to output figure to
+            Filename of output figure
     """
 
-    shared_gene_rank_scaled_df = get_shared_rank_scaled(
+    shared_gene_rank_scaled_df, correlations = get_shared_rank_scaled(
         summary_df,
         reference_filename,
         ref_gene_col,
@@ -891,10 +906,13 @@ def compare_gene_ranking(
         dpi=300,
     )
 
+    return correlations
+
 
 def compare_pathway_ranking(summary_df, reference_filename):
     """
     Compare pathway ranking.
+    Returns correlations to make debugging easier.
 
     Arguments
     ------------
@@ -908,7 +926,7 @@ def compare_pathway_ranking(summary_df, reference_filename):
     ref_gene_col = 'index'
     ref_rank_col = 'Powers Rank'
 
-    shared_pathway_rank_scaled_df = get_shared_rank_scaled(
+    shared_pathway_rank_scaled_df, correlations = get_shared_rank_scaled(
         summary_df,
         reference_filename,
         ref_gene_col,
@@ -921,6 +939,8 @@ def compare_pathway_ranking(summary_df, reference_filename):
         x='Rank (simulated)',
         y=ref_rank_col
     )
+
+    return correlations
 
 
 def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
