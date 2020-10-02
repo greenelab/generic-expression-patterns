@@ -27,6 +27,5 @@ jobs:
       - name: Run analysis notebooks
         run: |
           export R_HOME=`$CONDA/bin/R RHOME`
-          #$CONDA/bin/pytest -v --nbval-lax --current-env tests/1_process_recount2_data.ipynb
+          $CONDA/bin/pytest -v --nbval-lax --current-env tests/1_process_recount2_data.ipynb
           $CONDA/bin/pytest -v --nbval-lax --current-env tests/2_identify_generic_genes_pathways.ipynb
-          
