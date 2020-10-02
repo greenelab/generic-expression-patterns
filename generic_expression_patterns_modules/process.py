@@ -32,7 +32,7 @@ def replace_ensembl_ids(expression_df, gene_id_mapping):
     NOTE:
     -----
     This function is deprecated due to large memory usage: when `expression_df`
-    is a large data frame, manuipulating it inside the moemory becomes very slow
+    is a large dataframe, manuipulating it inside the moemory becomes very slow
     (and sometimes even impossible) due to large memory consumption.
 
     The same functionality has been refactored into `get_renamed_columns()` and
@@ -798,7 +798,7 @@ def get_shared_rank_scaled(
 
     Returns
     -------
-    A touple that includes two entries: the first is the shared rank scaled
+    A tuple that includes two entries: the first is the shared rank scaled
     dataframe, the second is a dict of correlation values (r, p, ci_low, ci_high).
 
     """
