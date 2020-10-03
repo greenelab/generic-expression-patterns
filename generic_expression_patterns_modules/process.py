@@ -28,36 +28,31 @@ def replace_ensembl_ids(expression_df, gene_id_mapping):
     gene_id_mapping: df
         Dataframe mapping ensembl ids (used in DE_stats_file) to hgnc symbols,
         used in Crow et. al.
+
+    NOTE:
+    -----
+    This function is deprecated due to large memory usage: when `expression_df`
+    is a large dataframe, manipulating it inside the momory becomes very slow
+    (and sometimes even impossible) due to large memory consumption.
+
+    The same functionality has been refactored into `get_renamed_columns()` and
+    `map_recount2_data()` functions in this module.
+
+    THIS FUNCTION IS KEPT AS A REFERENCE ONLY.
     """
-    # Read in data
-    gene_expression = expression_df
 
-    # Different cases of many-many mapping between gene ids
-    # count = 0
-    # symbols = []
-    # for symbol, group in gene_id_mapping.groupby("ensembl_gene_id"):
-    #    if group['hgnc_symbol'].nunique() > 1:
-    #        print(group)
-    #        count += 1
-    #        symbols.append(symbol)
-    # count
-
-    # Case 1: Ensembl ids are paralogs (geneA, geneA_PAR_Y) and map to the
-    # same hgnc symbol. Homologous sequences are paralogous
-    # if they were separated by a gene duplication event: if a gene in an
-    # organism is duplicated to occupy two different positions in the same
-    # genome, then the two copies are paralogous
-
-    # Remove paralogs
-
-    gene_expression = gene_expression.iloc[
-        :, ~gene_expression.columns.str.contains("PAR_Y")
+    # Some columns are duplicates, for example:
+    #   (ENSG00000223773.7,  ENSG00000223773) --> CD99P1
+    #   (ENSG00000124334.17, ENSG00000124334) --> IL9R
+    # We keep the first occurence of duplicated ensembl ids
+    updated_mapping = gene_id_mapping.loc[
+        ~gene_id_mapping.index.duplicated(keep="first")
     ]
 
-    # Case 2: Same ensembl ids are mapped to different gene symbol twice (CCL3L1, CCL3L3)
+    # Same ensembl ids are mapped to different gene symbol twice (CCL3L1, CCL3L3)
     # ENSG00000187510.7  ENSG00000187510    C12orf74
-    # ENSG00000187510.7  ENSG00000187510     PLEKHG7
-    # Manually map based on what is found on ensembl site
+    # ENSG00000187510.7  ENSG00000187510    PLEKHG7
+    # Manually mapping them based on what is found on ensembl site
     manual_mapping = {
         "ENSG00000187510.7": "PLEKHG7",
         "ENSG00000230417.11": "LINC00595",
@@ -65,28 +60,36 @@ def replace_ensembl_ids(expression_df, gene_id_mapping):
         "ENSG00000276085.1": "CCL3L1",
     }
 
-    gene_expression.rename(manual_mapping, axis="columns", inplace=True)
+    # Apply manual mappings to `updated_mapping`
+    for ensembl_id, gene_symbol in manual_mapping.items():
+        updated_mapping.loc[ensembl_id].hgnc_symbol = gene_symbol
 
-    # Case 3: Some rows are duplicates
-    # ENSG00000223773.7	ENSG00000223773	CD99P1
-    # ENSG00000124334.17	ENSG00000124334	IL9R
-
-    # Keep first occurence of duplicated ensembl ids
-    gene_id_mapping = gene_id_mapping.loc[
-        ~gene_id_mapping.index.duplicated(keep="first")
+    # Remove paralogs.
+    # Some ensembl ids are paralogs (for example, "geneA" and "geneA_PAR_Y").
+    # They map to the same hgnc symbol. Homologous sequences are paralogous
+    # if they were separated by a gene duplication event: if a gene in an
+    # organism is duplicated to occupy two different positions in the same
+    # genome, then the two copies are paralogous.
+    updated_expression_df = expression_df.iloc[
+        :, ~expression_df.columns.str.contains("PAR_Y")
     ]
 
     # Replace ensembl ids with gene symbol
-    gene_expression.columns = gene_expression.columns.map(
-        gene_id_mapping["hgnc_symbol"]
+    updated_expression_df.columns = updated_expression_df.columns.map(
+        updated_mapping["hgnc_symbol"]
     )
 
-    # Remove rows where we couldn't map ensembl id to gene symbol
-    gene_expression = gene_expression.iloc[:, gene_expression.columns != ""]
-    gene_expression = gene_expression.iloc[:, gene_expression.columns.notnull()]
+    # Remove columns whose mapped ensembl id is an empty string
+    updated_expression_df = updated_expression_df.iloc[
+        :, updated_expression_df.columns != ""
+    ]
 
-    # Save
-    return gene_expression
+    # Remove columns whose mapped ensembl id is `NaN`
+    updated_expression_df = updated_expression_df.iloc[
+        :, updated_expression_df.columns.notnull()
+    ]
+
+    return updated_expression_df
 
 
 def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
@@ -608,7 +611,7 @@ def map_recount2_data(
 ):
     """
     Map the ensembl gene IDs in `raw_filename` to hgnc gene symbols based
-    on the header line in `template_filename`, and save the new  header
+    on the header line in `template_filename`, and save the new header
     and corresponding data columns to `new_filename`.
     """
 
@@ -776,13 +779,14 @@ def get_shared_rank_scaled(
         data_type
 ):
     """
-    Returns shared rank scaled dataframe based on input `summary_df` and
-    other parameters.
-    
+    Returns shared rank scaled dataframe and correlation values based on
+    input `summary_df` and other parameters.
+
     Arguments
     ------------
     summary_df: dataframe
-        Dataframe containing our ranking per gene along with other statistics associated with that gene.
+        Dataframe containing our ranking per gene along with other statistics
+        associated with that gene.
     reference_filename: str
         File containing gene ranks from reference publication (Crow et. al.)
     ref_gene_col: str
@@ -791,7 +795,12 @@ def get_shared_rank_scaled(
         Name of column header containing reference ranks of genes
     data_type: str
         Either 'DE' or 'GSEA'
-    
+
+    Returns
+    -------
+    A tuple that includes two entries: the first is the shared rank scaled
+    dataframe, the second is a dict of correlation values (r, p, ci_low, ci_high).
+
     """
     # Merge our ranking and reference ranking
     shared_rank_df = merge_ranks_to_compare(
@@ -825,12 +834,19 @@ def get_shared_rank_scaled(
         1000,
         data_type
     )
-    print(f"r = {r}")
-    print(f"p = {p}")
-    print(f"ci_low = {ci_low}")
-    print(f"ci_high = {ci_high}")
 
-    return shared_rank_scaled_df
+    correlations = {
+        "r": r,
+        "p": p,
+        "ci_low": ci_low,
+        "ci_high": ci_high
+    }
+
+    # Print out correlation values
+    for k, v in correlations.items():
+        print(k, "=", v)
+
+    return (shared_rank_scaled_df, correlations)
 
 
 def compare_gene_ranking(
@@ -842,11 +858,13 @@ def compare_gene_ranking(
 ):
     """
     Compare gene ranking and generate a SVG figure.
-    
+    Returns correlations to make debugging easier.
+
         Arguments
         ------------
         summary_df: dataframe
-            Dataframe containing our ranking per gene along with other statistics associated with that gene.
+            Dataframe containing our ranking per gene along with other statistics
+            associated with that gene.
         reference_filename: str
             File containing gene ranks from reference publication (Crow et. al.)
         ref_gene_col: str
@@ -854,10 +872,10 @@ def compare_gene_ranking(
         ref_rank_col: str
             Name of column header containing reference ranks of genes
         output_figure_filename: str
-            Filename to output figure to
+            Filename of output figure
     """
 
-    shared_gene_rank_scaled_df = get_shared_rank_scaled(
+    shared_gene_rank_scaled_df, correlations = get_shared_rank_scaled(
         summary_df,
         reference_filename,
         ref_gene_col,
@@ -888,11 +906,14 @@ def compare_gene_ranking(
         dpi=300,
     )
 
+    return correlations
+
 
 def compare_pathway_ranking(summary_df, reference_filename):
     """
     Compare pathway ranking.
-    
+    Returns correlations to make debugging easier.
+
     Arguments
     ------------
     summary_df: dataframe
@@ -905,7 +926,7 @@ def compare_pathway_ranking(summary_df, reference_filename):
     ref_gene_col = 'index'
     ref_rank_col = 'Powers Rank'
 
-    shared_pathway_rank_scaled_df = get_shared_rank_scaled(
+    shared_pathway_rank_scaled_df, correlations = get_shared_rank_scaled(
         summary_df,
         reference_filename,
         ref_gene_col,
@@ -918,6 +939,8 @@ def compare_pathway_ranking(summary_df, reference_filename):
         x='Rank (simulated)',
         y=ref_rank_col
     )
+
+    return correlations
 
 
 def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
