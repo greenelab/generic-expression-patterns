@@ -6,12 +6,12 @@ library("fgsea")
 find_enriched_pathways <- function(DE_stats_file,
                                    hallmark_DB_filename,
                                    statistic) {
+
   # Read in data
   DE_stats_data <- read.table(DE_stats_file,
                               sep = "\t",
                               header = TRUE,
                               row.names = NULL)
-
   # Sort genes by feature 1
 
   # feature 1: numeric vector
@@ -40,7 +40,7 @@ find_enriched_pathways <- function(DE_stats_file,
 
   enrich_pathways <- fgsea(pathways = pathway_DB_data,
                            stats = rank_genes,
-                           nperm = 10000)
+                           nperm = 10000)                         
 
   return(as.data.frame(enrich_pathways))
 }

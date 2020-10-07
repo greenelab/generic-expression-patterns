@@ -22,9 +22,9 @@ epsilon_std	1.0
 validation_frac	0.25
 project_id	"GSE11352"
 metadata_colname	'gsm'
-num_simulated	2
-rank_genes_by	"log2FoldChange"
+num_simulated	25
+rank_genes_by	"logFC"
 rank_pathways_by	"padj"
 num_recount2_experiments_to_download	200
-gsea_statistic	'log2FoldChange'
+gsea_statistic	'logFC'
 compare_genes	1
