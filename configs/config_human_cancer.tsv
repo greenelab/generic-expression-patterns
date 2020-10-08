@@ -1,5 +1,5 @@
 local_dir	"/home/alexandra/Documents/Data/Generic_expression_patterns_Rani/"
-dataset_name	"validate_pathway_analysis"
+dataset_name	"human_cancer_analysis"
 raw_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_Rani/raw_rani_template.tsv"
 mapped_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_Rani/mapped_rani_template.tsv"
 processed_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_Rani/processed_rani_template.tsv"
