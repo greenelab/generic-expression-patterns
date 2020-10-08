@@ -17,6 +17,7 @@ from glob import glob
 from sklearn.preprocessing import MinMaxScaler
 from generic_expression_patterns_modules import calc
 
+
 def replace_ensembl_ids(expression_df, gene_id_mapping):
     """
     Replaces ensembl gene ids with hgnc symbols
@@ -451,7 +452,7 @@ def create_recount2_compendium(download_dir, output_filename):
     data_counts_filenames.sort()
 
     compendium_header = None
-    with open(output_filename, 'w') as ofh:
+    with open(output_filename, "w") as ofh:
         for filename in data_counts_filenames:
             with open(filename) as ifh:
                 file_header = ifh.readline()
@@ -476,7 +477,7 @@ def get_published_generic_genes(filename):
     """
 
     df = pd.read_csv(filename, header=0, sep="\t")
-    published_generic_genes = list(df['Gene_Name'])
+    published_generic_genes = list(df["Gene_Name"])
     return published_generic_genes
 
 
@@ -497,15 +498,15 @@ def get_merged_gene_id_mapping(gene_id_filename, raw_ensembl_genes):
     """
 
     original_gene_id_mapping = pd.read_csv(
-        gene_id_filename, header=0, sep='\t', index_col=0
+        gene_id_filename, header=0, sep="\t", index_col=0
     )
 
     # Get mapping between ensembl ids with and without version numbers.
     # The genes in `ensembl_genes` has version numbers at the end.
     ensembl_gene_ids = pd.DataFrame(
         data={
-            'ensembl_version': raw_ensembl_genes,
-            'ensembl_parsed': [gene_id.split('.')[0] for gene_id in raw_ensembl_genes]
+            "ensembl_version": raw_ensembl_genes,
+            "ensembl_parsed": [gene_id.split(".")[0] for gene_id in raw_ensembl_genes],
         }
     )
 
@@ -513,23 +514,23 @@ def get_merged_gene_id_mapping(gene_id_filename, raw_ensembl_genes):
     merged_gene_id_mapping = pd.merge(
         original_gene_id_mapping,
         ensembl_gene_ids,
-        left_on='ensembl_gene_id',
-        right_on='ensembl_parsed',
-        how='outer'
+        left_on="ensembl_gene_id",
+        right_on="ensembl_parsed",
+        how="outer",
     )
 
     # Set `ensembl_version` column as the index
-    merged_gene_id_mapping.set_index('ensembl_version', inplace=True)
+    merged_gene_id_mapping.set_index("ensembl_version", inplace=True)
 
     return merged_gene_id_mapping
 
 
 def get_renamed_columns(
-        raw_ensembl_ids,
-        merged_gene_id_mapping,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename
+    raw_ensembl_ids,
+    merged_gene_id_mapping,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
 ):
     """
     Find the new column names and corresponding column indexes.
@@ -595,19 +596,19 @@ def get_renamed_columns(
 
     # Pickle `shared_genes_hgnc` and save as `shared_genes_filename`
     if not os.path.exists(shared_genes_filename):
-        with open(shared_genes_filename, 'wb') as pkl_fh:
+        with open(shared_genes_filename, "wb") as pkl_fh:
             pickle.dump(shared_genes_hgnc, pkl_fh)
 
     return (shared_genes_hgnc, hgnc_to_cols)
 
 
 def map_recount2_data(
-        raw_filename,
-        gene_id_filename,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-        new_filename
+    raw_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    new_filename,
 ):
     """
     Map the ensembl gene IDs in `raw_filename` to hgnc gene symbols based
@@ -618,7 +619,7 @@ def map_recount2_data(
     # Read the header line of `raw_filename` to get its column names:
     raw_header_df = pd.read_csv(raw_filename, header=0, sep="\t", nrows=1)
     raw_ensembl_ids = list(raw_header_df.columns)
-    if raw_ensembl_ids[0] == 'Unnamed: 0':
+    if raw_ensembl_ids[0] == "Unnamed: 0":
         del raw_ensembl_ids[0]
 
     merged_gene_id_mapping = get_merged_gene_id_mapping(
@@ -630,7 +631,7 @@ def map_recount2_data(
         merged_gene_id_mapping,
         manual_mapping,
         DE_prior_filename,
-        shared_genes_filename
+        shared_genes_filename,
     )
 
     col_indexes = list()
@@ -642,13 +643,13 @@ def map_recount2_data(
         output_cols += [hgnc] * len(hgnc_to_cols[hgnc])
     output_header = "\t".join(output_cols) + "\n"
 
-    with open(new_filename, 'w') as ofh:
+    with open(new_filename, "w") as ofh:
         ofh.write(output_header)
         with open(raw_filename) as ifh:
             for line_num, line in enumerate(ifh):
                 if line_num == 0:
                     continue
-                tokens = line.strip('\n').split('\t')
+                tokens = line.strip("\n").split("\t")
                 sample_id = tokens[0].strip('"')
                 input_values = tokens[1:]
                 output_values = list()
@@ -658,14 +659,14 @@ def map_recount2_data(
 
 
 def process_raw_template(
-        raw_filename,
-        gene_id_filename,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-        mapped_filename,
-        sample_id_metadata_filename,
-        processed_filename
+    raw_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    mapped_filename,
+    sample_id_metadata_filename,
+    processed_filename,
 ):
     """
     Create mapped recount2 template data file based on input raw template
@@ -680,29 +681,27 @@ def process_raw_template(
         manual_mapping,
         DE_prior_filename,
         shared_genes_filename,
-        mapped_filename
+        mapped_filename,
     )
 
     sample_ids_to_drop = set()
     if os.path.exists(sample_id_metadata_filename):
         # Read in metadata and get samples to be dropped:
         metadata = pd.read_csv(
-            sample_id_metadata_filename, sep='\t', header=0, index_col=0
+            sample_id_metadata_filename, sep="\t", header=0, index_col=0
         )
         sample_ids_to_drop = set(metadata[metadata["processing"] == "drop"].index)
 
     # Write the processed recount2 template output file on disk
     with open(mapped_filename) as ifh, open(processed_filename, "w") as ofh:
         for idx, line in enumerate(ifh):
-            sample_id = line.split('\t')[0]
+            sample_id = line.split("\t")[0]
             if idx == 0 or sample_id not in sample_ids_to_drop:
                 ofh.write(line)
 
 
 def normalize_compendium(
-        mapped_filename,
-        normalized_filename,
-        scaler_filename,
+    mapped_filename, normalized_filename, scaler_filename,
 ):
     """
     Read the mapped compendium file into memor, normalize it, and save
@@ -711,10 +710,7 @@ def normalize_compendium(
 
     # Read mapped compendium file: ~4 minutes (17 GB of RAM)
     mapped_compendium_df = pd.read_table(
-        mapped_filename,
-        header=0,
-        sep='\t',
-        index_col=0
+        mapped_filename, header=0, sep="\t", index_col=0
     )
 
     # 0-1 normalize per gene
@@ -725,28 +721,26 @@ def normalize_compendium(
     normalized_compendium_df = pd.DataFrame(
         normalized_compendium,
         columns=mapped_compendium_df.columns,
-        index=mapped_compendium_df.index
+        index=mapped_compendium_df.index,
     )
 
     # Save normalized data on disk: ~17.5 minutes
-    normalized_compendium_df.to_csv(
-        normalized_filename, float_format='%.3f', sep='\t'
-    )
+    normalized_compendium_df.to_csv(normalized_filename, float_format="%.3f", sep="\t")
 
     # Pickle `scaler` as `scaler_filename` on disk
-    with open(scaler_filename, 'wb') as pkl_fh:
+    with open(scaler_filename, "wb") as pkl_fh:
         pickle.dump(scaler, pkl_fh)
 
 
 def process_raw_compendium(
-        raw_filename,
-        gene_id_filename,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-        mapped_filename,
-        normalized_filename,
-        scaler_filename
+    raw_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    mapped_filename,
+    normalized_filename,
+    scaler_filename,
 ):
     """
     Create mapped recount2 compendium data file based on raw compendium
@@ -760,23 +754,15 @@ def process_raw_compendium(
         manual_mapping,
         DE_prior_filename,
         shared_genes_filename,
-        mapped_filename
+        mapped_filename,
     )
 
     # Normalize mapped recount2 compendium data
-    normalize_compendium(
-        mapped_filename,
-        normalized_filename,
-        scaler_filename
-    )
+    normalize_compendium(mapped_filename, normalized_filename, scaler_filename)
 
 
 def get_shared_rank_scaled(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        data_type
+    summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type
 ):
     """
     Returns shared rank scaled dataframe and correlation values based on
@@ -804,17 +790,11 @@ def get_shared_rank_scaled(
     """
     # Merge our ranking and reference ranking
     shared_rank_df = merge_ranks_to_compare(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col
+        summary_df, reference_filename, ref_gene_col, ref_rank_col
     )
 
     if max(shared_rank_df["Rank (simulated)"]) != max(shared_rank_df[ref_rank_col]):
-        shared_rank_scaled_df = scale_reference_ranking(
-            shared_rank_df,
-            ref_rank_col
-        )
+        shared_rank_scaled_df = scale_reference_ranking(shared_rank_df, ref_rank_col)
     else:
         shared_rank_scaled_df = shared_rank_df
 
@@ -824,23 +804,15 @@ def get_shared_rank_scaled(
     # However, it doesn't really effect the outcome because these genes have almost no power for
     # detecting differential expression. Effects runtime though.
     shared_rank_scaled_df = shared_rank_scaled_df[
-        ~shared_rank_scaled_df['Rank (simulated)'].isna()
+        ~shared_rank_scaled_df["Rank (simulated)"].isna()
     ]
 
     # Get correlation
     r, p, ci_low, ci_high = calc.spearman_ci(
-        0.95,
-        shared_rank_scaled_df,
-        1000,
-        data_type
+        0.95, shared_rank_scaled_df, 1000, data_type
     )
 
-    correlations = {
-        "r": r,
-        "p": p,
-        "ci_low": ci_low,
-        "ci_high": ci_high
-    }
+    correlations = {"r": r, "p": p, "ci_low": ci_low, "ci_high": ci_high}
 
     # Print out correlation values
     for k, v in correlations.items():
@@ -850,11 +822,7 @@ def get_shared_rank_scaled(
 
 
 def compare_gene_ranking(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        output_figure_filename
+    summary_df, reference_filename, ref_gene_col, ref_rank_col, output_figure_filename
 ):
     """
     Compare gene ranking and generate a SVG figure.
@@ -876,30 +844,24 @@ def compare_gene_ranking(
     """
 
     shared_gene_rank_scaled_df, correlations = get_shared_rank_scaled(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        data_type="DE"
+        summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type="DE"
     )
 
     fig = sns.jointplot(
         data=shared_gene_rank_scaled_df,
-        x='Rank (simulated)',
+        x="Rank (simulated)",
         y=ref_rank_col,
-        kind='hex',
-        marginal_kws={'color':'white'}
+        kind="hex",
+        marginal_kws={"color": "white"},
     )
 
     fig.set_axis_labels(
-        "Our preliminary method",
-        "DE prior (Crow et. al. 2019)",
-        fontsize=14
+        "Our preliminary method", "DE prior (Crow et. al. 2019)", fontsize=14
     )
 
     fig.savefig(
         output_figure_filename,
-        format='svg',
+        format="svg",
         bbox_inches="tight",
         transparent=True,
         pad_inches=0,
@@ -909,7 +871,7 @@ def compare_gene_ranking(
     return correlations
 
 
-def compare_pathway_ranking(summary_df, reference_filename):
+def compare_pathway_ranking(summary_df, reference_filename, output_figure_filename):
     """
     Compare pathway ranking.
     Returns correlations to make debugging easier.
@@ -920,24 +882,36 @@ def compare_pathway_ranking(summary_df, reference_filename):
         Dataframe containing our ranking per pathway along with other statistics associated with that pathway
     reference_filename:
         File containing pathway ranks from reference publication (Powers et. al.)
+    output_figure_filename: str
+            Filename of output figure
     """
 
     # Column headers for generic pathways identified by Powers et. al.
-    ref_gene_col = 'index'
-    ref_rank_col = 'Powers Rank'
+    ref_gene_col = "index"
+    ref_rank_col = "Powers Rank"
 
     shared_pathway_rank_scaled_df, correlations = get_shared_rank_scaled(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        data_type="GSEA"
+        summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type="GSEA"
     )
 
     fig = sns.scatterplot(
         data=shared_pathway_rank_scaled_df,
-        x='Rank (simulated)',
-        y=ref_rank_col
+        x="Rank (simulated)",
+        y=ref_rank_col,
+        color="slateblue",
+        s=100,
+    )
+
+    fig.set_xlabel("Our preliminary method", fontsize=14)
+    fig.set_ylabel("Powers et. al. 2018", fontsize=14)
+
+    fig.figure.savefig(
+        output_figure_filename,
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
     )
 
     return correlations
@@ -966,7 +940,7 @@ def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
     """
 
     # Only "DE" and "GSEA" data types are supported.
-    if data_type not in ['DE', 'GSEA']:
+    if data_type not in ["DE", "GSEA"]:
         raise Exception(f"Unknown data_type: {data_type}")
 
     simulated_stats_all = pd.DataFrame()
@@ -983,8 +957,7 @@ def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
 
         # Concatenate df
         simulated_stats_all = pd.concat(
-            [simulated_stats_all, simulated_stats["NES"]],
-            axis=1
+            [simulated_stats_all, simulated_stats["NES"]], axis=1
         )
 
     simulated_stats_all.index = simulated_stats.index
