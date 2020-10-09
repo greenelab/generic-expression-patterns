@@ -28,6 +28,7 @@ from generic_expression_patterns_modules import process
 
 
 # Load data
+
 # Summary data using abs value of test statistic
 grp_1v2_file = "generic_gene_summary_E-GEOD-33245_1v2.tsv"
 grp_1v3_file = "generic_gene_summary_E-GEOD-33245_1v3.tsv"
@@ -41,10 +42,26 @@ grp_1v4_raw_file = "generic_gene_summary_E-GEOD-33245_1v4_raw.tsv"
 grp_1v5_raw_file = "generic_gene_summary_E-GEOD-33245_1v5_raw.tsv"
 
 
+# In[3]:
+
+
+# User parameters
+
+# FDR adjusted p-value cutoff to use to define DEGs
+pvalue_threshold = 0.05
+
+# Get predicted generic DEGs using z-score cutoff
+# Z-score cutoff was found by calculating the score
+# whose invnorm(0.05/5549). Here we are using a p-value = 0.05
+# with a Bonferroni correction for 5549 tests, which are
+# the number of P. aeruginosa genes
+zscore_threshold = 4.44
+
+
 # ## Create dataframe to compare trends
 # We are going to merge data across different conditions. For example, we will merge `grp_1v2` and `grp_1v3` to use for plotting later in this notebook. The Hogan lab can look at these tables to find *things of interest* as we start looking into how to use our computational predictions of generic and specific genes. 
 
-# In[3]:
+# In[4]:
 
 
 # Read data
@@ -59,7 +76,7 @@ grp_1v4_raw = pd.read_csv(grp_1v4_raw_file, sep="\t", header=0, index_col=0)
 grp_1v5_raw = pd.read_csv(grp_1v5_raw_file, sep="\t", header=0, index_col=0)
 
 
-# In[4]:
+# In[5]:
 
 
 # Merge summary dfs using abs log2 FC and using raw values
@@ -69,7 +86,7 @@ merged_1v4s_df = process.merge_abs_raw_dfs(grp_1v4, grp_1v4_raw, '1v4')
 merged_1v5s_df = process.merge_abs_raw_dfs(grp_1v5, grp_1v5_raw, '1v5')
 
 
-# In[5]:
+# In[7]:
 
 
 # Merge 1v2 and 1v3 summary dfs
@@ -146,7 +163,7 @@ process.plot_two_conditions(merged_1v3_1v4_df, "1v3", "1v4", "WT vs cbrB mutant"
 
 # ### 1v2
 
-# In[12]:
+# In[10]:
 
 
 (DEGs_1v2_df,
@@ -155,16 +172,16 @@ process.plot_two_conditions(merged_1v3_1v4_df, "1v3", "1v4", "WT vs cbrB mutant"
  degs_1v2_generic,
  degs_1v2_intersect,
  degs_1v2_intersect_generic,
- degs_1v2_diff) = process.get_and_save_DEG_lists(merged_1v2s_df, '1v2')
+ degs_1v2_diff) = process.get_and_save_DEG_lists(merged_1v2s_df, '1v2', pvalue_threshold, zscore_threshold)
 
 
-# In[13]:
+# In[11]:
 
 
 process.plot_venn(degs_1v2_traditional, degs_1v2_specific, degs_1v2_generic)
 
 
-# In[14]:
+# In[16]:
 
 
 process.plot_volcanos(degs_1v2_intersect, degs_1v2_diff, merged_1v2s_df, "1v2", "WT vs crc mutant")
@@ -181,7 +198,7 @@ process.plot_volcanos(degs_1v2_intersect, degs_1v2_diff, merged_1v2s_df, "1v2", 
  degs_1v3_generic,
  degs_1v3_intersect,
  degs_1v3_intersect_generic,
- degs_1v3_diff) = process.get_and_save_DEG_lists(merged_1v3s_df, '1v3')
+ degs_1v3_diff) = process.get_and_save_DEG_lists(merged_1v3s_df, '1v3', pvalue_threshold, zscore_threshold)
 
 
 # In[16]:
@@ -207,7 +224,7 @@ process.plot_volcanos(degs_1v3_intersect, degs_1v3_diff, merged_1v3s_df, "1v3", 
  degs_1v4_generic,
  degs_1v4_intersect, 
  degs_1v4_intersect_generic,
- degs_1v4_diff) = process.get_and_save_DEG_lists(merged_1v4s_df, '1v4')
+ degs_1v4_diff) = process.get_and_save_DEG_lists(merged_1v4s_df, '1v4', pvalue_threshold, zscore_threshold)
 
 
 # In[19]:
@@ -233,7 +250,7 @@ process.plot_volcanos(degs_1v4_intersect, degs_1v4_diff, merged_1v4s_df, "1v4", 
  degs_1v5_generic,
  degs_1v5_intersect,
  degs_1v5_intersect_generic,
- degs_1v5_diff) = process.get_and_save_DEG_lists(merged_1v5s_df, '1v5')
+ degs_1v5_diff) = process.get_and_save_DEG_lists(merged_1v5s_df, '1v5', pvalue_threshold, zscore_threshold)
 
 
 # In[22]:

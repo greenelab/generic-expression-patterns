@@ -1105,7 +1105,9 @@ def plot_two_conditions(merged_df, condition_1, condition_2, xlabel, ylabel):
     # MOVE LEGEND?
 
 
-def get_and_save_DEG_lists(merged_one_condition_df, condition):
+def get_and_save_DEG_lists(
+    merged_one_condition_df, condition, p_threshold, z_threshold
+):
     """
     Get list of DEGs using traditional criteria (log2FC and p-value)
     and using z-score cutoff. Return different combinations of gene
@@ -1127,7 +1129,7 @@ def get_and_save_DEG_lists(merged_one_condition_df, condition):
                 (merged_one_condition_df[f"Test statistic (Real)_grp_{condition}"] > 1)
                 & (
                     merged_one_condition_df[f"Adj P-value (Real)_grp_{condition}"]
-                    < 0.05
+                    < p_threshold
                 )
             ]
             .set_index("Gene ID")
@@ -1143,7 +1145,7 @@ def get_and_save_DEG_lists(merged_one_condition_df, condition):
                 (merged_one_condition_df[f"Test statistic (Real)_grp_{condition}"] > 1)
                 & (
                     merged_one_condition_df[f"abs(Z score)_grp_{condition}"].abs()
-                    > 4.44
+                    > z_threshold
                 )
             ]
             .set_index("Gene ID")
@@ -1163,7 +1165,7 @@ def get_and_save_DEG_lists(merged_one_condition_df, condition):
                 (merged_one_condition_df[f"Test statistic (Real)_grp_{condition}"] > 1)
                 & (
                     merged_one_condition_df[f"abs(Z score)_grp_{condition}"].abs()
-                    < 4.44
+                    < z_threshold
                 )
             ]
             .set_index("Gene ID")
@@ -1321,19 +1323,16 @@ def plot_volcanos(
 
     # Add labels
     fig.suptitle(fig_title, fontsize=16)
-    axes[0].set_xlabel("log2 Fold Change")
-    axes[1].set_xlabel("log2 Fold Change")
+    axes[0].set_xlabel("log$_2$ Fold Change")
+    axes[1].set_xlabel("log$_2$ Fold Change")
     axes[2].set_xlabel("Z-score")
     axes[0].set_ylabel("FDR adjusted p-value")
     axes[1].set_ylabel("Z-score")
     axes[2].set_ylabel("FDR adjusted p-value")
-    axes[0].set_title("log2FC vs p-value")
-    axes[1].set_title("log2FC vs z-score")
+    axes[0].set_title("log$_2$ Fold Change vs p-value")
+    axes[1].set_title("log$_2$ Fold Change vs z-score")
+    axes[2].set_title("z-score vs p-value")
     print(fig)
-
-    # ADD NEWLINE TO TITLE
-    # ADD THRESHOLD
-    # ADD P-VALUE VS Z-SCORE
 
 
 def plot_venn(degs_traditional, degs_specific, degs_generic):
