@@ -3,6 +3,13 @@
 
 # # Visualize E-GEOD-33245 patterns
 # This notebook will examine patterns of generic and experiment-specific genes using E-GEOD-33245 as the template experiment
+# 
+# This experiment contains multiple comparisons/conditions:
+# 
+# * grp_1v2 compares WT vs *crc* mutants
+# * grp_1v3 compares WT vs *cbrB* mutants
+# * grp_1v4 compares WT vs *crcZ* mutant
+# * grp_1v5 compares WT in LB vs WT in BSM
 
 # In[1]:
 
@@ -35,9 +42,7 @@ grp_1v5_raw_file = "generic_gene_summary_E-GEOD-33245_1v5_raw.tsv"
 
 
 # ## Create dataframe to compare trends
-# We are going to merge data across different conditions. For example, we will merge `grp_1v2` and `grp_1v3` to use for plotting later in this notebook. Deb can look at these tables to find *things of interest* as we start looking into how to use our computational predictions of generic and specific genes. 
-# 
-# She would like a dataframe with 1v2 and 1v3, 1v3 and 1v4.
+# We are going to merge data across different conditions. For example, we will merge `grp_1v2` and `grp_1v3` to use for plotting later in this notebook. The Hogan lab can look at these tables to find *things of interest* as we start looking into how to use our computational predictions of generic and specific genes. 
 
 # In[3]:
 
@@ -100,8 +105,8 @@ merged_1v3_1v4_df.to_csv("merged_E-GEOD_1v3_1v4_directionality.tsv", sep="\t")
 # ## Compare trends across different conditions
 # 
 # We want to compare across different conditions. For example, given:
-# * Group 1v2: WT vs crc mutant
-# * Group 1v3: WT vs cbr mutant
+# * Group 1v2: WT vs *crc* mutant
+# * Group 1v3: WT vs *cbr* mutant
 # 
 # We can then compare the test statistic between these two groups above. We hope to see that,
 # * Genes 1v3  > 1v2 are genes that change more in 1v3 than 1v2 and we guess are specific to 1v3 (high z-score)
@@ -265,5 +270,5 @@ degs_all_df.to_csv("DEGs_E_GEOD_33245.tsv", sep="\t")
 
 # **Takeaway:**
 # * Overall it looks like we find on the order of hundreds of DEGs using the traditional criteria (p-value and log2 fold change), but if we filter by high absolute z-score we get a reduced set of genes. In some cases the reduced set is of a similar size to the traditional set (i.e. 1v4) but other times the reduced set is signficantly smaller (i.e. 1v5).
-# * We predict that this z-score cutoff will supply researchers with a reasonable sized list of DEGs to follow-up with and that these are the genes that are most relevant to the perturbagen in question.
+# * Using traditional DE criteria you find a mix of generic and specific genes. And applying a z-score cutoff will supply researchers with a reasonable sized list of DEGs that are most relevant to the perturbagen in question that they can follow up with.
 # * There are also some specific genes that are missed by the traditional DE criteria because they are just shy of being significant based on the FDR p-value cutoff. Perhaps these genes play an important niche role that would have otherwise been missed using traditional DE analysis.

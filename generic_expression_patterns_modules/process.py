@@ -290,7 +290,7 @@ def generate_summary_table(
             "Number of experiments (simulated)": count_simulated,
         }
     )
-    summary["Z score"] = (
+    summary["abs(Z score)"] = (
         abs(
             summary["Test statistic (Real)"]
             - summary["Mean test statistic (simulated)"]
@@ -816,12 +816,7 @@ def get_shared_rank_scaled(
         0.95, shared_rank_scaled_df, 1000, data_type
     )
 
-    correlations = {
-        "r": r,
-        "p": p,
-        "ci_low": ci_low,
-        "ci_high": ci_high
-    }
+    correlations = {"r": r, "p": p, "ci_low": ci_low, "ci_high": ci_high}
 
     # Print out correlation values
     for k, v in correlations.items():
@@ -853,11 +848,7 @@ def compare_gene_ranking(
     """
 
     shared_gene_rank_scaled_df, correlations = get_shared_rank_scaled(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        data_type="DE"
+        summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type="DE"
     )
 
     fig = sns.jointplot(
@@ -902,11 +893,7 @@ def compare_pathway_ranking(summary_df, reference_filename):
     ref_rank_col = "Powers Rank"
 
     shared_pathway_rank_scaled_df, correlations = get_shared_rank_scaled(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        data_type="GSEA"
+        summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type="GSEA"
     )
 
     sns.scatterplot(
@@ -1014,7 +1001,9 @@ def merge_two_conditions_df(
         merged_condition_2_df, left_on="Gene ID", right_on="Gene ID"
     )
     merged_all_df["max Z score"] = (
-        merged_all_df[[f"Z score_grp_{condition_1}", f"Z score_grp_{condition_2}"]]
+        merged_all_df[
+            [f"abs(Z score)_grp_{condition_1}", f"abs(Z score)_grp_{condition_2}"]
+        ]
         .abs()
         .max(axis=1)
     )
@@ -1040,8 +1029,8 @@ def merge_two_conditions_df(
             f"Mean test statistic (simulated)_grp_{condition_2}",
             f"Std deviation (simulated)_grp_{condition_2}",
             f"Median adj p-value (simulated)_grp_{condition_2}",
-            f"Z score_grp_{condition_1}",
-            f"Z score_grp_{condition_2}",
+            f"abs(Z score)_grp_{condition_1}",
+            f"abs(Z score)_grp_{condition_2}",
             "max Z score",
         ]
     ]
@@ -1152,7 +1141,10 @@ def get_and_save_DEG_lists(merged_one_condition_df, condition):
         (
             merged_one_condition_df[
                 (merged_one_condition_df[f"Test statistic (Real)_grp_{condition}"] > 1)
-                & (merged_one_condition_df[f"Z score_grp_{condition}"].abs() > 4.44)
+                & (
+                    merged_one_condition_df[f"abs(Z score)_grp_{condition}"].abs()
+                    > 4.44
+                )
             ]
             .set_index("Gene ID")
             .index
@@ -1162,12 +1154,17 @@ def get_and_save_DEG_lists(merged_one_condition_df, condition):
 
     # Get predicted generic DEGs using z-score cutoff
     # Z-score cutoff was found by calculating the score
-    # whose invnorm(0.05/5549)
+    # whose invnorm(0.05/5549). Here we are using a p-value = 0.05
+    # with a Bonferroni correction for 5549 tests, which are
+    # the number of P. aeruginosa genes
     degs_generic = list(
         (
             merged_one_condition_df[
                 (merged_one_condition_df[f"Test statistic (Real)_grp_{condition}"] > 1)
-                & (merged_one_condition_df[f"Z score_grp_{condition}"].abs() < 4.44)
+                & (
+                    merged_one_condition_df[f"abs(Z score)_grp_{condition}"].abs()
+                    < 4.44
+                )
             ]
             .set_index("Gene ID")
             .index
@@ -1288,7 +1285,7 @@ def plot_volcanos(
     sns.scatterplot(
         data=merged_one_condition_df,
         x=f"Test statistic (Real)_grp_{condition}_raw",
-        y=f"Z score_grp_{condition}",
+        y=f"abs(Z score)_grp_{condition}",
         hue="gene group",
         hue_order=["none", "traditional + specific DEGs", "specific only DEGs"],
         style="gene group",
@@ -1306,7 +1303,7 @@ def plot_volcanos(
     # Plot: z-score vs p-value
     sns.scatterplot(
         data=merged_one_condition_df,
-        x=f"Z score_grp_{condition}",
+        x=f"abs(Z score)_grp_{condition}",
         y="FDR adjuted p-value plot",
         hue="gene group",
         hue_order=["none", "traditional + specific DEGs", "specific only DEGs"],
