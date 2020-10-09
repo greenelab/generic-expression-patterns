@@ -1270,7 +1270,7 @@ def plot_volcanos(
         x=f"Test statistic (Real)_grp_{condition}_raw",
         y="FDR adjusted p-value plot",
         hue="gene group",
-        hue_order=["none", "traditional + specific DEGs", "specific only DEGs"],
+        hue_order=["none", "traditional + specific DEGs", "only specific DEGs"],
         style="gene group",
         markers={
             "none": ".",
