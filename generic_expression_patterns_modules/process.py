@@ -1268,7 +1268,7 @@ def plot_volcanos(
     sns.scatterplot(
         data=merged_one_condition_df,
         x=f"Test statistic (Real)_grp_{condition}_raw",
-        y="FDR adjuted p-value plot",
+        y="FDR adjusted p-value plot",
         hue="gene group",
         hue_order=["none", "traditional + specific DEGs", "specific only DEGs"],
         style="gene group",
