@@ -1337,7 +1337,7 @@ def plot_volcanos(
 
 def plot_venn(degs_traditional, degs_specific, degs_generic):
     """
-    Create venn diagramt to compare the genes that were found
+    Create venn diagram to compare the genes that were found
     to be DE using traditional criteria vs genes that are
     specific (i.e. high z-score) or generic (i.e. low z-score)
 
