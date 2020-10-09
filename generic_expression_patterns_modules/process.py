@@ -1092,8 +1092,8 @@ def plot_two_conditions(merged_df, condition_1, condition_2, xlabel, ylabel):
     fig.suptitle(f"({xlabel}) vs ({ylabel})", fontsize=16)
     fig.text(0.5, 0.04, xlabel, ha="center", va="center")
     fig.text(0.06, 0.5, ylabel, ha="center", va="center", rotation="vertical")
-    axes[0].set_title("using abs(log2FC)")
-    axes[1].set_title("using log2FC")
+    axes[0].set_title("using abs(log$_2$ Fold Change)")
+    axes[1].set_title("using log$_2$ Fold Change")
     axes[0].set_xlabel("")
     axes[1].set_xlabel("")
     axes[0].set_ylabel("")
@@ -1261,7 +1261,7 @@ def plot_volcanos(
     merged_one_condition_df.loc[
         degs_intersect, "gene group"
     ] = "traditional + specific DEGs"
-    merged_one_condition_df.loc[degs_diff, "gene group"] = "specific only DEGs"
+    merged_one_condition_df.loc[degs_diff, "gene group"] = "only specific DEGs"
 
     colors = ["lightgrey", "red", "blue"]
     # Plot: log2FC vs p-value (traditional criteria)
@@ -1275,7 +1275,7 @@ def plot_volcanos(
         markers={
             "none": ".",
             "traditional + specific DEGs": "o",
-            "specific only DEGs": "o",
+            "only specific DEGs": "o",
         },
         palette=colors,
         linewidth=0,
@@ -1289,12 +1289,12 @@ def plot_volcanos(
         x=f"Test statistic (Real)_grp_{condition}_raw",
         y=f"abs(Z score)_grp_{condition}",
         hue="gene group",
-        hue_order=["none", "traditional + specific DEGs", "specific only DEGs"],
+        hue_order=["none", "traditional + specific DEGs", "only specific DEGs"],
         style="gene group",
         markers={
             "none": ".",
             "traditional + specific DEGs": "o",
-            "specific only DEGs": "o",
+            "only specific DEGs": "o",
         },
         palette=colors,
         linewidth=0,
@@ -1308,12 +1308,12 @@ def plot_volcanos(
         x=f"abs(Z score)_grp_{condition}",
         y="FDR adjuted p-value plot",
         hue="gene group",
-        hue_order=["none", "traditional + specific DEGs", "specific only DEGs"],
+        hue_order=["none", "traditional + specific DEGs", "only specific DEGs"],
         style="gene group",
         markers={
             "none": ".",
             "traditional + specific DEGs": "o",
-            "specific only DEGs": "o",
+            "only specific DEGs": "o",
         },
         palette=colors,
         linewidth=0,
