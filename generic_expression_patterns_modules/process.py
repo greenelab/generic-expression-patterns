@@ -1254,7 +1254,7 @@ def plot_volcanos(
     fig, axes = plt.subplots(ncols=3, nrows=1, figsize=(15, 4))
 
     # Add columns for plotting
-    merged_one_condition_df["FDR adjuted p-value plot"] = -np.log10(
+    merged_one_condition_df["FDR adjusted p-value plot"] = -np.log10(
         merged_one_condition_df[f"Adj P-value (Real)_grp_{condition}"]
     )
     merged_one_condition_df["gene group"] = "none"
@@ -1366,4 +1366,3 @@ def plot_venn(degs_traditional, degs_specific, degs_generic):
         set_labels=("Traditional", "Generic"),
         ax=axes[1],
     )
-
