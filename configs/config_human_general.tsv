@@ -1,5 +1,5 @@
 local_dir	"/home/alexandra/Documents/Data/Generic_expression_patterns/"
-dataset_name	"human_analysis"
+dataset_name	"human_general_analysis"
 raw_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/raw_recount2_template.tsv"
 mapped_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/mapped_recount2_template.tsv"
 processed_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/processed_recount2_template.tsv"
@@ -15,7 +15,7 @@ reference_rank_col	"DE_Prior_Rank"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10
-epochs	40
+epochs	20
 kappa	0.01
 intermediate_dim	2500
 latent_dim	30
@@ -23,7 +23,7 @@ epsilon_std	1.0
 validation_frac	0.25
 project_id	"SRP012656"
 metadata_colname	'run'
-num_simulated	100
+num_simulated	25
 rank_genes_by	"log2FoldChange"
 rank_pathways_by	"padj"
 num_recount2_experiments_to_download	200
