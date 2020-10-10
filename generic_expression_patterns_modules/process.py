@@ -10,12 +10,14 @@ import os
 import pickle
 import numpy as np
 import pandas as pd
-import sklearn
 import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib_venn import venn2
 
 from glob import glob
 from sklearn.preprocessing import MinMaxScaler
 from generic_expression_patterns_modules import calc
+
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
     """
@@ -288,8 +290,11 @@ def generate_summary_table(
             "Number of experiments (simulated)": count_simulated,
         }
     )
-    summary["Z score"] = (
-        summary["Test statistic (Real)"] - summary["Mean test statistic (simulated)"]
+    summary["abs(Z score)"] = (
+        abs(
+            summary["Test statistic (Real)"]
+            - summary["Mean test statistic (simulated)"]
+        )
     ) / summary["Std deviation (simulated)"]
 
     # Save file
@@ -451,7 +456,7 @@ def create_recount2_compendium(download_dir, output_filename):
     data_counts_filenames.sort()
 
     compendium_header = None
-    with open(output_filename, 'w') as ofh:
+    with open(output_filename, "w") as ofh:
         for filename in data_counts_filenames:
             with open(filename) as ifh:
                 file_header = ifh.readline()
@@ -476,7 +481,7 @@ def get_published_generic_genes(filename):
     """
 
     df = pd.read_csv(filename, header=0, sep="\t")
-    published_generic_genes = list(df['Gene_Name'])
+    published_generic_genes = list(df["Gene_Name"])
     return published_generic_genes
 
 
@@ -497,15 +502,15 @@ def get_merged_gene_id_mapping(gene_id_filename, raw_ensembl_genes):
     """
 
     original_gene_id_mapping = pd.read_csv(
-        gene_id_filename, header=0, sep='\t', index_col=0
+        gene_id_filename, header=0, sep="\t", index_col=0
     )
 
     # Get mapping between ensembl ids with and without version numbers.
     # The genes in `ensembl_genes` has version numbers at the end.
     ensembl_gene_ids = pd.DataFrame(
         data={
-            'ensembl_version': raw_ensembl_genes,
-            'ensembl_parsed': [gene_id.split('.')[0] for gene_id in raw_ensembl_genes]
+            "ensembl_version": raw_ensembl_genes,
+            "ensembl_parsed": [gene_id.split(".")[0] for gene_id in raw_ensembl_genes],
         }
     )
 
@@ -513,23 +518,23 @@ def get_merged_gene_id_mapping(gene_id_filename, raw_ensembl_genes):
     merged_gene_id_mapping = pd.merge(
         original_gene_id_mapping,
         ensembl_gene_ids,
-        left_on='ensembl_gene_id',
-        right_on='ensembl_parsed',
-        how='outer'
+        left_on="ensembl_gene_id",
+        right_on="ensembl_parsed",
+        how="outer",
     )
 
     # Set `ensembl_version` column as the index
-    merged_gene_id_mapping.set_index('ensembl_version', inplace=True)
+    merged_gene_id_mapping.set_index("ensembl_version", inplace=True)
 
     return merged_gene_id_mapping
 
 
 def get_renamed_columns(
-        raw_ensembl_ids,
-        merged_gene_id_mapping,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename
+    raw_ensembl_ids,
+    merged_gene_id_mapping,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
 ):
     """
     Find the new column names and corresponding column indexes.
@@ -595,19 +600,19 @@ def get_renamed_columns(
 
     # Pickle `shared_genes_hgnc` and save as `shared_genes_filename`
     if not os.path.exists(shared_genes_filename):
-        with open(shared_genes_filename, 'wb') as pkl_fh:
+        with open(shared_genes_filename, "wb") as pkl_fh:
             pickle.dump(shared_genes_hgnc, pkl_fh)
 
     return (shared_genes_hgnc, hgnc_to_cols)
 
 
 def map_recount2_data(
-        raw_filename,
-        gene_id_filename,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-        new_filename
+    raw_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    new_filename,
 ):
     """
     Map the ensembl gene IDs in `raw_filename` to hgnc gene symbols based
@@ -618,7 +623,7 @@ def map_recount2_data(
     # Read the header line of `raw_filename` to get its column names:
     raw_header_df = pd.read_csv(raw_filename, header=0, sep="\t", nrows=1)
     raw_ensembl_ids = list(raw_header_df.columns)
-    if raw_ensembl_ids[0] == 'Unnamed: 0':
+    if raw_ensembl_ids[0] == "Unnamed: 0":
         del raw_ensembl_ids[0]
 
     merged_gene_id_mapping = get_merged_gene_id_mapping(
@@ -630,7 +635,7 @@ def map_recount2_data(
         merged_gene_id_mapping,
         manual_mapping,
         DE_prior_filename,
-        shared_genes_filename
+        shared_genes_filename,
     )
 
     col_indexes = list()
@@ -642,13 +647,13 @@ def map_recount2_data(
         output_cols += [hgnc] * len(hgnc_to_cols[hgnc])
     output_header = "\t".join(output_cols) + "\n"
 
-    with open(new_filename, 'w') as ofh:
+    with open(new_filename, "w") as ofh:
         ofh.write(output_header)
         with open(raw_filename) as ifh:
             for line_num, line in enumerate(ifh):
                 if line_num == 0:
                     continue
-                tokens = line.strip('\n').split('\t')
+                tokens = line.strip("\n").split("\t")
                 sample_id = tokens[0].strip('"')
                 input_values = tokens[1:]
                 output_values = list()
@@ -658,14 +663,14 @@ def map_recount2_data(
 
 
 def process_raw_template(
-        raw_filename,
-        gene_id_filename,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-        mapped_filename,
-        sample_id_metadata_filename,
-        processed_filename
+    raw_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    mapped_filename,
+    sample_id_metadata_filename,
+    processed_filename,
 ):
     """
     Create mapped recount2 template data file based on input raw template
@@ -680,29 +685,27 @@ def process_raw_template(
         manual_mapping,
         DE_prior_filename,
         shared_genes_filename,
-        mapped_filename
+        mapped_filename,
     )
 
     sample_ids_to_drop = set()
     if os.path.exists(sample_id_metadata_filename):
         # Read in metadata and get samples to be dropped:
         metadata = pd.read_csv(
-            sample_id_metadata_filename, sep='\t', header=0, index_col=0
+            sample_id_metadata_filename, sep="\t", header=0, index_col=0
         )
         sample_ids_to_drop = set(metadata[metadata["processing"] == "drop"].index)
 
     # Write the processed recount2 template output file on disk
     with open(mapped_filename) as ifh, open(processed_filename, "w") as ofh:
         for idx, line in enumerate(ifh):
-            sample_id = line.split('\t')[0]
+            sample_id = line.split("\t")[0]
             if idx == 0 or sample_id not in sample_ids_to_drop:
                 ofh.write(line)
 
 
 def normalize_compendium(
-        mapped_filename,
-        normalized_filename,
-        scaler_filename,
+    mapped_filename, normalized_filename, scaler_filename,
 ):
     """
     Read the mapped compendium file into memor, normalize it, and save
@@ -711,10 +714,7 @@ def normalize_compendium(
 
     # Read mapped compendium file: ~4 minutes (17 GB of RAM)
     mapped_compendium_df = pd.read_table(
-        mapped_filename,
-        header=0,
-        sep='\t',
-        index_col=0
+        mapped_filename, header=0, sep="\t", index_col=0
     )
 
     # 0-1 normalize per gene
@@ -725,28 +725,26 @@ def normalize_compendium(
     normalized_compendium_df = pd.DataFrame(
         normalized_compendium,
         columns=mapped_compendium_df.columns,
-        index=mapped_compendium_df.index
+        index=mapped_compendium_df.index,
     )
 
     # Save normalized data on disk: ~17.5 minutes
-    normalized_compendium_df.to_csv(
-        normalized_filename, float_format='%.3f', sep='\t'
-    )
+    normalized_compendium_df.to_csv(normalized_filename, float_format="%.3f", sep="\t")
 
     # Pickle `scaler` as `scaler_filename` on disk
-    with open(scaler_filename, 'wb') as pkl_fh:
+    with open(scaler_filename, "wb") as pkl_fh:
         pickle.dump(scaler, pkl_fh)
 
 
 def process_raw_compendium(
-        raw_filename,
-        gene_id_filename,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-        mapped_filename,
-        normalized_filename,
-        scaler_filename
+    raw_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    mapped_filename,
+    normalized_filename,
+    scaler_filename,
 ):
     """
     Create mapped recount2 compendium data file based on raw compendium
@@ -760,23 +758,15 @@ def process_raw_compendium(
         manual_mapping,
         DE_prior_filename,
         shared_genes_filename,
-        mapped_filename
+        mapped_filename,
     )
 
     # Normalize mapped recount2 compendium data
-    normalize_compendium(
-        mapped_filename,
-        normalized_filename,
-        scaler_filename
-    )
+    normalize_compendium(mapped_filename, normalized_filename, scaler_filename)
 
 
 def get_shared_rank_scaled(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        data_type
+    summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type
 ):
     """
     Returns shared rank scaled dataframe and correlation values based on
@@ -804,17 +794,11 @@ def get_shared_rank_scaled(
     """
     # Merge our ranking and reference ranking
     shared_rank_df = merge_ranks_to_compare(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col
+        summary_df, reference_filename, ref_gene_col, ref_rank_col
     )
 
     if max(shared_rank_df["Rank (simulated)"]) != max(shared_rank_df[ref_rank_col]):
-        shared_rank_scaled_df = scale_reference_ranking(
-            shared_rank_df,
-            ref_rank_col
-        )
+        shared_rank_scaled_df = scale_reference_ranking(shared_rank_df, ref_rank_col)
     else:
         shared_rank_scaled_df = shared_rank_df
 
@@ -824,23 +808,15 @@ def get_shared_rank_scaled(
     # However, it doesn't really effect the outcome because these genes have almost no power for
     # detecting differential expression. Effects runtime though.
     shared_rank_scaled_df = shared_rank_scaled_df[
-        ~shared_rank_scaled_df['Rank (simulated)'].isna()
+        ~shared_rank_scaled_df["Rank (simulated)"].isna()
     ]
 
     # Get correlation
     r, p, ci_low, ci_high = calc.spearman_ci(
-        0.95,
-        shared_rank_scaled_df,
-        1000,
-        data_type
+        0.95, shared_rank_scaled_df, 1000, data_type
     )
 
-    correlations = {
-        "r": r,
-        "p": p,
-        "ci_low": ci_low,
-        "ci_high": ci_high
-    }
+    correlations = {"r": r, "p": p, "ci_low": ci_low, "ci_high": ci_high}
 
     # Print out correlation values
     for k, v in correlations.items():
@@ -850,11 +826,7 @@ def get_shared_rank_scaled(
 
 
 def compare_gene_ranking(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        output_figure_filename
+    summary_df, reference_filename, ref_gene_col, ref_rank_col, output_figure_filename
 ):
     """
     Compare gene ranking and generate a SVG figure.
@@ -876,30 +848,24 @@ def compare_gene_ranking(
     """
 
     shared_gene_rank_scaled_df, correlations = get_shared_rank_scaled(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        data_type="DE"
+        summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type="DE"
     )
 
     fig = sns.jointplot(
         data=shared_gene_rank_scaled_df,
-        x='Rank (simulated)',
+        x="Rank (simulated)",
         y=ref_rank_col,
-        kind='hex',
-        marginal_kws={'color':'white'}
+        kind="hex",
+        marginal_kws={"color": "white"},
     )
 
     fig.set_axis_labels(
-        "Our preliminary method",
-        "DE prior (Crow et. al. 2019)",
-        fontsize=14
+        "Our preliminary method", "DE prior (Crow et. al. 2019)", fontsize=14
     )
 
     fig.savefig(
         output_figure_filename,
-        format='svg',
+        format="svg",
         bbox_inches="tight",
         transparent=True,
         pad_inches=0,
@@ -923,21 +889,15 @@ def compare_pathway_ranking(summary_df, reference_filename):
     """
 
     # Column headers for generic pathways identified by Powers et. al.
-    ref_gene_col = 'index'
-    ref_rank_col = 'Powers Rank'
+    ref_gene_col = "index"
+    ref_rank_col = "Powers Rank"
 
     shared_pathway_rank_scaled_df, correlations = get_shared_rank_scaled(
-        summary_df,
-        reference_filename,
-        ref_gene_col,
-        ref_rank_col,
-        data_type="GSEA"
+        summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type="GSEA"
     )
 
-    fig = sns.scatterplot(
-        data=shared_pathway_rank_scaled_df,
-        x='Rank (simulated)',
-        y=ref_rank_col
+    sns.scatterplot(
+        data=shared_pathway_rank_scaled_df, x="Rank (simulated)", y=ref_rank_col
     )
 
     return correlations
@@ -966,7 +926,7 @@ def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
     """
 
     # Only "DE" and "GSEA" data types are supported.
-    if data_type not in ['DE', 'GSEA']:
+    if data_type not in ["DE", "GSEA"]:
         raise Exception(f"Unknown data_type: {data_type}")
 
     simulated_stats_all = pd.DataFrame()
@@ -983,9 +943,426 @@ def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
 
         # Concatenate df
         simulated_stats_all = pd.concat(
-            [simulated_stats_all, simulated_stats["NES"]],
-            axis=1
+            [simulated_stats_all, simulated_stats["NES"]], axis=1
         )
 
     simulated_stats_all.index = simulated_stats.index
     return simulated_stats_all
+
+
+def merge_abs_raw_dfs(abs_df, raw_df, condition):
+    """
+    This function merges and returns dataframe containing
+    summary gene results using absolute value of the test 
+    statistic and raw test statistic values.
+
+    Arguments
+    ---------
+    abs_df: df
+        Summary df using absolute value of test statistic
+    raw_df: df
+        Summary df using raw value of test statistic
+    condition: str
+        Condition from E-GEOD-33245. Either '1v2', '1v3', '1v4' or '1v5'
+    """
+    merged_df = abs_df.merge(
+        raw_df,
+        left_on="Gene ID",
+        right_on="Gene ID",
+        suffixes=[f"_grp_{condition}", f"_grp_{condition}_raw"],
+    )
+
+    return merged_df
+
+
+def merge_two_conditions_df(
+    merged_condition_1_df, merged_condition_2_df, condition_1, condition_2
+):
+    """
+    This function merges and returns summary dataframes across two conditions to
+    compare trends. For example, merge summary dataframes between 1v2 and 1v3.
+
+    Arguments
+    ---------
+    merged_condition_1_df: df
+        df of results for one of the E-GEOD-33245 conditions ('1v2', '1v3', '1v4' or '1v5')
+        returned from `merge_abs_raw_dfs`
+    merged_condition_2_df: df
+        df of results for another one of the E-GEOD-33245 conditions ('1v2', '1v3', '1v4' or '1v5')
+        returned from `merge_abs_raw_dfs`
+    condition_1: str
+        Condition from E-GEOD-33245 associated with 'merged_condition_1_df'.
+        Either '1v2', '1v3', '1v4' or '1v5'
+    condition_2: str
+        Condition from E-GEOD-33245 associated with 'merged_condition_2_df'.
+        Either '1v2', '1v3', '1v4' or '1v5'
+    """
+    merged_all_df = merged_condition_1_df.merge(
+        merged_condition_2_df, left_on="Gene ID", right_on="Gene ID"
+    )
+    merged_all_df["max Z score"] = (
+        merged_all_df[
+            [f"abs(Z score)_grp_{condition_1}", f"abs(Z score)_grp_{condition_2}"]
+        ]
+        .abs()
+        .max(axis=1)
+    )
+    merged_all_df["Gene ID Name"] = (
+        merged_all_df["Gene ID"]
+        + " "
+        + merged_all_df[f"Gene Name_grp_{condition_1}"].fillna("")
+    )
+
+    merged_df = merged_all_df[
+        [
+            "Gene ID",
+            "Gene ID Name",
+            f"Test statistic (Real)_grp_{condition_1}",
+            f"Test statistic (Real)_grp_{condition_1}_raw",
+            f"Adj P-value (Real)_grp_{condition_1}",
+            f"Mean test statistic (simulated)_grp_{condition_1}",
+            f"Std deviation (simulated)_grp_{condition_1}",
+            f"Median adj p-value (simulated)_grp_{condition_1}",
+            f"Test statistic (Real)_grp_{condition_2}",
+            f"Test statistic (Real)_grp_{condition_2}_raw",
+            f"Adj P-value (Real)_grp_{condition_2}",
+            f"Mean test statistic (simulated)_grp_{condition_2}",
+            f"Std deviation (simulated)_grp_{condition_2}",
+            f"Median adj p-value (simulated)_grp_{condition_2}",
+            f"abs(Z score)_grp_{condition_1}",
+            f"abs(Z score)_grp_{condition_2}",
+            "max Z score",
+        ]
+    ]
+    return merged_df
+
+
+def plot_two_conditions(merged_df, condition_1, condition_2, xlabel, ylabel):
+    """
+    This function plots scatterplot comparing trends across two
+    conditions
+
+    Arguments
+    ---------
+    merged_df: df
+        Merged df containing results for two conditions of E-GEOD-33245.
+        Created from `merge_two_conditions_df`
+    condition_1:condition_1: str
+        Condition from E-GEOD-33245 associated with 'merged_df'.
+        Either '1v2', '1v3', '1v4' or '1v5'
+    condition_2: str
+        Condition from E-GEOD-33245 associated with 'merged_df'.
+        Either '1v2', '1v3', '1v4' or '1v5'
+    xlabel: str
+        Label to describe condition_1
+    ylabel: str
+        Label to describe condition_2
+
+    """
+    fig, axes = plt.subplots(ncols=2, nrows=1, figsize=(10, 4))
+    cmap = sns.cubehelix_palette(start=2.8, rot=0.1, as_cmap=True)
+
+    fig_abs = sns.scatterplot(
+        data=merged_df,
+        x=f"Test statistic (Real)_grp_{condition_1}",
+        y=f"Test statistic (Real)_grp_{condition_2}",
+        hue="max Z score",
+        size="max Z score",
+        linewidth=0,
+        alpha=0.7,
+        ax=axes[0],
+        palette=cmap,
+    )
+    fig_abs.plot([0, 4], [0, 4], "--k")
+
+    fig_raw = sns.scatterplot(
+        data=merged_df,
+        x=f"Test statistic (Real)_grp_{condition_1}_raw",
+        y=f"Test statistic (Real)_grp_{condition_2}_raw",
+        hue="max Z score",
+        size="max Z score",
+        linewidth=0,
+        alpha=0.7,
+        ax=axes[1],
+        palette=cmap,
+    )
+    fig_raw.plot([-4, 4], [-4, 4], "--k")
+
+    # Add labels
+    fig.suptitle(f"({xlabel}) vs ({ylabel})", fontsize=16)
+    fig.text(0.5, 0.04, xlabel, ha="center", va="center")
+    fig.text(0.06, 0.5, ylabel, ha="center", va="center", rotation="vertical")
+    axes[0].set_title("using abs(log$_2$ Fold Change)")
+    axes[1].set_title("using log$_2$ Fold Change")
+    axes[0].set_xlabel("")
+    axes[1].set_xlabel("")
+    axes[0].set_ylabel("")
+    axes[1].set_ylabel("")
+    print(fig)
+
+    # ADD NEWLINE TO TITLE
+    # MAKE LABELS LARGER
+    # MOVE LEGEND?
+
+
+def get_and_save_DEG_lists(
+    merged_one_condition_df, condition, p_threshold, z_threshold
+):
+    """
+    Get list of DEGs using traditional criteria (log2FC and p-value)
+    and using z-score cutoff. Return different combinations of gene
+    lists.
+
+    Arguments
+    ---------
+    merged_one_condition_df: df
+        df of results for one of the E-GEOD-33245 conditions ('1v2', '1v3', '1v4' or '1v5')
+        returned from `merge_abs_raw_dfs`
+    condition: str
+        Condition from E-GEOD-33245 associated with 'merged_one_condition_df'.
+        Either '1v2', '1v3', '1v4' or '1v5'
+    """
+    # Get DEGs using traditional criteria
+    degs_traditional = list(
+        (
+            merged_one_condition_df[
+                (merged_one_condition_df[f"Test statistic (Real)_grp_{condition}"] > 1)
+                & (
+                    merged_one_condition_df[f"Adj P-value (Real)_grp_{condition}"]
+                    < p_threshold
+                )
+            ]
+            .set_index("Gene ID")
+            .index
+        )
+    )
+    print(f"No. of DEGs using traditional criteria: {len(degs_traditional)}")
+
+    # Get predicted specific DEGs using z-score cutoff
+    degs_specific = list(
+        (
+            merged_one_condition_df[
+                (merged_one_condition_df[f"Test statistic (Real)_grp_{condition}"] > 1)
+                & (
+                    merged_one_condition_df[f"abs(Z score)_grp_{condition}"].abs()
+                    > z_threshold
+                )
+            ]
+            .set_index("Gene ID")
+            .index
+        )
+    )
+    print(f"No. of specific DEGs using z-score: {len(degs_specific)}")
+
+    # Get predicted generic DEGs using z-score cutoff
+    # Z-score cutoff was found by calculating the score
+    # whose invnorm(0.05/5549). Here we are using a p-value = 0.05
+    # with a Bonferroni correction for 5549 tests, which are
+    # the number of P. aeruginosa genes
+    degs_generic = list(
+        (
+            merged_one_condition_df[
+                (merged_one_condition_df[f"Test statistic (Real)_grp_{condition}"] > 1)
+                & (
+                    merged_one_condition_df[f"abs(Z score)_grp_{condition}"].abs()
+                    < z_threshold
+                )
+            ]
+            .set_index("Gene ID")
+            .index
+        )
+    )
+    print(f"No. of generic DEGs using z-score: {len(degs_generic)}")
+
+    # Get intersection of DEGs using traditional and z-score criteria
+    degs_intersect = list(set(degs_traditional).intersection(degs_specific))
+    print(
+        f"No. of traditional DEGs that are specific by z-score criteria: {len(degs_intersect)}"
+    )
+
+    # Get specific DEGs that were NOT found using traditional criteria
+    degs_diff = list(set(degs_specific).difference(degs_intersect))
+    print(
+        f"No. of specific DEGs that were not found by traditional criteria: {len(degs_diff)}"
+    )
+
+    # Get intersection of DEGs using traditional and z-score criteria
+    degs_intersect_generic = list(set(degs_traditional).intersection(degs_generic))
+    print(
+        f"No. of traditional DEGs that are generic by z-score criteria: {len(degs_intersect_generic)}"
+    )
+
+    # Save list of genes that interesect and those that do not
+    merged_one_condition_df["Gene ID Name"] = (
+        merged_one_condition_df["Gene ID"]
+        + " "
+        + merged_one_condition_df[f"Gene Name_grp_{condition}"].fillna("")
+    )
+
+    # Set `Gene ID` as index
+    merged_one_condition_df.set_index("Gene ID", inplace=True)
+
+    gene_id_names_intersect = merged_one_condition_df.loc[
+        degs_intersect, "Gene ID Name"
+    ]
+    gene_id_names_diff = merged_one_condition_df.loc[degs_diff, "Gene ID Name"]
+    gene_id_names_generic = merged_one_condition_df.loc[degs_generic, "Gene ID Name"]
+
+    gene_lists_df = pd.DataFrame(
+        {
+            "Traditional + specific DEGs": gene_id_names_intersect,
+            "Specific only DEGs": gene_id_names_diff,
+            "Generic DEGs": gene_id_names_generic,
+        }
+    )
+
+    return (
+        gene_lists_df,
+        degs_traditional,
+        degs_specific,
+        degs_generic,
+        degs_intersect,
+        degs_intersect_generic,
+        degs_diff,
+    )
+
+
+def plot_volcanos(
+    degs_intersect, degs_diff, merged_one_condition_df, condition, fig_title
+):
+    """
+    Make volcano plots based on one condition from E-GEOD-33245. Color genes
+    by gene lists created from `get_and_save_DEG_lists`
+
+    Arguments
+    ---------
+    degs_intersect: list
+        List of genes that were found to be DE using traditional criteria
+        and were found to have a high z-score (specificity)
+    degs_diff: list
+        List of genes that were found to have a high log2 fold change and
+        high z-score but were not found to be DE using traditional criteria
+    merged_one_condition_df: df
+        df of results for one of the E-GEOD-33245 conditions ('1v2', '1v3', '1v4' or '1v5')
+        returned from `merge_abs_raw_dfs`
+    condition: str
+        Condition from E-GEOD-33245 associated with 'merged_one_condition_df'.
+        Either '1v2', '1v3', '1v4' or '1v5'
+    fig_title: str
+        Title to describe condition
+    """
+    fig, axes = plt.subplots(ncols=3, nrows=1, figsize=(15, 4))
+
+    # Add columns for plotting
+    merged_one_condition_df["FDR adjusted p-value plot"] = -np.log10(
+        merged_one_condition_df[f"Adj P-value (Real)_grp_{condition}"]
+    )
+    merged_one_condition_df["gene group"] = "none"
+    merged_one_condition_df.loc[
+        degs_intersect, "gene group"
+    ] = "traditional + specific DEGs"
+    merged_one_condition_df.loc[degs_diff, "gene group"] = "only specific DEGs"
+
+    colors = ["lightgrey", "red", "blue"]
+    # Plot: log2FC vs p-value (traditional criteria)
+    sns.scatterplot(
+        data=merged_one_condition_df,
+        x=f"Test statistic (Real)_grp_{condition}_raw",
+        y="FDR adjusted p-value plot",
+        hue="gene group",
+        hue_order=["none", "traditional + specific DEGs", "only specific DEGs"],
+        style="gene group",
+        markers={
+            "none": ".",
+            "traditional + specific DEGs": "o",
+            "only specific DEGs": "o",
+        },
+        palette=colors,
+        linewidth=0,
+        alpha=0.5,
+        ax=axes[0],
+    )
+
+    # Plot: log2FC vs z-score
+    sns.scatterplot(
+        data=merged_one_condition_df,
+        x=f"Test statistic (Real)_grp_{condition}_raw",
+        y=f"abs(Z score)_grp_{condition}",
+        hue="gene group",
+        hue_order=["none", "traditional + specific DEGs", "only specific DEGs"],
+        style="gene group",
+        markers={
+            "none": ".",
+            "traditional + specific DEGs": "o",
+            "only specific DEGs": "o",
+        },
+        palette=colors,
+        linewidth=0,
+        alpha=0.5,
+        ax=axes[1],
+    )
+
+    # Plot: z-score vs p-value
+    sns.scatterplot(
+        data=merged_one_condition_df,
+        x=f"abs(Z score)_grp_{condition}",
+        y="FDR adjuted p-value plot",
+        hue="gene group",
+        hue_order=["none", "traditional + specific DEGs", "only specific DEGs"],
+        style="gene group",
+        markers={
+            "none": ".",
+            "traditional + specific DEGs": "o",
+            "only specific DEGs": "o",
+        },
+        palette=colors,
+        linewidth=0,
+        alpha=0.5,
+        ax=axes[2],
+    )
+
+    # Add labels
+    fig.suptitle(fig_title, fontsize=16)
+    axes[0].set_xlabel("log$_2$ Fold Change")
+    axes[1].set_xlabel("log$_2$ Fold Change")
+    axes[2].set_xlabel("Z-score")
+    axes[0].set_ylabel("FDR adjusted p-value")
+    axes[1].set_ylabel("Z-score")
+    axes[2].set_ylabel("FDR adjusted p-value")
+    axes[0].set_title("log$_2$ Fold Change vs p-value")
+    axes[1].set_title("log$_2$ Fold Change vs z-score")
+    axes[2].set_title("z-score vs p-value")
+    print(fig)
+
+
+def plot_venn(degs_traditional, degs_specific, degs_generic):
+    """
+    Create venn diagram to compare the genes that were found
+    to be DE using traditional criteria vs genes that are
+    specific (i.e. high z-score) or generic (i.e. low z-score)
+
+    Arguments
+    ---------
+    degs_traditional: list
+        List of genes found to pass traditional DE criteria
+        (log2FC > 1 and FDR adjusted p-value < 0.05).
+    degs_specific: list
+        List of genes that were found to have log2 FC > 1
+        and z-score > 4.44
+    degs_generic: list
+        List of genes that were found to have log2 FC > 1
+        and z-score < 4.44
+    """
+    fig, axes = plt.subplots(ncols=2, nrows=1, figsize=(15, 4))
+
+    venn2(
+        [set(degs_traditional), set(degs_specific)],
+        set_labels=("Traditional", "Specific"),
+        ax=axes[0],
+    )
+
+    venn2(
+        [set(degs_traditional), set(degs_generic)],
+        set_labels=("Traditional", "Generic"),
+        ax=axes[1],
+    )
