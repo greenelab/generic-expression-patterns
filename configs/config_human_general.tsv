@@ -15,7 +15,7 @@ reference_rank_col	"DE_Prior_Rank"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10
-epochs	20
+epochs	40
 kappa	0.01
 intermediate_dim	2500
 latent_dim	30

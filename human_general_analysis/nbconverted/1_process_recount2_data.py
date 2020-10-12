@@ -18,7 +18,7 @@
 # 
 # 3. Train VAE on recount2 data
 
-# In[ ]:
+# In[1]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -26,7 +26,7 @@ get_ipython().run_line_magic('load_ext', 'rpy2.ipython')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[ ]:
+# In[2]:
 
 
 import os
@@ -38,14 +38,14 @@ from generic_expression_patterns_modules import process
 # 
 # Most parameters are read from `config_filename`. We manually selected bioproject [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764) as the template experiment, which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients with 2 replicates each.
 
-# In[ ]:
+# In[3]:
 
 
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 # Read in config variables
 config_filename = os.path.abspath(
-    os.path.join(base_dir, "configs", "config_human.tsv")
+    os.path.join(base_dir, "configs", "config_human_general.tsv")
 )
 
 params = utils.read_config(config_filename)
@@ -78,7 +78,7 @@ scaler_filename = params['scaler_filename']
 
 # ### Download template experiment's expression data and generate raw template data file
 
-# In[ ]:
+# In[4]:
 
 
 # Directory where the downloaded files of template experiment will be saved into
@@ -88,7 +88,7 @@ template_download_dir = os.path.join(local_dir, "template_download")
 os.makedirs(template_download_dir, exist_ok=True)
 
 
-# In[ ]:
+# In[5]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i template_download_dir -i raw_template_filename', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_template_experiment(project_id, template_download_dir, raw_template_filename)")
@@ -96,7 +96,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i template_download_dir -i raw
 
 # ### Download all recount2 SRA data
 
-# In[ ]:
+# In[6]:
 
 
 # Directory where the recount2 SRA data files are saved into
@@ -107,7 +107,7 @@ os.makedirs(compendium_download_dir, exist_ok=True)
 metadata_dir = local_dir
 
 
-# In[ ]:
+# In[7]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_dir -i compendium_download_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\ndownload_recount2_sra(metadata_dir, compendium_download_dir)")
@@ -116,7 +116,7 @@ get_ipython().run_cell_magic('R', '-i metadata_dir -i compendium_download_dir', 
 # ### Create raw recount2 compendium data file
 # Compile data in individual projects together into a single raw compendium file. 
 
-# In[ ]:
+# In[8]:
 
 
 # Output file: `raw_compendium_filename`
@@ -126,14 +126,14 @@ process.create_recount2_compendium(compendium_download_dir, raw_compendium_filen
 # ### Subset genes and convert gene names
 # For our downstream analysis, we will be comparing our set of differentially expression genes against the set found in [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf), therefore we will limit our genes to include only those genes shared between our starting set of genes and those in publication. 
 
-# In[ ]:
+# In[9]:
 
 
 # File mapping ensembl ids to hgnc symbols
 gene_id_filename = os.path.join(local_dir, "ensembl_hgnc_mapping.tsv")
 
 
-# In[ ]:
+# In[10]:
 
 
 get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename', '\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n# Input: raw_template_filename, output: gene_id_filename\n\nsource(\'../generic_expression_patterns_modules/process_names.R\')\n\n# Note: This mapping file from ensembl ids to hgnc symbols is based on the library("biomaRt")\n# that gets updated. In order to get the most up-to-date version, you can delete the \n# ensembl_hgnc_mapping file to re-run the script that generates this mapping.\n\nif (file.exists(gene_id_filename) == FALSE) {\n  get_ensembl_symbol_mapping(raw_template_filename, gene_id_filename)\n}')
@@ -147,7 +147,7 @@ get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename'
 # - `mapped_template_filename`: template data with column names mapped to hgnc gene symbols
 # - `processed_template_filename`: template data with some sample rows dropped
 
-# In[ ]:
+# In[11]:
 
 
 manual_mapping = {                                                                                  
@@ -187,7 +187,7 @@ process.process_raw_template(
 # - `normalized_compendium_filename`: normalized compendium data
 # - `scaler_filename`: pickled scaler
 
-# In[ ]:
+# In[12]:
 
 
 process.process_raw_compendium(
@@ -205,7 +205,7 @@ process.process_raw_compendium(
 # ### Train VAE 
 # Performed exploratory analysis of compendium data [here](../explore_data/viz_recount2_compendium.ipynb) to help interpret loss curve.
 
-# In[ ]:
+# In[13]:
 
 
 # Create VAE directories if needed
