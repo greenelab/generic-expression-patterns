@@ -875,7 +875,7 @@ def compare_gene_ranking(
     return correlations
 
 
-def compare_pathway_ranking(summary_df, reference_filename):
+def compare_pathway_ranking(summary_df, reference_filename, output_figure_filename):
     """
     Compare pathway ranking.
     Returns correlations to make debugging easier.
@@ -886,6 +886,8 @@ def compare_pathway_ranking(summary_df, reference_filename):
         Dataframe containing our ranking per pathway along with other statistics associated with that pathway
     reference_filename:
         File containing pathway ranks from reference publication (Powers et. al.)
+    output_figure_filename: str
+            Filename of output figure
     """
 
     # Column headers for generic pathways identified by Powers et. al.
@@ -896,8 +898,24 @@ def compare_pathway_ranking(summary_df, reference_filename):
         summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type="GSEA"
     )
 
-    sns.scatterplot(
-        data=shared_pathway_rank_scaled_df, x="Rank (simulated)", y=ref_rank_col
+    fig = sns.scatterplot(
+        data=shared_pathway_rank_scaled_df,
+        x="Rank (simulated)",
+        y=ref_rank_col,
+        color="slateblue",
+        s=100,
+    )
+
+    fig.set_xlabel("Our preliminary method", fontsize=14)
+    fig.set_ylabel("Powers et. al. 2018", fontsize=14)
+
+    fig.figure.savefig(
+        output_figure_filename,
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
     )
 
     return correlations
