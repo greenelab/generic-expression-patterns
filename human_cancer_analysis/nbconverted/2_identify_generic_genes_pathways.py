@@ -21,7 +21,7 @@
 # 
 # **Evaluation:**
 # * We want to compare the ranking of genes identified using the above method with the ranking found from [Crow et. al.](https://www.pnas.org/content/pnas/116/13/6491.full.pdf), which identified a set of genes as generic based on how frequently they were found to be DE across 600 experiments
-# * We want to compare the ranking of pathways identified using the above method with the ranking based on the [Powers et. al.](https://www.biorxiv.org/content/10.1101/259440v1.full.pdf) data, where ranking was determined based on the fraction of 432 experiments a pathway was found to be enriched
+# * We want to compare the ranking of pathways identified using the above method with the ranking based on the [Powers et. al.](https://www.biorxiv.org/content/10.1101/259440v1.full.pdf) data, where ranking was determined based on the fraction of 442 experiments a pathway was found to be enriched
 # * This comparison will validate our method being used as a way to automatically identify generic genes and pathways.
 
 # In[1]:
@@ -777,12 +777,12 @@ process.compare_pathway_ranking(
 # **Takeaway:**
 # * Previously we compared pathway ranks obtained from (recount2)-trained VAE model vs pathway ranking based on manual curation using Powers et. al. This [PR](https://github.com/ajlee21/generic-expression-patterns/blob/807377d76f63b6282c62255d7b160feb8585e0e2/human_analysis/2_identify_generic_genes_pathways.ipynb) shows that there was no correlation.
 # 
-# * Here we are comparing pathway ranks obtained from a (Powers et. al.)-trained VAE model vs pathway ranking based on manual curation using Powers et. al datasets. Based on this correlation plot there is a high correlation.
+# * Here we validated that our analysis pipeline is working correctly by comparing pathway ranks obtained from a (Powers et. al.)-trained VAE model vs pathway ranking based on manual curation using Powers et. al datasets. We expect to see a high correlation between pathway ranks given that we are using the same training dataset. Indeed that is what we find 
 
 # **Conclusion:**
 # 
 # * We find relatively similar generic genes using our simulation approach (i.e. VAE model trained on a cancer-specific dataset, Powers et. al.) compared to generic genes found from real general experiments from Crow et. al. These generic genes are not *that* context-specific at the extremes.
 # 
-# * We found very different generic pathways training using our simulation approach (i.e. VAE model trained on a general dataset, recount2) compared to generic pathways found from real cancer-specific experiments from Powers et. al. See [analysis](../human_general_analysis/2_identify_generic_genes_pathways.ipynb). But we get very similar generic pathways using our simulation approach trained on a cancer-specific dataset (Powers et. al.) compared with generic pathways found from cancer-specific dataset (Powers et. al.). This indicates that generic pathways are more context specific.
+# * We found very different generic pathways training using our simulation approach trained on a general dataset (recount2) compared to generic pathways found from real cancer-specific experiments from Powers et. al. See [analysis](../human_general_analysis/2_identify_generic_genes_pathways.ipynb). But we get very similar generic pathways using our simulation approach trained on a cancer-specific dataset (Powers et. al.) compared with generic pathways found from cancer-specific dataset (Powers et. al.). This indicates that generic pathways are more context specific.
 # 
 # * I need to think about about why there is a difference in genes vs pathways.
