@@ -3,7 +3,11 @@
 
 # # Identify generic genes and pathways
 # 
-# **This notebook performs the following steps to identify generic genes:**
+# Studies have found that some genes are more likely to be differentially expressed even across a wide range of experimental designs. These generic genes and subsequent pathways are not necessarily specific to the biological process being studied but instead represent a more systematic change.
+# 
+# This notebook identifies generic genes and pathways and then evaluates if those identified are consistent with published findings.
+# 
+# **Steps to identify generic genes:**
 # 1. Simulates N gene expression experiments using [ponyo](https://github.com/ajlee21/ponyo)
 # 2. Perform DE analysis to get association statistics for each gene
 # 
@@ -14,14 +18,14 @@
 # 4. Rank genes based on this aggregated statistic (i.e. log fold change, or p-value)
 # 
 # 
-# **This notebook performs the following steps to identify generic gene sets (pathways):**
+# **Steps to identify generic gene sets (pathways):**
 # 1. Using the same simulated experiments from above, perform GSEA analysis. This analysis will determine whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list of genes, where genes are ranked by log fold change, indicating a correlation with change in expression.
 # 2. For each gene set (pathway), aggregate statistics across all simulated experiments
 # 3. Rank gene sets based on this aggregated statistic
 # 
 # **Evaluation:**
-# * We want to compare the ranking of genes identified using the above method with the ranking found from Crow et. al., which identified a set of genes as generic based on their ranking;
-# * We want to compare the ranking of pathways identified using the above method with the ranking found from Powers et. al., which identified a set of pathways as generic based on their ranking;
+# * We want to compare the ranking of genes identified using the above method with the ranking found from [Crow et. al.](https://www.pnas.org/content/pnas/116/13/6491.full.pdf), which identified a set of genes as generic based on how frequently they were found to be DE across 600 experiments
+# * We want to compare the ranking of pathways identified using the above method with the ranking based on the [Powers et. al.](https://www.biorxiv.org/content/10.1101/259440v1.full.pdf) data, where ranking was determined based on the fraction of 432 experiments a pathway was found to be enriched
 # * This comparison will validate our method being used as a way to automatically identify generic genes and pathways.
 
 # In[1]:
@@ -109,6 +113,14 @@ pathway_summary_filename = os.path.join(
 
 
 # ### Simulate experiments using selected template experiment
+# 
+# Workflow:
+# 
+# 1. Get the gene expression data for the selected template experiment
+# 2. Encode this experiment into a latent space using the trained VAE model
+# 3. Linearly shift the encoded template experiment in the latent space
+# 4. Decode the samples. This results in a new experiment
+# 5. Repeat steps 1-4 to get multiple simulated experiments
 
 # In[5]:
 
@@ -327,7 +339,7 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[44]:
+# In[22]:
 
 
 # Get generic genes identified by Crow et. al.
@@ -335,11 +347,7 @@ DE_prior_file = params['reference_gene_filename']
 ref_gene_col = params['reference_gene_name_col']
 ref_rank_col = params['reference_rank_col']
 
-figure_filename = os.path.join(
-    base_dir,
-    dataset_name,
-    f"gene_ranking_{col_to_rank_genes}.svg"
-)
+figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
 
 process.compare_gene_ranking(
     summary_gene_ranks,
@@ -367,27 +375,27 @@ process.compare_gene_ranking(
 hallmark_DB_filename = os.path.join(local_dir, "hallmark_DB.gmt")
 
 
-# In[26]:
+# In[24]:
 
 
 get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways', "\nsource(paste(base_dir, 'generic_expression_patterns_modules/GSEA_analysis.R', sep='/'))\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)")
 
 
-# In[27]:
+# In[25]:
 
 
 print(template_enriched_pathways.shape)
 template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj')
 
 
-# In[28]:
+# In[26]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
 os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
 
 
-# In[29]:
+# In[27]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic', '\nsource(\'../generic_expression_patterns_modules/GSEA_analysis.R\')\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_file <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_file <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")\n}')
@@ -395,7 +403,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_fil
 
 # ### Rank pathways 
 
-# In[30]:
+# In[28]:
 
 
 # Concatenate simulated experiments
@@ -404,7 +412,7 @@ simulated_GSEA_stats_all.set_index('pathway', inplace=True)
 print(simulated_GSEA_stats_all.shape)
 
 
-# In[31]:
+# In[29]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -417,7 +425,7 @@ simulated_GSEA_summary_stats = calc.aggregate_stats(
 simulated_GSEA_summary_stats.head()
 
 
-# In[32]:
+# In[30]:
 
 
 # Load association statistics for template experiment
@@ -434,7 +442,7 @@ template_GSEA_stats = calc.rank_genes_or_pathways(
 )
 
 
-# In[33]:
+# In[31]:
 
 
 # Rank genes in simulated experiments
@@ -447,7 +455,7 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(
 
 # ### Pathway summary table
 
-# In[35]:
+# In[32]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
@@ -461,7 +469,7 @@ summary_pathway_ranks = process.generate_summary_table(
 summary_pathway_ranks.head()
 
 
-# In[36]:
+# In[33]:
 
 
 # Create `pathway_summary_filename`
@@ -477,7 +485,7 @@ summary_pathway_ranks.to_csv(pathway_summary_filename, sep='\t')
 # 
 # To get a `reference ranking`, we calculate the fraction of experiments that a given pathway was significant (q-value <0.05) and use this rank pathways. `Our ranking` is to rank pathways based on the median q-value across the simulated experiments. We can then compare `our ranking` versus the `reference ranking.`
 
-# In[37]:
+# In[34]:
 
 
 # Load Powers et. al. results file
@@ -490,7 +498,7 @@ powers_rank_filename = os.path.join(
 )
 
 
-# In[38]:
+# In[35]:
 
 
 # Read Powers et. al. data
@@ -501,7 +509,7 @@ print(powers_rank_df.shape)
 powers_rank_df.head()
 
 
-# In[39]:
+# In[36]:
 
 
 # Count the number of experiments where a given pathway was found to be enriched (qvalue < 0.05)
@@ -521,7 +529,7 @@ powers_rank_stats_df = pd.DataFrame(
 powers_rank_stats_df.head()
 
 
-# In[40]:
+# In[37]:
 
 
 # Save reference file for input into comparison
@@ -536,12 +544,16 @@ powers_rank_processed_filename = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_filename, sep="\t", )
 
 
-# In[42]:
+# In[39]:
 
+
+figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"
 
 process.compare_pathway_ranking(
     summary_pathway_ranks,
-    powers_rank_processed_filename)
+    powers_rank_processed_filename,
+    figure_filename
+)
 
 
 # **Takeaway:**
@@ -552,8 +564,8 @@ process.compare_pathway_ranking(
 # 
 # **Therefore,** 
 # 
-# * We can get relatively similar generic genes training our VAE model on a cancer-specific dataset (Powers et. al.) and testing on a genenal dataset (Crow et. al.). These generic genes are not that context-specific at the extremes
+# * We find relatively similar generic genes using our simulation approach (i.e. VAE model trained on a cancer-specific dataset, Powers et. al.) compared to generic genes found from real general experiments from Crow et. al. These generic genes are not that context-specific at the extremes.
 # 
-# * We get very different generic pathways training our VAE model on a general dataset (recount2) and testing on a cancer-specific dataset (Powers et. al.). But we get very similar generic pathways training our VAE model on a cancer-specific dataset (Powers et. al.) and testing on a cancer-specific dataset (Powers et. al.) -- see [notebook](../human_cancer_analysis/2_identify_generic_genes_pathways.ipynb). This indicates that generic pathways are more context specific.
+# * We found very different generic pathways training using our simulation approach (i.e. VAE model trained on a general dataset, recount2) compared to generic pathways found from real cancer-specific experiments from Powers et. al. See [analysis](../human_cancer_analysis/2_identify_generic_genes_pathways.ipynb). But we get very similar generic pathways using our simulation approach trained on a cancer-specific dataset (Powers et. al.) compared with generic pathways found from cancer-specific dataset (Powers et. al.). This indicates that generic pathways are more context specific. 
 # 
 # * I need to think about about why there is a difference in genes vs pathways.
