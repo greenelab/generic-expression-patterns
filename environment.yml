@@ -19,6 +19,7 @@ dependencies:
 - conda-forge::umap-learn
 - conda-forge::scipy=1.1.0
 - conda-forge::plotnine=0.5.1
+- conda-forge::jupyter
 - conda-forge::ipykernel=5.1.1
 - conda-forge::nb_conda_kernels
 - conda-forge::gxx_linux-64
@@ -31,3 +32,4 @@ dependencies:
 - pip:
   - matplotlib==3.0.0
   - ponyo
+  - matplotlib-venn
