@@ -1,13 +1,13 @@
 local_dir	"/home/alexandra/Documents/Data/Generic_expression_patterns/"
-dataset_name	"human_analysis"
+dataset_name	"human_general_analysis"
 raw_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/raw_recount2_template.tsv"
 mapped_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/mapped_recount2_template.tsv"
-processed_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/processed_recount2_template.tsv"
+processed_template_filename	"data/processed_recount2_template.tsv"
 raw_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/raw_recount2_compendium.tsv"
 mapped_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/mapped_recount2_compendium.tsv"
-normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/normalized_recount2_compendium_filename.tsv"
-shared_genes_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/shared_genes_human.pickle"
-scaler_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/scaler_transform_human.pickle"
+normalized_compendium_filename	"https://recount2.s3.amazonaws.com/normalized_recount2_compendium_data.tsv"
+shared_genes_filename	"data/shared_genes_human.pickle"
+scaler_filename	"data/scaler_transform_human.pickle"
 hallmark_DB_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/hallmark_DB.gmt"
 reference_gene_filename	"https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
 reference_gene_name_col	"Gene_Name"
@@ -23,7 +23,7 @@ epsilon_std	1.0
 validation_frac	0.25
 project_id	"SRP012656"
 metadata_colname	'run'
-num_simulated	100
+num_simulated	25
 rank_genes_by	"log2FoldChange"
 rank_pathways_by	"padj"
 num_recount2_experiments_to_download	200
