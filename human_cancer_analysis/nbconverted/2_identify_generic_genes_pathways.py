@@ -3,21 +3,25 @@
 
 # # Identify generic genes and pathways
 # 
-# **This notebook performs the following steps to identify generic genes:**
+# Studies have found that some genes are more likely to be differentially expressed even across a wide range of experimental designs. These generic genes and subsequent pathways are not necessarily specific to the biological process being studied but instead represent a more systematic change.
+# 
+# This notebook identifies generic genes and pathways and then evaluates if those identified are consistent with published findings.
+# 
+# **Steps to identify generic genes:**
 # 1. Simulates N gene expression experiments using [ponyo](https://github.com/ajlee21/ponyo)
 # 2. Perform DE analysis to get association statistics for each gene
 # 3. For each gene, aggregate statsitics across all simulated experiments 
 # 4. Rank genes based on this aggregated statistic (i.e. log fold change, or p-value)
 # 
 # 
-# **This notebook performs the following steps to identify generic gene sets (pathways):**
+# **Steps to identify generic gene sets (pathways):**
 # 1. Using the same simulated experiments from above, perform GSEA analysis. This analysis will determine whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list of genes, where genes are ranked by log fold change, indicating a correlation with change in expression.
 # 2. For each gene set (pathway), aggregate statistics across all simulated experiments
 # 3. Rank gene sets based on this aggregated statistic
 # 
 # **Evaluation:**
-# * We want to compare the ranking of genes identified using the above method with the ranking found from Crow et. al., which identified a set of genes as generic based on their ranking;
-# * We want to compare the ranking of pathways identified using the above method with the ranking found from Powers et. al., which identified a set of pathways as generic based on their ranking;
+# * We want to compare the ranking of genes identified using the above method with the ranking found from [Crow et. al.](https://www.pnas.org/content/pnas/116/13/6491.full.pdf), which identified a set of genes as generic based on how frequently they were found to be DE across 600 experiments
+# * We want to compare the ranking of pathways identified using the above method with the ranking based on the [Powers et. al.](https://www.biorxiv.org/content/10.1101/259440v1.full.pdf) data, where ranking was determined based on the fraction of 432 experiments a pathway was found to be enriched
 # * This comparison will validate our method being used as a way to automatically identify generic genes and pathways.
 
 # In[1]:
@@ -149,7 +153,7 @@ def get_sample_ids(experiment_id, dataset_name, sample_id_colname):
 import glob
 from keras.models import load_model
 
-def shift_template_experiment(
+def shift_template_experiment_with_metadatafile(
     normalized_data_file,
     selected_experiment_id,
     sample_id_colname,
@@ -319,6 +323,13 @@ def shift_template_experiment(
 
 
 # ### Simulate experiments using selected template experiment
+# 
+# Workflow:
+# 1. Get the gene expression data for the selected template experiment 
+# 2. Encode this experiment into a latent space using the trained VAE model
+# 3. Linearly shift the encoded template experiment in the latent space
+# 4. Decode the samples. This results in a new experiment
+# 5. Repeat steps 1-4 to get multiple simulated experiments
 
 # In[7]:
 
@@ -344,7 +355,7 @@ metadata_filename = os.path.join(
 # in which "<n>" is an integer in the range of [0, num_runs-1] 
 os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
 for run_id in range(num_runs):
-    shift_template_experiment(
+    shift_template_experiment_with_metadatafile(
         normalized_compendium_filename,
         project_id,
         metadata_col_id,
@@ -537,7 +548,7 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 # ### Compare gene ranking
 # Studies have found that some genes are more likely to be differentially expressed even across a wide range of experimental designs. These *generic genes* are not necessarily specific to the biological process being studied but instead represent a more systematic change. 
 # 
-# We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
+# We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes were ranked by the number differentially expressed gene sets a gene appeared in across 600 experiments.
 
 # In[24]:
 
@@ -762,7 +773,6 @@ process.compare_pathway_ranking(
 
 # * Our method ranked pathways using median adjusted p-value score across simulated experiments.
 # * Powers et. al. ranked pathways based on the fraction of experiments they had adjusted p-value < 0.05.
-# * Next let's try to use the fraction of adjusted p-value < 0.05 for our method and re-compare (below)
 # 
 # **Takeaway:**
 # * Previously we compared pathway ranks obtained from (recount2)-trained VAE model vs pathway ranking based on manual curation using Powers et. al. This [PR](https://github.com/ajlee21/generic-expression-patterns/blob/807377d76f63b6282c62255d7b160feb8585e0e2/human_analysis/2_identify_generic_genes_pathways.ipynb) shows that there was no correlation.
@@ -771,8 +781,8 @@ process.compare_pathway_ranking(
 
 # **Conclusion:**
 # 
-# * We can get relatively similar generic genes training our VAE model on a cancer-specific dataset (Powers et. al.) and testing on a genenal dataset (Crow et. al.). These generic genes are not *that* context-specific at the extremes
+# * We find relatively similar generic genes using our simulation approach (i.e. VAE model trained on a cancer-specific dataset, Powers et. al.) compared to generic genes found from real general experiments from Crow et. al. These generic genes are not *that* context-specific at the extremes.
 # 
-# * We get very different generic pathways training our VAE model on a general dataset (recount2) and testing on a cancer-specific dataset (Powers et. al.) -- see [this analysis](../human_analysis/2_identify_generic_genes_pathways.ipynb). But we get very similar generic pathways training our VAE model on a cancer-specific dataset (Powers et. al.) and testing on a cancer-specific dataset (Powers et. al.). This indicates that generic pathways are more context specific.
+# * We found very different generic pathways training using our simulation approach (i.e. VAE model trained on a general dataset, recount2) compared to generic pathways found from real cancer-specific experiments from Powers et. al. See [analysis](../human_cancer_analysis/2_identify_generic_genes_pathways.ipynb). But we get very similar generic pathways using our simulation approach trained on a cancer-specific dataset (Powers et. al.) compared with generic pathways found from cancer-specific dataset (Powers et. al.). This indicates that generic pathways are more context specific.
 # 
 # * I need to think about about why there is a difference in genes vs pathways.

@@ -6,10 +6,9 @@
 # 
 # 1. Select template experiment. This template experiment will be used in the next [notebook](2_identify_generic_genes_pathways.ipynb) to simulate experiments with the same experimental design but testing a different biological process.
 # 
+# 2.  Powers et. al. data was downloaded from [here](https://www.synapse.org/#!Synapse:syn22685451) and saved to a local directory. Data was processed using steps described below.
 # 
-# 2.  Process Powers et. al. data. Data was downloaded from [here](https://www.synapse.org/#!Synapse:syn22685451) and saved to a local directory.
-# 
-# 3. Train VAE on data
+# 3. Train VAE on processed data.
 
 # In[1]:
 
