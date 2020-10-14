@@ -330,7 +330,7 @@ summary_gene_ranks.head()
 # In[21]:
 
 
-# Create `gene_summary_fielname`
+# Create `gene_summary_filename`
 summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 
 
