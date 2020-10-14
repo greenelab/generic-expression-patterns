@@ -1,10 +1,12 @@
 local_dir	"/home/alexandra/Documents/Data/Generic_expression_patterns/"
 dataset_name	"pseudomonas_analysis"
-template_data_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/pseudomonas_template_data.tsv"
-compendium_data_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/Pa_compendium_02.22.2014.pcl"
-normalized_compendium_data_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/normalized_pseudomonas_compendium_data.tsv"
-shared_genes_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/shared_genes_pseudomonas.pickle"
-scaler_transform_file	"/home/alexandra/Documents/Data/Generic_expression_patterns/scaler_transform_pseudomonas.pickle"
+raw_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/raw_pseudomonas_template_data.tsv"
+processed_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/processed_pseudomonas_template_data.tsv"
+raw_compendium_filename	"https://raw.githubusercontent.com/greenelab/adage/master/Data_collection_processing/Pa_compendium_02.22.2014.pcl"
+processed_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/processed_pseudomonas_compendium_data.tsv"
+normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/normalized_pseudomonas_compendium_data.tsv"
+shared_genes_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/shared_genes_pseudomonas.pickle"
+scaler_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/scaler_transform_pseudomonas.pickle"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10
