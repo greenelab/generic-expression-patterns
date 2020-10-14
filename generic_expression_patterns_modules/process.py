@@ -17,6 +17,7 @@ from matplotlib_venn import venn2
 from glob import glob
 from sklearn.preprocessing import MinMaxScaler
 from generic_expression_patterns_modules import calc
+from ponyo import simulate_expression_data
 
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
@@ -662,7 +663,7 @@ def map_recount2_data(
                 ofh.write(sample_id + "\t" + "\t".join(output_values) + "\n")
 
 
-def process_raw_template(
+def process_raw_template_recount2(
     raw_filename,
     gene_id_filename,
     manual_mapping,
@@ -704,11 +705,58 @@ def process_raw_template(
                 ofh.write(line)
 
 
+def process_raw_template_pseudomonas(
+    processed_compendium_filename,
+    project_id,
+    dataset_name,
+    metadata_colname,
+    sample_id_metadata_filename,
+    raw_template_filename,
+    processed_template_filename,
+):
+    """
+    Create processed pseudomonas template data file based on 
+    processed compendium file (`compendium_filename`), 
+    drop sample rows if needed, and save updated
+    template data on disk.
+    """
+
+    # Get sample ids associated with selected project id
+    sample_ids = simulate_expression_data.get_sample_ids(
+        project_id, dataset_name, metadata_colname
+    )
+
+    # Get samples from experiment id
+    processed_compendium = pd.read_csv(
+        processed_compendium_filename, header=0, index_col=0, sep="\t"
+    )
+    template_data = processed_compendium.loc[sample_ids]
+
+    template_data.to_csv(raw_template_filename, sep="\t")
+
+    sample_ids_to_drop = set()
+    if os.path.exists(sample_id_metadata_filename):
+        # Read in metadata and get samples to be dropped:
+        metadata = pd.read_csv(
+            sample_id_metadata_filename, sep="\t", header=0, index_col=0
+        )
+        sample_ids_to_drop = set(metadata[metadata["processing"] == "drop"].index)
+
+    # Write the processed pseudomonas template output file on disk
+    with open(raw_template_filename) as ifh, open(
+        processed_template_filename, "w"
+    ) as ofh:
+        for idx, line in enumerate(ifh):
+            sample_id = line.split("\t")[0]
+            if idx == 0 or sample_id not in sample_ids_to_drop:
+                ofh.write(line)
+
+
 def normalize_compendium(
     mapped_filename, normalized_filename, scaler_filename,
 ):
     """
-    Read the mapped compendium file into memor, normalize it, and save
+    Read the mapped compendium file into memory, normalize it, and save
     both normalized compendium data and pickled scaler on disk.
     """
 
@@ -736,33 +784,29 @@ def normalize_compendium(
         pickle.dump(scaler, pkl_fh)
 
 
-def process_raw_compendium(
-    raw_filename,
-    gene_id_filename,
-    manual_mapping,
-    DE_prior_filename,
-    shared_genes_filename,
-    mapped_filename,
-    normalized_filename,
-    scaler_filename,
+def process_raw_compendium_pseudomonas(
+    raw_filename, processed_filename, normalized_filename, scaler_filename,
 ):
     """
-    Create mapped recount2 compendium data file based on raw compendium
-    data file (`raw_filename`), and normalize the mapped compendium.
+    Create processed pseudomonas compendium data file based on raw compendium
+    data file (`raw_filename`), and normalize the processed compendium.
     """
 
-    # Create mapped recount2 compendium data file
-    map_recount2_data(
-        raw_filename,
-        gene_id_filename,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-        mapped_filename,
-    )
+    # Create processed pseudomonas compendium data file
+    raw_compendium = pd.read_csv(raw_filename, header=0, index_col=0, sep="\t")
 
-    # Normalize mapped recount2 compendium data
-    normalize_compendium(mapped_filename, normalized_filename, scaler_filename)
+    if raw_compendium.shape != (950, 5549):
+        processed_compendium = raw_compendium.T
+    else:
+        processed_compendium = raw_compendium
+
+    assert processed_compendium.shape == (950, 5549)
+
+    # Save transformed compendium data
+    processed_compendium.to_csv(processed_filename, sep="\t")
+
+    # Normalize processed pseudomonas compendium data
+    normalize_compendium(processed_filename, normalized_filename, scaler_filename)
 
 
 def get_shared_rank_scaled(
