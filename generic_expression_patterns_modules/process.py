@@ -1026,7 +1026,7 @@ def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
     return simulated_stats_all
 
 
-def add_pseudomonas_gene_name_col(summary_gene_ranks):
+def add_pseudomonas_gene_name_col(summary_gene_ranks, base_dir):
     """
     This function adds a column to the input dataframe
     that contains the gene name corresponding to the
@@ -1036,6 +1036,8 @@ def add_pseudomonas_gene_name_col(summary_gene_ranks):
     ---------
     summary_gene_ranks: df
         Dataframe of ranks and other statistics per gene
+    base_dir: str
+        Path to repository directiory
     """
 
     # Gene number to gene name file
@@ -1437,7 +1439,7 @@ def plot_volcanos(
     sns.scatterplot(
         data=merged_one_condition_df,
         x=f"abs(Z score)_grp_{condition}",
-        y="FDR adjuted p-value plot",
+        y="FDR adjusted p-value plot",
         hue="gene group",
         hue_order=["none", "traditional + specific DEGs", "only specific DEGs"],
         style="gene group",
