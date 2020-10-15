@@ -86,7 +86,7 @@ merged_1v4s_df = process.merge_abs_raw_dfs(grp_1v4, grp_1v4_raw, '1v4')
 merged_1v5s_df = process.merge_abs_raw_dfs(grp_1v5, grp_1v5_raw, '1v5')
 
 
-# In[7]:
+# In[6]:
 
 
 # Merge 1v2 and 1v3 summary dfs
@@ -94,7 +94,7 @@ merged_1v2_1v3_df = process.merge_two_conditions_df(merged_1v2s_df, merged_1v3s_
 merged_1v2_1v3_df.head()
 
 
-# In[6]:
+# In[7]:
 
 
 # Merge 1v3 and 1v4 summaries
@@ -102,7 +102,7 @@ merged_1v3_1v4_df = process.merge_two_conditions_df(merged_1v3s_df, merged_1v4s_
 merged_1v3_1v4_df.head()
 
 
-# In[7]:
+# In[8]:
 
 
 # Merge 1v2 and 1v4 summaries
@@ -110,7 +110,7 @@ merged_1v2_1v4_df = process.merge_two_conditions_df(merged_1v2s_df, merged_1v4s_
 merged_1v2_1v4_df.head()
 
 
-# In[8]:
+# In[9]:
 
 
 # Save
@@ -132,7 +132,7 @@ merged_1v3_1v4_df.to_csv("merged_E-GEOD_1v3_1v4_directionality.tsv", sep="\t")
 
 # ### 1v2 compared with 1v3
 
-# In[9]:
+# In[10]:
 
 
 process.plot_two_conditions(merged_1v2_1v3_df, "1v2", "1v3", "WT vs crc mutant", "WT vs cbrB mutant")
@@ -140,7 +140,7 @@ process.plot_two_conditions(merged_1v2_1v3_df, "1v2", "1v3", "WT vs crc mutant",
 
 # ### 1v2 compared with 1v4
 
-# In[10]:
+# In[11]:
 
 
 process.plot_two_conditions(merged_1v2_1v4_df, "1v2", "1v4", "WT vs crc mutant", "WT vs crcZ mutant")
@@ -148,7 +148,7 @@ process.plot_two_conditions(merged_1v2_1v4_df, "1v2", "1v4", "WT vs crc mutant",
 
 # ### 1v3 compared with 1v4
 
-# In[11]:
+# In[12]:
 
 
 process.plot_two_conditions(merged_1v3_1v4_df, "1v3", "1v4", "WT vs cbrB mutant", "WT vs crcZ mutant")
@@ -163,7 +163,7 @@ process.plot_two_conditions(merged_1v3_1v4_df, "1v3", "1v4", "WT vs cbrB mutant"
 
 # ### 1v2
 
-# In[10]:
+# In[13]:
 
 
 (DEGs_1v2_df,
@@ -175,13 +175,13 @@ process.plot_two_conditions(merged_1v3_1v4_df, "1v3", "1v4", "WT vs cbrB mutant"
  degs_1v2_diff) = process.get_and_save_DEG_lists(merged_1v2s_df, '1v2', pvalue_threshold, zscore_threshold)
 
 
-# In[11]:
+# In[14]:
 
 
 process.plot_venn(degs_1v2_traditional, degs_1v2_specific, degs_1v2_generic)
 
 
-# In[16]:
+# In[15]:
 
 
 process.plot_volcanos(degs_1v2_intersect, degs_1v2_diff, merged_1v2s_df, "1v2", "WT vs crc mutant")
@@ -189,7 +189,7 @@ process.plot_volcanos(degs_1v2_intersect, degs_1v2_diff, merged_1v2s_df, "1v2", 
 
 # ### 1v3
 
-# In[15]:
+# In[16]:
 
 
 (DEGs_1v3_df,
@@ -201,13 +201,13 @@ process.plot_volcanos(degs_1v2_intersect, degs_1v2_diff, merged_1v2s_df, "1v2", 
  degs_1v3_diff) = process.get_and_save_DEG_lists(merged_1v3s_df, '1v3', pvalue_threshold, zscore_threshold)
 
 
-# In[16]:
+# In[17]:
 
 
 process.plot_venn(degs_1v3_traditional, degs_1v3_specific, degs_1v3_generic)
 
 
-# In[17]:
+# In[18]:
 
 
 process.plot_volcanos(degs_1v3_intersect, degs_1v3_diff, merged_1v3s_df, "1v3", "WT vs cbrB mutant")
@@ -215,7 +215,7 @@ process.plot_volcanos(degs_1v3_intersect, degs_1v3_diff, merged_1v3s_df, "1v3", 
 
 # ### 1v4
 
-# In[18]:
+# In[19]:
 
 
 (DEGs_1v4_df,
@@ -227,13 +227,13 @@ process.plot_volcanos(degs_1v3_intersect, degs_1v3_diff, merged_1v3s_df, "1v3", 
  degs_1v4_diff) = process.get_and_save_DEG_lists(merged_1v4s_df, '1v4', pvalue_threshold, zscore_threshold)
 
 
-# In[19]:
+# In[20]:
 
 
 process.plot_venn(degs_1v4_traditional, degs_1v4_specific, degs_1v4_generic)
 
 
-# In[20]:
+# In[21]:
 
 
 process.plot_volcanos(degs_1v4_intersect, degs_1v4_diff, merged_1v4s_df, "1v4", "WT vs crcZ mutant")
@@ -241,7 +241,7 @@ process.plot_volcanos(degs_1v4_intersect, degs_1v4_diff, merged_1v4s_df, "1v4", 
 
 # ### 1v5
 
-# In[21]:
+# In[22]:
 
 
 (DEGs_1v5_df,
@@ -253,19 +253,19 @@ process.plot_volcanos(degs_1v4_intersect, degs_1v4_diff, merged_1v4s_df, "1v4", 
  degs_1v5_diff) = process.get_and_save_DEG_lists(merged_1v5s_df, '1v5', pvalue_threshold, zscore_threshold)
 
 
-# In[22]:
+# In[23]:
 
 
 process.plot_venn(degs_1v5_traditional, degs_1v5_specific, degs_1v5_generic)
 
 
-# In[23]:
+# In[24]:
 
 
 process.plot_volcanos(degs_1v5_intersect, degs_1v5_diff, merged_1v5s_df, "1v5", "WT LB vs WT BSM")
 
 
-# In[24]:
+# In[25]:
 
 
 # Save DEGs to file to share with Hogan lab

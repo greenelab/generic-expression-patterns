@@ -1,4 +1,4 @@
-	Gene ID	Adj P-value (Real)	Rank (Real)	Test statistic (Real)	Median adj p-value (simulated)	Rank (simulated)	Mean test statistic (simulated)	Std deviation (simulated)	Number of experiments (simulated)	Z score	Gene Name
+	Gene ID	Adj P-value (Real)	Rank (Real)	Test statistic (Real)	Median adj p-value (simulated)	Rank (simulated)	Mean test statistic (simulated)	Std deviation (simulated)	Number of experiments (simulated)	abs(Z score)	Gene Name
 PA1985	PA1985	0.000230031397414969	5549.0	2.872	0.8934534717269151	5465.0	0.3431200000000001	0.27771749284719804	25	9.105944224375547	pqqA
 PA1249	PA1249	0.00018252616379591002	5548.0	2.5525	0.9189250136109659	5434.0	0.29441999999999985	0.1983848679545226	25	11.382319746875245	aprA
 PA1988	PA1988	0.000230031397414969	5547.0	2.419	0.8898138072829251	5339.0	0.2767399999999996	0.17587851631168638	25	12.180339275796223	pqqD
