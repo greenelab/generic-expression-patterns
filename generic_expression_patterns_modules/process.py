@@ -19,6 +19,12 @@ from sklearn.preprocessing import MinMaxScaler
 from generic_expression_patterns_modules import calc
 from ponyo import simulate_expression_data
 
+# Data processing scripts including:
+# * scripts to map ensembl gene ids to hgnc symbols
+# * scripts to remove subsets of samples
+# * scripts to transform data into integer for downstream DE analysis
+# * scripts to normalize data
+
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
     """
@@ -164,277 +170,6 @@ def recast_int(num_runs, local_dir, project_id):
 
         # Save
         simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
-
-
-def concat_simulated_data(local_dir, num_runs, project_id, data_type):
-    """
-    This function will concatenate the simulated experiments into a single dataframe
-    in order to aggregate statistics across all experiments.
-
-    Arguments
-    ---------
-    local_dir: str
-        Local directory containing simulated experiments
-    num_runs: int
-        Number of simulated experiments
-    project_id: str
-        Project id to use to retrieve simulated experiments
-    data_type: str
-        Either 'DE' or 'GSEA'
-
-    Returns
-    -------
-    Dataframe containing all simulated experiments concatenated together
-
-    """
-
-    simulated_stats_all = pd.DataFrame()
-    for i in range(num_runs):
-        if data_type.lower() == "de":
-            simulated_stats_file = os.path.join(
-                local_dir,
-                "DE_stats",
-                "DE_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
-            )
-        elif data_type.lower() == "gsea":
-            simulated_stats_file = os.path.join(
-                local_dir,
-                "GSEA_stats",
-                "GSEA_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
-            )
-
-        # Read results
-        simulated_stats = pd.read_csv(
-            simulated_stats_file, header=0, sep="\t", index_col=0
-        )
-
-        simulated_stats.reset_index(inplace=True)
-
-        # Concatenate df
-        simulated_stats_all = pd.concat([simulated_stats_all, simulated_stats])
-
-    return simulated_stats_all
-
-
-def abs_value_stats(simulated_DE_stats_all):
-    """
-    This function takes the absolute value of columns=[`logFC`, `t`].
-    For ranking genes, we only care about the magnitude of the change for
-    the logFC and t statistic, but not the direction.
-
-    The ranking for each gene will be based on the mean absolute value of either
-    logFC or t statistic, depending on the user selection
-    """
-    if "logFC" in simulated_DE_stats_all.columns:
-        simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
-    elif "log2FoldChange" in simulated_DE_stats_all.columns:
-        simulated_DE_stats_all["log2FoldChange"] = simulated_DE_stats_all[
-            "log2FoldChange"
-        ].abs()
-    elif "t" in simulated_DE_stats_all.columns:
-        simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
-    elif "NES" in simulated_DE_stats_all.columns:
-        simulated_DE_stats_all["NES"] = simulated_DE_stats_all["NES"].abs()
-    return simulated_DE_stats_all
-
-
-def generate_summary_table(
-    template_DE_stats, simulated_DE_summary_stats, col_to_rank, local_dir
-):
-    """
-    Generate a summary table of the template and summary statistics
-
-    Arguments
-    ---------
-    template_DE_stats: df
-        dataframe containing DE statistics for template experiment
-    simulated_DE_summary_stats: df
-        dataframe containing aggregated DE statistics across all simulated experiments
-    col_to_rank: str
-        DE statistic to use to rank genes
-    local_dir: str
-        path to local machine where output file will be stored
-
-    Returns
-    -------
-    Dataframe summarizing gene ranking for template and simulated experiments
-
-    """
-    # Merge template statistics with simulated statistics
-    template_simulated_DE_stats = template_DE_stats.merge(
-        simulated_DE_summary_stats, left_index=True, right_index=True
-    )
-    print(template_simulated_DE_stats.shape)
-
-    # Parse columns
-    if "adj.P.Val" in template_simulated_DE_stats.columns:
-        median_pval_simulated = template_simulated_DE_stats[("adj.P.Val", "median")]
-        col_name = "adj.P.Val"
-    else:
-        median_pval_simulated = template_simulated_DE_stats[("padj", "median")]
-        col_name = "padj"
-    mean_test_simulated = template_simulated_DE_stats[(col_to_rank, "mean")]
-    std_test_simulated = template_simulated_DE_stats[(col_to_rank, "std")]
-    count_simulated = template_simulated_DE_stats[(col_to_rank, "count")]
-    rank_simulated = template_simulated_DE_stats[("ranking", "")]
-
-    summary = pd.DataFrame(
-        data={
-            "Gene ID": template_simulated_DE_stats.index,
-            "Adj P-value (Real)": template_simulated_DE_stats[col_name],
-            "Rank (Real)": template_simulated_DE_stats["ranking"],
-            "Test statistic (Real)": template_simulated_DE_stats[col_to_rank],
-            "Median adj p-value (simulated)": median_pval_simulated,
-            "Rank (simulated)": rank_simulated,
-            "Mean test statistic (simulated)": mean_test_simulated,
-            "Std deviation (simulated)": std_test_simulated,
-            "Number of experiments (simulated)": count_simulated,
-        }
-    )
-    summary["abs(Z score)"] = (
-        abs(
-            summary["Test statistic (Real)"]
-            - summary["Mean test statistic (simulated)"]
-        )
-    ) / summary["Std deviation (simulated)"]
-
-    # Save file
-    summary_file = os.path.join(local_dir, "gene_summary_table_" + col_to_rank + ".tsv")
-
-    summary.to_csv(summary_file, float_format="%.5f", sep="\t")
-
-    return summary
-
-
-def merge_ranks_to_compare(
-    your_summary_ranks_df, reference_ranks_file, reference_name_col, reference_rank_col,
-):
-    """
-    Given dataframes of your ranking of genes or pathways
-    and reference ranking of genes or pathways.
-    This function merges the ranking into one dataframe
-    to be able to compare, `shared_gene_rank_df`
-
-    Arguments
-    ---------
-    your_summary_ranks_df: df
-        dataframe containing your rank per gene or pathway
-    reference_ranks_file: file
-        file contining reference ranks per gene or pathway
-    reference_name_col: str
-        column header containing the reference genes or pathway
-    reference_rank_col: str
-        column header containing the reference rank
-
-    Returns
-    -------
-    Dataframe containing your ranking and the reference ranking per gene
-
-    """
-    # Read in reference ranks file
-    reference_ranks_df = pd.read_csv(
-        reference_ranks_file, header=0, index_col=0, sep="\t"
-    )
-
-    # Get list of our genes or pathways
-    gene_or_pathway_ids = list(your_summary_ranks_df.index)
-
-    # Get list of published generic genes or pathways
-    if reference_name_col == "index":
-        published_generic_genes_or_pathways = list(reference_ranks_df.index)
-    else:
-        published_generic_genes_or_pathways = list(
-            reference_ranks_df[reference_name_col]
-        )
-    # Get intersection of gene or pathway lists
-    shared_genes_or_pathways = set(gene_or_pathway_ids).intersection(
-        published_generic_genes_or_pathways
-    )
-
-    # Get your rank of shared genes
-    your_rank_df = pd.DataFrame(
-        your_summary_ranks_df.loc[shared_genes_or_pathways, "Rank (simulated)"]
-    )
-
-    # Merge published ranking
-    if reference_name_col == "index":
-        shared_gene_rank_df = pd.merge(
-            your_rank_df,
-            reference_ranks_df[[reference_rank_col]],
-            left_index=True,
-            right_index=True,
-        )
-    else:
-        shared_gene_rank_df = pd.merge(
-            your_rank_df,
-            reference_ranks_df[[reference_rank_col, reference_name_col]],
-            left_index=True,
-            right_on=reference_name_col,
-        )
-
-    return shared_gene_rank_df
-
-
-def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
-    """
-    In the case where the reference ranking and your ranking are not
-    in the same range, this function scales the reference ranking
-    to be in the range as your ranking.
-
-    For example, if reference ranking ranged from (0,1) and your
-    ranking ranged from (0,100). This function would scale the
-    reference ranking to also be between 0 and 100.
-
-    Note: This function is assuming that the reference ranking range
-    is smaller than yours
-
-    Arguments
-    ---------
-    merged_gene_ranks: df
-        dataframe containing your rank and reference rank per gene
-    reference_rank_col: str
-        column header containing the reference rank
-
-    Returns
-    -------
-    The same merged_gene_ranks dataframe with reference ranks re-scaled
-    """
-    # Scale published ranking to our range
-    scaler = MinMaxScaler(
-        feature_range=(
-            min(merged_gene_ranks_df["Rank (simulated)"]),
-            max(merged_gene_ranks_df["Rank (simulated)"]),
-        )
-    )
-
-    merged_gene_ranks_df[reference_rank_col] = scaler.fit_transform(
-        np.array(merged_gene_ranks_df[reference_rank_col]).reshape(-1, 1)
-    )
-
-    return merged_gene_ranks_df
-
-
-def compare_and_reorder_samples(expression_file, metadata_file):
-    """
-    This function checks that the ordering of the samples matches
-    between the expression file and the metadata file. This
-    ordering is used for calculating DEGs.
-    """
-    # Check ordering of sample ids is consistent between gene expression data and metadata
-    metadata = pd.read_csv(metadata_file, sep="\t", header=0, index_col=0)
-    metadata_sample_ids = metadata.index
-
-    expression_data = pd.read_csv(expression_file, sep="\t", header=0, index_col=0)
-    expression_sample_ids = expression_data.index
-
-    if metadata_sample_ids.equals(expression_sample_ids):
-        print("sample ids are ordered correctly")
-    else:
-        # Convert gene expression ordering to be the same as
-        # metadata sample ordering
-        print("sample ids don't match, going to re-order gene expression samples")
-        expression_data = expression_data.reindex(metadata_sample_ids)
-        expression_data.to_csv(expression_file, sep="\t")
 
 
 def create_recount2_compendium(download_dir, output_filename):
@@ -715,8 +450,8 @@ def process_raw_template_pseudomonas(
     processed_template_filename,
 ):
     """
-    Create processed pseudomonas template data file based on 
-    processed compendium file (`compendium_filename`), 
+    Create processed pseudomonas template data file based on
+    processed compendium file (`compendium_filename`),
     drop sample rows if needed, and save updated
     template data on disk.
     """
@@ -807,6 +542,285 @@ def process_raw_compendium_pseudomonas(
 
     # Normalize processed pseudomonas compendium data
     normalize_compendium(processed_filename, normalized_filename, scaler_filename)
+
+
+# Scripts to format intermediate data files to prepare to compare gene/pathway
+# ranking:
+# * scripts to concatenate simulated data results
+# * scripts to get absolute value of test statistics to use for ranking
+# * scripts to generate summary data files
+# * scripts to scale ranking
+
+
+def concat_simulated_data(local_dir, num_runs, project_id, data_type):
+    """
+    This function will concatenate the simulated experiments into a single dataframe
+    in order to aggregate statistics across all experiments.
+
+    Arguments
+    ---------
+    local_dir: str
+        Local directory containing simulated experiments
+    num_runs: int
+        Number of simulated experiments
+    project_id: str
+        Project id to use to retrieve simulated experiments
+    data_type: str
+        Either 'DE' or 'GSEA'
+
+    Returns
+    -------
+    Dataframe containing all simulated experiments concatenated together
+
+    """
+
+    simulated_stats_all = pd.DataFrame()
+    for i in range(num_runs):
+        if data_type.lower() == "de":
+            simulated_stats_file = os.path.join(
+                local_dir,
+                "DE_stats",
+                "DE_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
+            )
+        elif data_type.lower() == "gsea":
+            simulated_stats_file = os.path.join(
+                local_dir,
+                "GSEA_stats",
+                "GSEA_stats_simulated_data_" + project_id + "_" + str(i) + ".txt",
+            )
+
+        # Read results
+        simulated_stats = pd.read_csv(
+            simulated_stats_file, header=0, sep="\t", index_col=0
+        )
+
+        simulated_stats.reset_index(inplace=True)
+
+        # Concatenate df
+        simulated_stats_all = pd.concat([simulated_stats_all, simulated_stats])
+
+    return simulated_stats_all
+
+
+def abs_value_stats(simulated_DE_stats_all):
+    """
+    This function takes the absolute value of columns=[`logFC`, `t`].
+    For ranking genes, we only care about the magnitude of the change for
+    the logFC and t statistic, but not the direction.
+
+    The ranking for each gene will be based on the mean absolute value of either
+    logFC or t statistic, depending on the user selection
+    """
+    if "logFC" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
+    elif "log2FoldChange" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["log2FoldChange"] = simulated_DE_stats_all[
+            "log2FoldChange"
+        ].abs()
+    elif "t" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
+    elif "NES" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["NES"] = simulated_DE_stats_all["NES"].abs()
+    return simulated_DE_stats_all
+
+
+def generate_summary_table(
+    template_DE_stats, simulated_DE_summary_stats, col_to_rank, local_dir
+):
+    """
+    Generate a summary table of the template and summary statistics
+
+    Arguments
+    ---------
+    template_DE_stats: df
+        dataframe containing DE statistics for template experiment
+    simulated_DE_summary_stats: df
+        dataframe containing aggregated DE statistics across all simulated experiments
+    col_to_rank: str
+        DE statistic to use to rank genes
+    local_dir: str
+        path to local machine where output file will be stored
+
+    Returns
+    -------
+    Dataframe summarizing gene ranking for template and simulated experiments
+
+    """
+    # Merge template statistics with simulated statistics
+    template_simulated_DE_stats = template_DE_stats.merge(
+        simulated_DE_summary_stats, left_index=True, right_index=True
+    )
+    print(template_simulated_DE_stats.shape)
+
+    # Parse columns
+    if "adj.P.Val" in template_simulated_DE_stats.columns:
+        median_pval_simulated = template_simulated_DE_stats[("adj.P.Val", "median")]
+        col_name = "adj.P.Val"
+    else:
+        median_pval_simulated = template_simulated_DE_stats[("padj", "median")]
+        col_name = "padj"
+    mean_test_simulated = template_simulated_DE_stats[(col_to_rank, "mean")]
+    std_test_simulated = template_simulated_DE_stats[(col_to_rank, "std")]
+    count_simulated = template_simulated_DE_stats[(col_to_rank, "count")]
+    rank_simulated = template_simulated_DE_stats[("ranking", "")]
+
+    summary = pd.DataFrame(
+        data={
+            "Gene ID": template_simulated_DE_stats.index,
+            "Adj P-value (Real)": template_simulated_DE_stats[col_name],
+            "Rank (Real)": template_simulated_DE_stats["ranking"],
+            "Test statistic (Real)": template_simulated_DE_stats[col_to_rank],
+            "Median adj p-value (simulated)": median_pval_simulated,
+            "Rank (simulated)": rank_simulated,
+            "Mean test statistic (simulated)": mean_test_simulated,
+            "Std deviation (simulated)": std_test_simulated,
+            "Number of experiments (simulated)": count_simulated,
+        }
+    )
+    summary["abs(Z score)"] = (
+        abs(
+            summary["Test statistic (Real)"]
+            - summary["Mean test statistic (simulated)"]
+        )
+    ) / summary["Std deviation (simulated)"]
+
+    # Save file
+    summary_file = os.path.join(local_dir, "gene_summary_table_" + col_to_rank + ".tsv")
+
+    summary.to_csv(summary_file, float_format="%.5f", sep="\t")
+
+    return summary
+
+
+def merge_ranks_to_compare(
+    your_summary_ranks_df, reference_ranks_file, reference_name_col, reference_rank_col,
+):
+    """
+    Given dataframes of your ranking of genes or pathways
+    and reference ranking of genes or pathways.
+    This function merges the ranking into one dataframe
+    to be able to compare, `shared_gene_rank_df`
+
+    Arguments
+    ---------
+    your_summary_ranks_df: df
+        dataframe containing your rank per gene or pathway
+    reference_ranks_file: file
+        file contining reference ranks per gene or pathway
+    reference_name_col: str
+        column header containing the reference genes or pathway
+    reference_rank_col: str
+        column header containing the reference rank
+
+    Returns
+    -------
+    Dataframe containing your ranking and the reference ranking per gene
+
+    """
+    # Read in reference ranks file
+    reference_ranks_df = pd.read_csv(
+        reference_ranks_file, header=0, index_col=0, sep="\t"
+    )
+
+    # Get list of our genes or pathways
+    gene_or_pathway_ids = list(your_summary_ranks_df.index)
+
+    # Get list of published generic genes or pathways
+    if reference_name_col == "index":
+        published_generic_genes_or_pathways = list(reference_ranks_df.index)
+    else:
+        published_generic_genes_or_pathways = list(
+            reference_ranks_df[reference_name_col]
+        )
+    # Get intersection of gene or pathway lists
+    shared_genes_or_pathways = set(gene_or_pathway_ids).intersection(
+        published_generic_genes_or_pathways
+    )
+
+    # Get your rank of shared genes
+    your_rank_df = pd.DataFrame(
+        your_summary_ranks_df.loc[shared_genes_or_pathways, "Rank (simulated)"]
+    )
+
+    # Merge published ranking
+    if reference_name_col == "index":
+        shared_gene_rank_df = pd.merge(
+            your_rank_df,
+            reference_ranks_df[[reference_rank_col]],
+            left_index=True,
+            right_index=True,
+        )
+    else:
+        shared_gene_rank_df = pd.merge(
+            your_rank_df,
+            reference_ranks_df[[reference_rank_col, reference_name_col]],
+            left_index=True,
+            right_on=reference_name_col,
+        )
+
+    return shared_gene_rank_df
+
+
+def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
+    """
+    In the case where the reference ranking and your ranking are not
+    in the same range, this function scales the reference ranking
+    to be in the range as your ranking.
+
+    For example, if reference ranking ranged from (0,1) and your
+    ranking ranged from (0,100). This function would scale the
+    reference ranking to also be between 0 and 100.
+
+    Note: This function is assuming that the reference ranking range
+    is smaller than yours
+
+    Arguments
+    ---------
+    merged_gene_ranks: df
+        dataframe containing your rank and reference rank per gene
+    reference_rank_col: str
+        column header containing the reference rank
+
+    Returns
+    -------
+    The same merged_gene_ranks dataframe with reference ranks re-scaled
+    """
+    # Scale published ranking to our range
+    scaler = MinMaxScaler(
+        feature_range=(
+            min(merged_gene_ranks_df["Rank (simulated)"]),
+            max(merged_gene_ranks_df["Rank (simulated)"]),
+        )
+    )
+
+    merged_gene_ranks_df[reference_rank_col] = scaler.fit_transform(
+        np.array(merged_gene_ranks_df[reference_rank_col]).reshape(-1, 1)
+    )
+
+    return merged_gene_ranks_df
+
+
+def compare_and_reorder_samples(expression_file, metadata_file):
+    """
+    This function checks that the ordering of the samples matches
+    between the expression file and the metadata file. This
+    ordering is used for calculating DEGs.
+    """
+    # Check ordering of sample ids is consistent between gene expression data and metadata
+    metadata = pd.read_csv(metadata_file, sep="\t", header=0, index_col=0)
+    metadata_sample_ids = metadata.index
+
+    expression_data = pd.read_csv(expression_file, sep="\t", header=0, index_col=0)
+    expression_sample_ids = expression_data.index
+
+    if metadata_sample_ids.equals(expression_sample_ids):
+        print("sample ids are ordered correctly")
+    else:
+        # Convert gene expression ordering to be the same as
+        # metadata sample ordering
+        print("sample ids don't match, going to re-order gene expression samples")
+        expression_data = expression_data.reindex(metadata_sample_ids)
+        expression_data.to_csv(expression_file, sep="\t")
 
 
 def get_shared_rank_scaled(
@@ -1012,6 +1026,65 @@ def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
     return simulated_stats_all
 
 
+def add_pseudomonas_gene_name_col(summary_gene_ranks):
+    """
+    This function adds a column to the input dataframe
+    that contains the gene name corresponding to the
+    pseudomonas gene id
+
+    Arguments
+    ---------
+    summary_gene_ranks: df
+        Dataframe of ranks and other statistics per gene
+    """
+
+    # Gene number to gene name file
+    gene_name_filename = os.path.join(
+        base_dir,
+        "pseudomonas_analysis",
+        "data",
+        "metadata",
+        "Pseudomonas_aeruginosa_PAO1_107.csv",
+    )
+
+    # Read gene number to name mapping
+    gene_name_mapping = pd.read_table(
+        gene_name_filename, header=0, sep=",", index_col=0
+    )
+
+    gene_name_mapping = gene_name_mapping[["Locus Tag", "Name"]]
+
+    gene_name_mapping.set_index("Locus Tag", inplace=True)
+
+    # Format gene numbers to remove extraneous quotes
+    gene_number = gene_name_mapping.index
+    gene_name_mapping.index = gene_number.str.strip('"')
+
+    gene_name_mapping.dropna(inplace=True)
+
+    # Remove duplicate mapping
+    # Not sure which mapping is correct in this case
+    # PA4527 maps to pilC and still frameshift type 4
+    # fimbrial biogenesis protein PilC (putative pseudogene)
+    gene_name_mapping = gene_name_mapping[
+        ~gene_name_mapping.index.duplicated(keep=False)
+    ]
+
+    # Add gene names
+    summary_gene_ranks["Gene Name"] = summary_gene_ranks["Gene ID"].map(
+        gene_name_mapping["Name"]
+    )
+
+    return summary_gene_ranks
+
+
+# Scripts related to visualizing trends in generic
+# genes/pathways found
+# * scripts to generate summary dataframes
+# * scripts to plot trends
+# * scripts to compare groups of genes
+
+
 def merge_abs_raw_dfs(abs_df, raw_df, condition):
     """
     This function merges and returns dataframe containing
@@ -1161,10 +1234,6 @@ def plot_two_conditions(merged_df, condition_1, condition_2, xlabel, ylabel):
     axes[0].set_ylabel("")
     axes[1].set_ylabel("")
     print(fig)
-
-    # ADD NEWLINE TO TITLE
-    # MAKE LABELS LARGER
-    # MOVE LEGEND?
 
 
 def get_and_save_DEG_lists(
