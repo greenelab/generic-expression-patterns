@@ -109,7 +109,7 @@ gene_summary_filename = os.path.join(
 # In[5]:
 
 
-"""# Simulate multiple experiments
+# Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:           
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -126,13 +126,13 @@ for run_id in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        run_id)"""
+        run_id)
 
 
 # In[6]:
 
 
-"""# This step modifies the following files:
+# This step modifies the following files:
 # "<local_dir>/pseudo_experiments/selected_simulated_data_SRP012656_<n>.txt"
 if os.path.exists(sample_id_metadata_filename):
     # Read in metadata
@@ -146,7 +146,7 @@ if os.path.exists(sample_id_metadata_filename):
         num_runs,
         local_dir,
         project_id
-    )"""
+    )
 
 
 # ### Differential expression analysis
@@ -283,68 +283,14 @@ summary_gene_ranks = process.generate_summary_table(
 summary_gene_ranks.head()
 
 
-# #### Add gene name as column
-
 # In[19]:
 
 
-# Gene number to gene name file
-gene_name_filename = os.path.join(
-    base_dir,
-    "pseudomonas_analysis",
-    "data",
-    "metadata",
-    "Pseudomonas_aeruginosa_PAO1_107.csv")
+# Add gene name as column to summary dataframe
+summary_gene_ranks = process.add_pseudomonas_gene_name_col(summary_gene_ranks, base_dir)
 
 
 # In[20]:
-
-
-# Read gene number to name mapping
-gene_name_mapping = pd.read_table(
-    gene_name_filename,
-    header=0,
-    sep=',',
-    index_col=0)
-
-gene_name_mapping = gene_name_mapping[["Locus Tag", "Name"]]
-
-gene_name_mapping.set_index("Locus Tag", inplace=True)
-print(gene_name_mapping.shape)
-gene_name_mapping.head()
-
-
-# In[21]:
-
-
-# Format gene numbers to remove extraneous quotes
-gene_number = gene_name_mapping.index
-gene_name_mapping.index = gene_number.str.strip("\"")
-
-gene_name_mapping.dropna(inplace=True)
-print(gene_name_mapping.shape)
-gene_name_mapping.head(10)
-
-
-# In[22]:
-
-
-# Remove duplicate mapping
-# Not sure which mapping is correct in this case
-# PA4527 maps to pilC and still frameshift type 4 fimbrial biogenesis protein PilC (putative pseudogene)
-gene_name_mapping = gene_name_mapping[~gene_name_mapping.index.duplicated(keep=False)]
-
-
-# In[23]:
-
-
-# Add gene names
-#gene_name_mapping_dict = gene_name_mapping.to_dict()
-summary_gene_ranks['Gene Name'] = summary_gene_ranks['Gene ID'].map(gene_name_mapping["Name"])
-summary_gene_ranks.head()
-
-
-# In[24]:
 
 
 # Create `gene_summary_filename`
