@@ -2,8 +2,7 @@
 Author: Alexandra Lee
 Date Created: 16 June 2020
 
-These scripts provide supporting functions to run analysis notebooks.
-These scripts include: replacing ensembl gene ids with hgnc symbols.
+This script provide supporting functions to run analysis notebooks.
 """
 
 import os
@@ -19,11 +18,11 @@ from sklearn.preprocessing import MinMaxScaler
 from generic_expression_patterns_modules import calc
 from ponyo import simulate_expression_data
 
-# Data processing scripts including:
-# * scripts to map ensembl gene ids to hgnc symbols
-# * scripts to remove subsets of samples
-# * scripts to transform data into integer for downstream DE analysis
-# * scripts to normalize data
+# Data processing functions including:
+# * functions to map ensembl gene ids to hgnc symbols
+# * functions to remove subsets of samples
+# * functions to transform data into integer for downstream DE analysis
+# * functions to normalize data
 
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
@@ -544,12 +543,12 @@ def process_raw_compendium_pseudomonas(
     normalize_compendium(processed_filename, normalized_filename, scaler_filename)
 
 
-# Scripts to format intermediate data files to prepare to compare gene/pathway
+# Functions to format intermediate data files to prepare to compare gene/pathway
 # ranking:
-# * scripts to concatenate simulated data results
-# * scripts to get absolute value of test statistics to use for ranking
-# * scripts to generate summary data files
-# * scripts to scale ranking
+# * functions to concatenate simulated data results
+# * functions to get absolute value of test statistics to use for ranking
+# * functions to generate summary data files
+# * functions to scale ranking
 
 
 def concat_simulated_data(local_dir, num_runs, project_id, data_type):
@@ -1080,11 +1079,11 @@ def add_pseudomonas_gene_name_col(summary_gene_ranks, base_dir):
     return summary_gene_ranks
 
 
-# Scripts related to visualizing trends in generic
+# Functions related to visualizing trends in generic
 # genes/pathways found
-# * scripts to generate summary dataframes
-# * scripts to plot trends
-# * scripts to compare groups of genes
+# * functions to generate summary dataframes
+# * functions to plot trends
+# * functions to compare groups of genes
 
 
 def merge_abs_raw_dfs(abs_df, raw_df, condition):
