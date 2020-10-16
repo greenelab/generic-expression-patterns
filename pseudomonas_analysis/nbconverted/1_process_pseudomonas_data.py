@@ -4,7 +4,7 @@
 # # Process pseudomonas data
 # This notebook does the following:
 # 
-# 1. Selects template experiment from the Pseudomonas compendium create from [Tan et. al.](https://msystems.asm.org/content/1/1/e00025-15)
+# 1. Selects template experiment from the Pseudomonas compendium created from [Tan et. al.](https://msystems.asm.org/content/1/1/e00025-15)
 # 2. Normalizes the gene expression data from the Pseudomonas compendium
 # 3. Train VAE on the normalized data
 
