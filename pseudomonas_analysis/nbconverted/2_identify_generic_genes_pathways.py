@@ -3,20 +3,26 @@
 
 # # Identify generic genes and pathways
 # 
-# This notebook performs the following steps to identify generic genes
+# Studies have found that some genes are more likely to be differentially expressed even across a wide range of experimental designs. These generic genes and subsequent pathways are not necessarily specific to the biological process being studied but instead represent a more systematic change. 
+# 
+# We have developed an approach, outlined below, to automatically identify these generic genes and pathways. We have validated this simulation approach can identify generic genes and pathways in the analysis notebooks: [human_general_analysis](../human_general_analysis/) and [human_cancer_analysis](../human_cancer_analysis/). Here
+# 
+# This notebook applies this approach to identify generic genes and pathways in the pseudomonas compendium. 
+# 
+# **Steps to identify generic genes:**
 # 1. Simulates N gene expression experiments using [ponyo](https://github.com/ajlee21/ponyo)
 # 2. Perform DE analysis to get association statistics for each gene
 # 
 # In this case the DE analysis is based on the experimental design of the template experiment, described in the previous [notebook](1_process_pseudomonas_data.ipynb). 
-# The template experiment is [E-GEOD-9989](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-9989/?query=George+O%27Toole), which contains 2 samples (3 replicates each) of PA14 WT that are grown on CFBE41o- cells are either treated tobramycin or untreated. So the DE analysis is comparing treated vs untreated in this case.
-# 
-# Another template experiment is [E-MEXP-1183](https://www.ebi.ac.uk/arrayexpress/experiments/E-MEXP-1183/), which contains a total of 10 samples. But for now we will select those 4 samples using WT that were measuring the effect of acyl-HSL signal.
+# The template experiment is [GEOD-33245](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-33245/?s_sortby=col_8&s_sortorder=ascending), which contains multiple different comparisons including WT vs *crc* mutants, WT vs *cbr* mutants in different conditions. So the DE analysis is comparing WT vs mutant.
 # 
 # 3. For each gene, aggregate statistics across all simulated experiments 
 # 4. Rank genes based on this aggregated statistic
 # 
-# **Evaluation:**
-# We want to compare our ranking using ponyo, compared to the ranking found from Crow et. al.
+# **Steps to identify generic gene sets (pathways):**
+# 1. Using the same simulated experiments from above, perform GSEA analysis. This analysis will determine whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list of genes, where genes are ranked by log fold change, indicating a correlation with change in expression.
+# 2. For each gene set (pathway), aggregate statistics across all simulated experiments
+# 3. Rank gene sets based on this aggregated statistic
 
 # In[1]:
 
@@ -63,26 +69,13 @@ NN_architecture = params['NN_architecture']
 num_runs = params['num_simulated']
 project_id = params['project_id']
 metadata_col_id = params['metadata_colname']
-template_data_file = params['template_data_file']
-original_compendium_file = params['compendium_data_file']
-normalized_compendium_file = params['normalized_compendium_data_file']
-scaler_file = params['scaler_transform_file']
+processed_template_filename = params['processed_template_filename']
+normalized_compendium_filename = params['normalized_compendium_filename']
+scaler_filename = params['scaler_filename']
 col_to_rank_genes = params['rank_genes_by']
-compare_genes = params['compare_genes']
-
-gene_summary_file = os.path.join(
-    base_dir, 
-    dataset_name, 
-    f"generic_gene_summary_{project_id}.tsv")
-
-NN_dir = os.path.join(
-    base_dir, 
-    dataset_name, 
-    "models", 
-    NN_architecture)
 
 # Load metadata file with grouping assignments for samples
-sample_id_metadata_file = os.path.join(
+sample_id_metadata_filename = os.path.join(
     base_dir,
     dataset_name,
     "data",
@@ -90,18 +83,42 @@ sample_id_metadata_file = os.path.join(
     f"{project_id}_process_samples.tsv")
 
 # Load pickled file
-scaler = pickle.load(open(scaler_file, "rb"))
+scaler = pickle.load(open(scaler_filename, "rb"))
 
-
-# ### Simulate experiments using selected template experiment
 
 # In[4]:
 
 
-"""# Simulate multiple experiments
-for i in range(num_runs):
+# Output files
+gene_summary_filename = os.path.join(
+    base_dir, 
+    dataset_name, 
+    f"generic_gene_summary_{project_id}.tsv"
+)
+
+
+# ### Simulate experiments using selected template experiment
+# Workflow:
+# 
+# 1. Get the gene expression data for the selected template experiment
+# 2. Encode this experiment into a latent space using the trained VAE model
+# 3. Linearly shift the encoded template experiment in the latent space
+# 4. Decode the samples. This results in a new experiment
+# 5. Repeat steps 1-4 to get multiple simulated experiments
+
+# In[5]:
+
+
+# Simulate multiple experiments
+# This step creates the following files in "<local_dir>/pseudo_experiment/" directory:           
+#   - selected_simulated_data_SRP012656_<n>.txt
+#   - selected_simulated_encoded_data_SRP012656_<n>.txt
+#   - template_normalized_data_SRP012656_test.txt
+# in which "<n>" is an integer in the range of [0, num_runs-1] 
+os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
+for run_id in range(num_runs):
     simulate_expression_data.shift_template_experiment(
-        normalized_compendium_file,
+        normalized_compendium_filename,
         project_id,
         metadata_col_id,
         NN_architecture,
@@ -109,32 +126,36 @@ for i in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        i)"""
+        run_id)
 
-
-# In[5]:
-
-
-"""if os.path.exists(sample_id_metadata_file):
-    # Read in metadata
-    metadata = pd.read_csv(sample_id_metadata_file, sep='\t', header=0, index_col=0)
-    
-    # Get samples to be dropped
-    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
-
-    process.subset_samples(sample_ids_to_drop,
-                           num_runs,
-                           local_dir,
-                           project_id)"""
-
-
-# ### Differential expression analysis
 
 # In[6]:
 
 
+# This step modifies the following files:
+# "<local_dir>/pseudo_experiments/selected_simulated_data_SRP012656_<n>.txt"
+if os.path.exists(sample_id_metadata_filename):
+    # Read in metadata
+    metadata = pd.read_csv(sample_id_metadata_filename, sep='\t', header=0, index_col=0)
+    
+    # Get samples to be dropped
+    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
+
+    process.subset_samples(
+        sample_ids_to_drop,
+        num_runs,
+        local_dir,
+        project_id
+    )
+
+
+# ### Differential expression analysis
+
+# In[7]:
+
+
 # Load metadata file with grouping assignments for samples
-metadata_file = os.path.join(
+metadata_filename = os.path.join(
     base_dir,
     dataset_name,
     "data",
@@ -142,48 +163,43 @@ metadata_file = os.path.join(
     f"{project_id}_groups.tsv")
 
 
-# In[7]:
-
-
-get_ipython().run_cell_magic('R', '', '# Select 59\n# Run one time\n#if (!requireNamespace("BiocManager", quietly = TRUE))\n#    install.packages("BiocManager")\n#BiocManager::install("limma")')
-
-
 # In[8]:
 
 
-get_ipython().run_cell_magic('R', '', "library('limma')")
+# Check whether ordering of sample ids is consistent between gene expression data and metadata
+process.compare_and_reorder_samples(processed_template_filename, metadata_filename)
 
 
 # In[9]:
 
 
-# Check ordering of sample ids is consistent between gene expression data and metadata
-process.compare_and_reorder_samples(template_data_file, metadata_file)
+# Create subdirectory: "<local_dir>/DE_stats/"
+os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 
 
 # In[10]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i template_data_file -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats_limma(metadata_file,\n                   project_id, \n                   template_data_file,\n                   "template",\n                   local_dir,\n                   "real")')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats_limma(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
 # In[11]:
 
 
-# Check ordering of sample ids is consistent between gene expression data and metadata
+# Check whether ordering of sample ids is consistent between gene expression data and metadata
 for i in range(num_runs):
-    simulated_data_file = os.path.join(
+    simulated_data_filename = os.path.join(
         local_dir,
         "pseudo_experiment",
         f"selected_simulated_data_{project_id}_{i}.txt")
         
-    process.compare_and_reorder_samples(simulated_data_file, metadata_file)
+    process.compare_and_reorder_samples(simulated_data_filename, metadata_filename)
 
 
 # In[12]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_file -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_file <- paste(local_dir, \n                                 "pseudo_experiment/selected_simulated_data_",\n                                 project_id,\n                                 "_", \n                                 i,\n                                 ".txt",\n                                 sep="")\n    \n    run_output <- get_DE_stats_limma(metadata_file,\n                                     project_id, \n                                     simulated_data_file,\n                                     "simulated",\n                                     local_dir,\n                                     i)\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(\n        local_dir, \n        "pseudo_experiment/selected_simulated_data_",\n        project_id,\n        "_", \n        i,\n        ".txt",\n        sep=""\n    )\n    \n    run_output <- get_DE_stats_limma(\n        metadata_filename,\n        project_id, \n        simulated_data_filename,\n        "simulated",\n        local_dir,\n        i\n    )\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
 
 
 # ### Rank genes
@@ -208,22 +224,24 @@ simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
 
 
 # Aggregate statistics across all simulated experiments
-simulated_DE_summary_stats = calc.aggregate_stats(col_to_rank_genes,
-                                                  simulated_DE_stats_all,
-                                                  'DE')
+simulated_DE_summary_stats = calc.aggregate_stats(
+    col_to_rank_genes,
+    simulated_DE_stats_all,
+    'DE'
+)
 
 
 # In[16]:
 
 
 # Load association statistics for template experiment
-template_DE_stats_file = os.path.join(
+template_DE_stats_filename = os.path.join(
     local_dir,
     "DE_stats",
     "DE_stats_template_data_"+project_id+"_real.txt")
 
 template_DE_stats = pd.read_csv(
-    template_DE_stats_file,
+    template_DE_stats_filename,
     header=0,
     sep='\t',
     index_col=0)
@@ -232,18 +250,22 @@ template_DE_stats = pd.read_csv(
 template_DE_stats = process.abs_value_stats(template_DE_stats)
 
 # Rank genes in template experiment
-template_DE_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
-                                                template_DE_stats,
-                                                True)
+template_DE_stats = calc.rank_genes_or_pathways(
+    col_to_rank_genes,
+    template_DE_stats,
+    True
+)
 
 
 # In[17]:
 
 
 # Rank genes in simulated experiments
-simulated_DE_summary_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
-                                                         simulated_DE_summary_stats,
-                                                         False)
+simulated_DE_summary_stats = calc.rank_genes_or_pathways(
+    col_to_rank_genes,
+    simulated_DE_summary_stats,
+    False
+)
 
 
 # ### Gene summary table
@@ -251,80 +273,28 @@ simulated_DE_summary_stats = calc.rank_genes_or_pathways(col_to_rank_genes,
 # In[18]:
 
 
-summary_gene_ranks = process.generate_summary_table(template_DE_stats,
-                                                   simulated_DE_summary_stats,
-                                                   col_to_rank_genes,
-                                                   local_dir)
+summary_gene_ranks = process.generate_summary_table(
+    template_DE_stats,
+    simulated_DE_summary_stats,
+    col_to_rank_genes,
+    local_dir
+)
 
 summary_gene_ranks.head()
 
 
-# #### Add gene name as column
-
 # In[19]:
 
 
-# Gene number to gene name file
-gene_name_file = os.path.join(
-    base_dir,
-    "pseudomonas_analysis",
-    "data",
-    "metadata",
-    "Pseudomonas_aeruginosa_PAO1_107.csv")
+# Add gene name as column to summary dataframe
+summary_gene_ranks = process.add_pseudomonas_gene_name_col(summary_gene_ranks, base_dir)
 
 
 # In[20]:
 
 
-# Read gene number to name mapping
-gene_name_mapping = pd.read_table(
-    gene_name_file,
-    header=0,
-    sep=',',
-    index_col=0)
-
-gene_name_mapping = gene_name_mapping[["Locus Tag", "Name"]]
-
-gene_name_mapping.set_index("Locus Tag", inplace=True)
-print(gene_name_mapping.shape)
-gene_name_mapping.head()
-
-
-# In[21]:
-
-
-# Format gene numbers to remove extraneous quotes
-gene_number = gene_name_mapping.index
-gene_name_mapping.index = gene_number.str.strip("\"")
-
-gene_name_mapping.dropna(inplace=True)
-print(gene_name_mapping.shape)
-gene_name_mapping.head(10)
-
-
-# In[22]:
-
-
-# Remove duplicate mapping
-# Not sure which mapping is correct in this case
-# PA4527 maps to pilC and still frameshift type 4 fimbrial biogenesis protein PilC (putative pseudogene)
-gene_name_mapping = gene_name_mapping[~gene_name_mapping.index.duplicated(keep=False)]
-
-
-# In[23]:
-
-
-# Add gene names
-#gene_name_mapping_dict = gene_name_mapping.to_dict()
-summary_gene_ranks['Gene Name'] = summary_gene_ranks['Gene ID'].map(gene_name_mapping["Name"])
-summary_gene_ranks.head()
-
-
-# In[24]:
-
-
-summary_gene_ranks.to_csv(
-    gene_summary_file, sep='\t')
+# Create `gene_summary_filename`
+summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 
 
 # ### GSEA 

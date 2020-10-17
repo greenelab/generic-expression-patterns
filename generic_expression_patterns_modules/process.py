@@ -2,8 +2,7 @@
 Author: Alexandra Lee
 Date Created: 16 June 2020
 
-These scripts provide supporting functions to run analysis notebooks.
-These scripts include: replacing ensembl gene ids with hgnc symbols.
+This script provide supporting functions to run analysis notebooks.
 """
 
 import os
@@ -17,6 +16,13 @@ from matplotlib_venn import venn2
 from glob import glob
 from sklearn.preprocessing import MinMaxScaler
 from generic_expression_patterns_modules import calc
+from ponyo import simulate_expression_data
+
+# Data processing functions including:
+# * functions to map ensembl gene ids to hgnc symbols
+# * functions to remove subsets of samples
+# * functions to transform data into integer for downstream DE analysis
+# * functions to normalize data
 
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
@@ -163,6 +169,386 @@ def recast_int(num_runs, local_dir, project_id):
 
         # Save
         simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
+
+
+def create_recount2_compendium(download_dir, output_filename):
+    """
+    Concatenate `t_data_counts.tsv` in each project directory and create the
+    single recount2 commpendium file in TSV format.
+    The first row in each `t_data_counts.tsv` is a header line that includes
+    column names, so only the header in the first `t_data_counts.tsv` is copied
+    to the output file.
+
+    Arguments
+    ---------
+    download_dir: str
+        dirname that hosts all downloaded projects data
+    output_filename: str
+        filename of output single compendium data
+    """
+
+    data_counts_filenames = glob(f"{download_dir}/*/t_data_counts.tsv")
+    data_counts_filenames.sort()
+
+    compendium_header = None
+    with open(output_filename, "w") as ofh:
+        for filename in data_counts_filenames:
+            with open(filename) as ifh:
+                file_header = ifh.readline()
+                if compendium_header is None:
+                    compendium_header = file_header
+                    ofh.write(compendium_header)
+                elif file_header != compendium_header:
+                    raise Exception(f"Inconsistent header in {filename}")
+
+                file_content = ifh.read()
+                ofh.write(file_content)
+
+
+def get_published_generic_genes(filename):
+    """
+    Get generic genes based on input filename, which could be a URL.
+
+    Arguments
+    ---------
+    filename: str
+        name of the file that includes published generic genes
+    """
+
+    df = pd.read_csv(filename, header=0, sep="\t")
+    published_generic_genes = list(df["Gene_Name"])
+    return published_generic_genes
+
+
+def get_merged_gene_id_mapping(gene_id_filename, raw_ensembl_genes):
+    """
+    Merge genes in input gene_id file with the raw ensembl gene IDs.
+
+    Arguments
+    ---------
+    gene_id_filename: str
+        filename of input gene IDs;
+    raw_ensembl_genes: list
+        list of strings (ensembl gene IDs)
+
+    Returns
+    -------
+    Mapping between ensembl ids and hgnc symbols
+    """
+
+    original_gene_id_mapping = pd.read_csv(
+        gene_id_filename, header=0, sep="\t", index_col=0
+    )
+
+    # Get mapping between ensembl ids with and without version numbers.
+    # The genes in `ensembl_genes` has version numbers at the end.
+    ensembl_gene_ids = pd.DataFrame(
+        data={
+            "ensembl_version": raw_ensembl_genes,
+            "ensembl_parsed": [gene_id.split(".")[0] for gene_id in raw_ensembl_genes],
+        }
+    )
+
+    # Map ensembl gene ids with version number to gene_id_mapping
+    merged_gene_id_mapping = pd.merge(
+        original_gene_id_mapping,
+        ensembl_gene_ids,
+        left_on="ensembl_gene_id",
+        right_on="ensembl_parsed",
+        how="outer",
+    )
+
+    # Set `ensembl_version` column as the index
+    merged_gene_id_mapping.set_index("ensembl_version", inplace=True)
+
+    return merged_gene_id_mapping
+
+
+def get_renamed_columns(
+    raw_ensembl_ids,
+    merged_gene_id_mapping,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+):
+    """
+    Find the new column names and corresponding column indexes.
+
+    Arguments
+    ---------
+    raw_ensembl_ids:
+        list of strings (ensembl gene IDs), which are columns names in
+        raw recount2 data file;
+    merged_gene_id_mapping: DataFrame
+        merged gene ID mapping;
+    manual_mapping: dict
+        dict of manual mapping (key: ensembl_id, value: gene symbol)
+    DE_prior_filename: str
+        input filename that includes symbols of published generic genes
+    shared_genes_filename: str
+        name of output pickled file (a list of shared gene symbols)
+
+    Returns
+    -------
+    A tuple that includes two entries. The first entry is a list
+    of hgnc gene symbols (which will be the new column names in remapped
+    recount2 data file; The second entry is a dict whose keys are hgnc gene
+    symbols and values are lists of the corresponding indexes of columns in
+    the raw recount2 data file (most lists include only one column index.)
+
+    """
+
+    updated_mapping = merged_gene_id_mapping.loc[
+        ~merged_gene_id_mapping.index.duplicated(keep="first")
+    ]
+    for ensembl_id, gene_symbol in manual_mapping.items():
+        updated_mapping.loc[ensembl_id].hgnc_symbol = gene_symbol
+
+    # Build a dict that maps hgnc symbols to column indexes in raw recount2 data
+    hgnc_to_cols = dict()
+    for col_idx, ensembl_id in enumerate(raw_ensembl_ids):
+        # Skip paralogs (whose ensembl_id includes "PAR_Y")
+        if "PAR_Y" in ensembl_id:
+            continue
+
+        hgnc_symbol = updated_mapping.loc[ensembl_id].hgnc_symbol
+
+        # Skip hgnc gene symbols that are `float` type (NaN) or empty strings
+        if type(hgnc_symbol) == float or len(hgnc_symbol) == 0:
+            continue
+
+        if hgnc_symbol in hgnc_to_cols:
+            hgnc_to_cols[hgnc_symbol].append(col_idx)
+        else:
+            hgnc_to_cols[hgnc_symbol] = [col_idx]
+
+    our_gene_ids_hgnc = list(hgnc_to_cols.keys())
+
+    published_generic_genes = get_published_generic_genes(DE_prior_filename)
+    shared_genes_hgnc = list(
+        set(our_gene_ids_hgnc).intersection(published_generic_genes)
+    )
+
+    # In Python, the order of elements in a list that is converted from a set
+    # is non-deterministic, so it is sorted here to have reproducible result.
+    shared_genes_hgnc.sort()
+
+    # Pickle `shared_genes_hgnc` and save as `shared_genes_filename`
+    if not os.path.exists(shared_genes_filename):
+        with open(shared_genes_filename, "wb") as pkl_fh:
+            pickle.dump(shared_genes_hgnc, pkl_fh)
+
+    return (shared_genes_hgnc, hgnc_to_cols)
+
+
+def map_recount2_data(
+    raw_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    new_filename,
+):
+    """
+    Map the ensembl gene IDs in `raw_filename` to hgnc gene symbols based
+    on the header line in `template_filename`, and save the new header
+    and corresponding data columns to `new_filename`.
+    """
+
+    # Read the header line of `raw_filename` to get its column names:
+    raw_header_df = pd.read_csv(raw_filename, header=0, sep="\t", nrows=1)
+    raw_ensembl_ids = list(raw_header_df.columns)
+    if raw_ensembl_ids[0] == "Unnamed: 0":
+        del raw_ensembl_ids[0]
+
+    merged_gene_id_mapping = get_merged_gene_id_mapping(
+        gene_id_filename, raw_ensembl_ids
+    )
+
+    shared_genes_hgnc, hgnc_to_cols = get_renamed_columns(
+        raw_ensembl_ids,
+        merged_gene_id_mapping,
+        manual_mapping,
+        DE_prior_filename,
+        shared_genes_filename,
+    )
+
+    col_indexes = list()
+    for hgnc in shared_genes_hgnc:
+        col_indexes += hgnc_to_cols[hgnc]
+
+    output_cols = [""]
+    for hgnc in shared_genes_hgnc:
+        output_cols += [hgnc] * len(hgnc_to_cols[hgnc])
+    output_header = "\t".join(output_cols) + "\n"
+
+    with open(new_filename, "w") as ofh:
+        ofh.write(output_header)
+        with open(raw_filename) as ifh:
+            for line_num, line in enumerate(ifh):
+                if line_num == 0:
+                    continue
+                tokens = line.strip("\n").split("\t")
+                sample_id = tokens[0].strip('"')
+                input_values = tokens[1:]
+                output_values = list()
+                for idx in col_indexes:
+                    output_values.append(input_values[idx])
+                ofh.write(sample_id + "\t" + "\t".join(output_values) + "\n")
+
+
+def process_raw_template_recount2(
+    raw_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    mapped_filename,
+    sample_id_metadata_filename,
+    processed_filename,
+):
+    """
+    Create mapped recount2 template data file based on input raw template
+    data file (`raw_filename`), drop sample rows if needed, and save updated
+    template data on disk.
+    """
+
+    # Write the intermediate mapped recount2 template data file on disk
+    map_recount2_data(
+        raw_filename,
+        gene_id_filename,
+        manual_mapping,
+        DE_prior_filename,
+        shared_genes_filename,
+        mapped_filename,
+    )
+
+    sample_ids_to_drop = set()
+    if os.path.exists(sample_id_metadata_filename):
+        # Read in metadata and get samples to be dropped:
+        metadata = pd.read_csv(
+            sample_id_metadata_filename, sep="\t", header=0, index_col=0
+        )
+        sample_ids_to_drop = set(metadata[metadata["processing"] == "drop"].index)
+
+    # Write the processed recount2 template output file on disk
+    with open(mapped_filename) as ifh, open(processed_filename, "w") as ofh:
+        for idx, line in enumerate(ifh):
+            sample_id = line.split("\t")[0]
+            if idx == 0 or sample_id not in sample_ids_to_drop:
+                ofh.write(line)
+
+
+def process_raw_template_pseudomonas(
+    processed_compendium_filename,
+    project_id,
+    dataset_name,
+    metadata_colname,
+    sample_id_metadata_filename,
+    raw_template_filename,
+    processed_template_filename,
+):
+    """
+    Create processed pseudomonas template data file based on
+    processed compendium file (`compendium_filename`),
+    drop sample rows if needed, and save updated
+    template data on disk.
+    """
+
+    # Get sample ids associated with selected project id
+    sample_ids = simulate_expression_data.get_sample_ids(
+        project_id, dataset_name, metadata_colname
+    )
+
+    # Get samples from experiment id
+    processed_compendium = pd.read_csv(
+        processed_compendium_filename, header=0, index_col=0, sep="\t"
+    )
+    template_data = processed_compendium.loc[sample_ids]
+
+    template_data.to_csv(raw_template_filename, sep="\t")
+
+    sample_ids_to_drop = set()
+    if os.path.exists(sample_id_metadata_filename):
+        # Read in metadata and get samples to be dropped:
+        metadata = pd.read_csv(
+            sample_id_metadata_filename, sep="\t", header=0, index_col=0
+        )
+        sample_ids_to_drop = set(metadata[metadata["processing"] == "drop"].index)
+
+    # Write the processed pseudomonas template output file on disk
+    with open(raw_template_filename) as ifh, open(
+        processed_template_filename, "w"
+    ) as ofh:
+        for idx, line in enumerate(ifh):
+            sample_id = line.split("\t")[0]
+            if idx == 0 or sample_id not in sample_ids_to_drop:
+                ofh.write(line)
+
+
+def normalize_compendium(
+    mapped_filename, normalized_filename, scaler_filename,
+):
+    """
+    Read the mapped compendium file into memory, normalize it, and save
+    both normalized compendium data and pickled scaler on disk.
+    """
+
+    # Read mapped compendium file: ~4 minutes (17 GB of RAM)
+    mapped_compendium_df = pd.read_table(
+        mapped_filename, header=0, sep="\t", index_col=0
+    )
+
+    # 0-1 normalize per gene
+    scaler = MinMaxScaler()
+
+    # Fitting (2 minutes, ~8 GB of RAM)
+    normalized_compendium = scaler.fit_transform(mapped_compendium_df)
+    normalized_compendium_df = pd.DataFrame(
+        normalized_compendium,
+        columns=mapped_compendium_df.columns,
+        index=mapped_compendium_df.index,
+    )
+
+    # Save normalized data on disk: ~17.5 minutes
+    normalized_compendium_df.to_csv(normalized_filename, float_format="%.3f", sep="\t")
+
+    # Pickle `scaler` as `scaler_filename` on disk
+    with open(scaler_filename, "wb") as pkl_fh:
+        pickle.dump(scaler, pkl_fh)
+
+
+def process_raw_compendium_pseudomonas(
+    raw_filename, processed_filename, normalized_filename, scaler_filename,
+):
+    """
+    Create processed pseudomonas compendium data file based on raw compendium
+    data file (`raw_filename`), and normalize the processed compendium.
+    """
+
+    # Create processed pseudomonas compendium data file
+    raw_compendium = pd.read_csv(raw_filename, header=0, index_col=0, sep="\t")
+
+    if raw_compendium.shape != (950, 5549):
+        processed_compendium = raw_compendium.T
+    else:
+        processed_compendium = raw_compendium
+
+    assert processed_compendium.shape == (950, 5549)
+
+    # Save transformed compendium data
+    processed_compendium.to_csv(processed_filename, sep="\t")
+
+    # Normalize processed pseudomonas compendium data
+    normalize_compendium(processed_filename, normalized_filename, scaler_filename)
+
+
+# Functions to format intermediate data files to prepare to compare gene/pathway
+# ranking:
+# * functions to concatenate simulated data results
+# * functions to get absolute value of test statistics to use for ranking
+# * functions to generate summary data files
+# * functions to scale ranking
 
 
 def concat_simulated_data(local_dir, num_runs, project_id, data_type):
@@ -436,335 +822,6 @@ def compare_and_reorder_samples(expression_file, metadata_file):
         expression_data.to_csv(expression_file, sep="\t")
 
 
-def create_recount2_compendium(download_dir, output_filename):
-    """
-    Concatenate `t_data_counts.tsv` in each project directory and create the
-    single recount2 commpendium file in TSV format.
-    The first row in each `t_data_counts.tsv` is a header line that includes
-    column names, so only the header in the first `t_data_counts.tsv` is copied
-    to the output file.
-
-    Arguments
-    ---------
-    download_dir: str
-        dirname that hosts all downloaded projects data
-    output_filename: str
-        filename of output single compendium data
-    """
-
-    data_counts_filenames = glob(f"{download_dir}/*/t_data_counts.tsv")
-    data_counts_filenames.sort()
-
-    compendium_header = None
-    with open(output_filename, "w") as ofh:
-        for filename in data_counts_filenames:
-            with open(filename) as ifh:
-                file_header = ifh.readline()
-                if compendium_header is None:
-                    compendium_header = file_header
-                    ofh.write(compendium_header)
-                elif file_header != compendium_header:
-                    raise Exception(f"Inconsistent header in {filename}")
-
-                file_content = ifh.read()
-                ofh.write(file_content)
-
-
-def get_published_generic_genes(filename):
-    """
-    Get generic genes based on input filename, which could be a URL.
-
-    Arguments
-    ---------
-    filename: str
-        name of the file that includes published generic genes
-    """
-
-    df = pd.read_csv(filename, header=0, sep="\t")
-    published_generic_genes = list(df["Gene_Name"])
-    return published_generic_genes
-
-
-def get_merged_gene_id_mapping(gene_id_filename, raw_ensembl_genes):
-    """
-    Merge genes in input gene_id file with the raw ensembl gene IDs.
-
-    Arguments
-    ---------
-    gene_id_filename: str
-        filename of input gene IDs;
-    raw_ensembl_genes: list
-        list of strings (ensembl gene IDs)
-
-    Returns
-    -------
-    Mapping between ensembl ids and hgnc symbols
-    """
-
-    original_gene_id_mapping = pd.read_csv(
-        gene_id_filename, header=0, sep="\t", index_col=0
-    )
-
-    # Get mapping between ensembl ids with and without version numbers.
-    # The genes in `ensembl_genes` has version numbers at the end.
-    ensembl_gene_ids = pd.DataFrame(
-        data={
-            "ensembl_version": raw_ensembl_genes,
-            "ensembl_parsed": [gene_id.split(".")[0] for gene_id in raw_ensembl_genes],
-        }
-    )
-
-    # Map ensembl gene ids with version number to gene_id_mapping
-    merged_gene_id_mapping = pd.merge(
-        original_gene_id_mapping,
-        ensembl_gene_ids,
-        left_on="ensembl_gene_id",
-        right_on="ensembl_parsed",
-        how="outer",
-    )
-
-    # Set `ensembl_version` column as the index
-    merged_gene_id_mapping.set_index("ensembl_version", inplace=True)
-
-    return merged_gene_id_mapping
-
-
-def get_renamed_columns(
-    raw_ensembl_ids,
-    merged_gene_id_mapping,
-    manual_mapping,
-    DE_prior_filename,
-    shared_genes_filename,
-):
-    """
-    Find the new column names and corresponding column indexes.
-
-    Arguments
-    ---------
-    raw_ensembl_ids:
-        list of strings (ensembl gene IDs), which are columns names in
-        raw recount2 data file;
-    merged_gene_id_mapping: DataFrame
-        merged gene ID mapping;
-    manual_mapping: dict
-        dict of manual mapping (key: ensembl_id, value: gene symbol)
-    DE_prior_filename: str
-        input filename that includes symbols of published generic genes
-    shared_genes_filename: str
-        name of output pickled file (a list of shared gene symbols)
-
-    Returns
-    -------
-    A tuple that includes two entries. The first entry is a list
-    of hgnc gene symbols (which will be the new column names in remapped
-    recount2 data file; The second entry is a dict whose keys are hgnc gene
-    symbols and values are lists of the corresponding indexes of columns in
-    the raw recount2 data file (most lists include only one column index.)
-
-    """
-
-    updated_mapping = merged_gene_id_mapping.loc[
-        ~merged_gene_id_mapping.index.duplicated(keep="first")
-    ]
-    for ensembl_id, gene_symbol in manual_mapping.items():
-        updated_mapping.loc[ensembl_id].hgnc_symbol = gene_symbol
-
-    # Build a dict that maps hgnc symbols to column indexes in raw recount2 data
-    hgnc_to_cols = dict()
-    for col_idx, ensembl_id in enumerate(raw_ensembl_ids):
-        # Skip paralogs (whose ensembl_id includes "PAR_Y")
-        if "PAR_Y" in ensembl_id:
-            continue
-
-        hgnc_symbol = updated_mapping.loc[ensembl_id].hgnc_symbol
-
-        # Skip hgnc gene symbols that are `float` type (NaN) or empty strings
-        if type(hgnc_symbol) == float or len(hgnc_symbol) == 0:
-            continue
-
-        if hgnc_symbol in hgnc_to_cols:
-            hgnc_to_cols[hgnc_symbol].append(col_idx)
-        else:
-            hgnc_to_cols[hgnc_symbol] = [col_idx]
-
-    our_gene_ids_hgnc = list(hgnc_to_cols.keys())
-
-    published_generic_genes = get_published_generic_genes(DE_prior_filename)
-    shared_genes_hgnc = list(
-        set(our_gene_ids_hgnc).intersection(published_generic_genes)
-    )
-
-    # In Python, the order of elements in a list that is converted from a set
-    # is non-deterministic, so it is sorted here to have reproducible result.
-    shared_genes_hgnc.sort()
-
-    # Pickle `shared_genes_hgnc` and save as `shared_genes_filename`
-    if not os.path.exists(shared_genes_filename):
-        with open(shared_genes_filename, "wb") as pkl_fh:
-            pickle.dump(shared_genes_hgnc, pkl_fh)
-
-    return (shared_genes_hgnc, hgnc_to_cols)
-
-
-def map_recount2_data(
-    raw_filename,
-    gene_id_filename,
-    manual_mapping,
-    DE_prior_filename,
-    shared_genes_filename,
-    new_filename,
-):
-    """
-    Map the ensembl gene IDs in `raw_filename` to hgnc gene symbols based
-    on the header line in `template_filename`, and save the new header
-    and corresponding data columns to `new_filename`.
-    """
-
-    # Read the header line of `raw_filename` to get its column names:
-    raw_header_df = pd.read_csv(raw_filename, header=0, sep="\t", nrows=1)
-    raw_ensembl_ids = list(raw_header_df.columns)
-    if raw_ensembl_ids[0] == "Unnamed: 0":
-        del raw_ensembl_ids[0]
-
-    merged_gene_id_mapping = get_merged_gene_id_mapping(
-        gene_id_filename, raw_ensembl_ids
-    )
-
-    shared_genes_hgnc, hgnc_to_cols = get_renamed_columns(
-        raw_ensembl_ids,
-        merged_gene_id_mapping,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-    )
-
-    col_indexes = list()
-    for hgnc in shared_genes_hgnc:
-        col_indexes += hgnc_to_cols[hgnc]
-
-    output_cols = [""]
-    for hgnc in shared_genes_hgnc:
-        output_cols += [hgnc] * len(hgnc_to_cols[hgnc])
-    output_header = "\t".join(output_cols) + "\n"
-
-    with open(new_filename, "w") as ofh:
-        ofh.write(output_header)
-        with open(raw_filename) as ifh:
-            for line_num, line in enumerate(ifh):
-                if line_num == 0:
-                    continue
-                tokens = line.strip("\n").split("\t")
-                sample_id = tokens[0].strip('"')
-                input_values = tokens[1:]
-                output_values = list()
-                for idx in col_indexes:
-                    output_values.append(input_values[idx])
-                ofh.write(sample_id + "\t" + "\t".join(output_values) + "\n")
-
-
-def process_raw_template(
-    raw_filename,
-    gene_id_filename,
-    manual_mapping,
-    DE_prior_filename,
-    shared_genes_filename,
-    mapped_filename,
-    sample_id_metadata_filename,
-    processed_filename,
-):
-    """
-    Create mapped recount2 template data file based on input raw template
-    data file (`raw_filename`), drop sample rows if needed, and save updated
-    template data on disk.
-    """
-
-    # Write the intermediate mapped recount2 template data file on disk
-    map_recount2_data(
-        raw_filename,
-        gene_id_filename,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-        mapped_filename,
-    )
-
-    sample_ids_to_drop = set()
-    if os.path.exists(sample_id_metadata_filename):
-        # Read in metadata and get samples to be dropped:
-        metadata = pd.read_csv(
-            sample_id_metadata_filename, sep="\t", header=0, index_col=0
-        )
-        sample_ids_to_drop = set(metadata[metadata["processing"] == "drop"].index)
-
-    # Write the processed recount2 template output file on disk
-    with open(mapped_filename) as ifh, open(processed_filename, "w") as ofh:
-        for idx, line in enumerate(ifh):
-            sample_id = line.split("\t")[0]
-            if idx == 0 or sample_id not in sample_ids_to_drop:
-                ofh.write(line)
-
-
-def normalize_compendium(
-    mapped_filename, normalized_filename, scaler_filename,
-):
-    """
-    Read the mapped compendium file into memor, normalize it, and save
-    both normalized compendium data and pickled scaler on disk.
-    """
-
-    # Read mapped compendium file: ~4 minutes (17 GB of RAM)
-    mapped_compendium_df = pd.read_table(
-        mapped_filename, header=0, sep="\t", index_col=0
-    )
-
-    # 0-1 normalize per gene
-    scaler = MinMaxScaler()
-
-    # Fitting (2 minutes, ~8 GB of RAM)
-    normalized_compendium = scaler.fit_transform(mapped_compendium_df)
-    normalized_compendium_df = pd.DataFrame(
-        normalized_compendium,
-        columns=mapped_compendium_df.columns,
-        index=mapped_compendium_df.index,
-    )
-
-    # Save normalized data on disk: ~17.5 minutes
-    normalized_compendium_df.to_csv(normalized_filename, float_format="%.3f", sep="\t")
-
-    # Pickle `scaler` as `scaler_filename` on disk
-    with open(scaler_filename, "wb") as pkl_fh:
-        pickle.dump(scaler, pkl_fh)
-
-
-def process_raw_compendium(
-    raw_filename,
-    gene_id_filename,
-    manual_mapping,
-    DE_prior_filename,
-    shared_genes_filename,
-    mapped_filename,
-    normalized_filename,
-    scaler_filename,
-):
-    """
-    Create mapped recount2 compendium data file based on raw compendium
-    data file (`raw_filename`), and normalize the mapped compendium.
-    """
-
-    # Create mapped recount2 compendium data file
-    map_recount2_data(
-        raw_filename,
-        gene_id_filename,
-        manual_mapping,
-        DE_prior_filename,
-        shared_genes_filename,
-        mapped_filename,
-    )
-
-    # Normalize mapped recount2 compendium data
-    normalize_compendium(mapped_filename, normalized_filename, scaler_filename)
-
-
 def get_shared_rank_scaled(
     summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type
 ):
@@ -968,6 +1025,67 @@ def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
     return simulated_stats_all
 
 
+def add_pseudomonas_gene_name_col(summary_gene_ranks, base_dir):
+    """
+    This function adds a column to the input dataframe
+    that contains the gene name corresponding to the
+    pseudomonas gene id
+
+    Arguments
+    ---------
+    summary_gene_ranks: df
+        Dataframe of ranks and other statistics per gene
+    base_dir: str
+        Path to repository directiory
+    """
+
+    # Gene number to gene name file
+    gene_name_filename = os.path.join(
+        base_dir,
+        "pseudomonas_analysis",
+        "data",
+        "metadata",
+        "Pseudomonas_aeruginosa_PAO1_107.csv",
+    )
+
+    # Read gene number to name mapping
+    gene_name_mapping = pd.read_table(
+        gene_name_filename, header=0, sep=",", index_col=0
+    )
+
+    gene_name_mapping = gene_name_mapping[["Locus Tag", "Name"]]
+
+    gene_name_mapping.set_index("Locus Tag", inplace=True)
+
+    # Format gene numbers to remove extraneous quotes
+    gene_number = gene_name_mapping.index
+    gene_name_mapping.index = gene_number.str.strip('"')
+
+    gene_name_mapping.dropna(inplace=True)
+
+    # Remove duplicate mapping
+    # Not sure which mapping is correct in this case
+    # PA4527 maps to pilC and still frameshift type 4
+    # fimbrial biogenesis protein PilC (putative pseudogene)
+    gene_name_mapping = gene_name_mapping[
+        ~gene_name_mapping.index.duplicated(keep=False)
+    ]
+
+    # Add gene names
+    summary_gene_ranks["Gene Name"] = summary_gene_ranks["Gene ID"].map(
+        gene_name_mapping["Name"]
+    )
+
+    return summary_gene_ranks
+
+
+# Functions related to visualizing trends in generic
+# genes/pathways found
+# * functions to generate summary dataframes
+# * functions to plot trends
+# * functions to compare groups of genes
+
+
 def merge_abs_raw_dfs(abs_df, raw_df, condition):
     """
     This function merges and returns dataframe containing
@@ -1117,10 +1235,6 @@ def plot_two_conditions(merged_df, condition_1, condition_2, xlabel, ylabel):
     axes[0].set_ylabel("")
     axes[1].set_ylabel("")
     print(fig)
-
-    # ADD NEWLINE TO TITLE
-    # MAKE LABELS LARGER
-    # MOVE LEGEND?
 
 
 def get_and_save_DEG_lists(
@@ -1324,7 +1438,7 @@ def plot_volcanos(
     sns.scatterplot(
         data=merged_one_condition_df,
         x=f"abs(Z score)_grp_{condition}",
-        y="FDR adjuted p-value plot",
+        y="FDR adjusted p-value plot",
         hue="gene group",
         hue_order=["none", "traditional + specific DEGs", "only specific DEGs"],
         style="gene group",

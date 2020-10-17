@@ -166,7 +166,7 @@ sample_id_metadata_filename = os.path.join(
     f"{project_id}_process_samples.tsv"
 )
 
-process.process_raw_template(
+process.process_raw_template_recount2(
     raw_template_filename,
     gene_id_filename,
     manual_mapping,
@@ -190,7 +190,7 @@ process.process_raw_template(
 # In[12]:
 
 
-process.process_raw_compendium(
+process.process_raw_compendium_recount2(
     raw_compendium_filename,
     gene_id_filename,
     manual_mapping,

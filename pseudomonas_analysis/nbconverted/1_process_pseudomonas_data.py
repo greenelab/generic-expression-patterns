@@ -4,8 +4,8 @@
 # # Process pseudomonas data
 # This notebook does the following:
 # 
-# 1. Selects template experiment from the Pseudomonas compendium
-# 2. Normalizes the Pseudomonas compendium
+# 1. Selects template experiment from the Pseudomonas compendium created from [Tan et. al.](https://msystems.asm.org/content/1/1/e00025-15)
+# 2. Normalizes the gene expression data from the Pseudomonas compendium
 # 3. Train VAE on the normalized data
 
 # In[1]:
@@ -21,41 +21,55 @@ import numpy as np
 from sklearn import preprocessing
 import pickle
 
-from ponyo import utils, train_vae_modules, simulate_expression_data
+from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process, calc
 
 np.random.seed(123)
 
 
+# ### Set parameters for data processing
+# 
+# Most parameters are read from `config_filename`. We manually selected bioproject [GEOD-33245](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-33245/?s_sortby=col_8&s_sortorder=ascending), as the template experiment, which contains multiple different comparisons including WT vs *crc* mutants, WT vs *cbr* mutants in different conditions.
+
 # In[2]:
 
 
+base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
+
 # Read in config variables
-base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
+config_filename = os.path.abspath(
+    os.path.join(base_dir, "configs", "config_pseudomonas_33245.tsv")
+)
 
-config_file = os.path.abspath(os.path.join(base_dir,
-                                           "configs",
-                                           "config_pseudomonas_33245.tsv"))
-params = utils.read_config(config_file)
+params = utils.read_config(config_filename)
 
-
-# In[3]:
-
-
-# Load params
 local_dir = params["local_dir"]
-dataset_name = params['dataset_name']
-NN_architecture = params['NN_architecture']
-project_id = params['project_id']
+dataset_name = params["dataset_name"]
+
+# Column header containing sample ids
 metadata_colname = params['metadata_colname']
-template_data_file = params['template_data_file']
-original_compendium_file = params['compendium_data_file']
-normalized_data_file = params['normalized_compendium_data_file']
-shared_genes_file = params['shared_genes_file']
-scaler_file = params['scaler_transform_file']
+
+# Template experiment ID
+project_id = params['project_id']
+
+# Output file: pickled list of shared genes(generated during gene ID mapping)
+shared_genes_filename = params['shared_genes_filename']
+
+# Output files of pseudomonas template experiment data
+raw_template_filename = params['raw_template_filename']
+#mapped_template_filename = params['mapped_template_filename']
+processed_template_filename = params['processed_template_filename']
+
+# Output files of pseudomonas compendium data
+raw_compendium_filename = params['raw_compendium_filename']
+processed_compendium_filename = params['processed_compendium_filename']
+normalized_compendium_filename = params['normalized_compendium_filename']
+
+# Output file: pickled scaler (generated during compendium normalization)
+scaler_filename = params['scaler_filename']
 
 # Load metadata file with grouping assignments for samples
-sample_id_metadata_file = os.path.join(
+sample_id_metadata_filename = os.path.join(
     base_dir,
     dataset_name,
     "data",
@@ -63,68 +77,51 @@ sample_id_metadata_file = os.path.join(
     f"{project_id}_process_samples.tsv")
 
 
-# ### Download Pseudomonas compendium
-# The compendium is downloaded from https://raw.githubusercontent.com/greenelab/adage/master/Data_collection_processing/Pa_compendium_02.22.2014.pcl
+# ### Transpose raw pseudomonas compendium and normalize it
+# The compendium is from https://raw.githubusercontent.com/greenelab/adage/master/Data_collection_processing/Pa_compendium_02.22.2014.pcl
+
+# In[3]:
+
+
+process.process_raw_compendium_pseudomonas(
+    raw_compendium_filename,
+    processed_compendium_filename,
+    normalized_compendium_filename,
+    scaler_filename,
+)
+
+
+# ### Select template experiment and drop subset of samples
+# 
+# We manually selected bioproject selected [GEOD-33245](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-33245/?s_sortby=col_8&s_sortorder=ascending), which contains multiple different comparisons including WT vs *crc* mutants, WT vs *cbr* mutants in different conditions.
 
 # In[4]:
 
 
-# Read compendium
-original_compendium = pd.read_csv(original_compendium_file,
-                                  header=0,
-                                  index_col=0,
-                                  sep="\t")
+process.process_raw_template_pseudomonas(
+    processed_compendium_filename,
+    project_id,
+    dataset_name,
+    metadata_colname,
+    sample_id_metadata_filename,
+    raw_template_filename,
+    processed_template_filename,
+)
 
-if original_compendium.shape != (950, 5549):
-    original_compendium = original_compendium.T
-    
-assert original_compendium.shape == (950, 5549)
-
-print(original_compendium.shape)
-original_compendium.head()
-
-
-# ### Select template experiment
-# 
-# We manually selected bioproject [E-GEOD-9989](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-9989/?query=George+O%27Toole), which contains 2 samples (3 replicates each) of PA14 WT that are grown on CFBE41o- cells are either treated tobramycin or untreated.
-# 
-# Another bioproject selected [E-MEXP-1183](https://www.ebi.ac.uk/arrayexpress/experiments/E-MEXP-1183/), which contains a total of 10 samples. But for now we will select those 4 samples using WT that were measuring the effect of acyl-HSL signal.
-# 
-# Another bioproject selected [GEOD-33245](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-33245/?s_sortby=col_8&s_sortorder=ascending), which contains multiple different comparisons including WT vs *crc* mutants, WT vs *cbr* mutants in different conditions.
 
 # In[5]:
 
 
-sample_ids = simulate_expression_data.get_sample_ids(project_id, dataset_name, metadata_colname)
+# Check
+template_data = pd.read_csv(
+    processed_template_filename, 
+    header=0,
+    index_col=0,
+    sep="\t"
+)
 
-
-# In[6]:
-
-
-# Get samples from experiment id
-template_data = original_compendium.loc[sample_ids]
-print(template_data.shape)
-template_data.head()
-
-
-# In[7]:
-
-
-if os.path.exists(sample_id_metadata_file):
-    # Read in metadata
-    metadata = pd.read_csv(sample_id_metadata_file, sep='\t', header=0, index_col=0)
-    
-    # Get samples to be dropped
-    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
-
-    template_data = template_data.drop(sample_ids_to_drop)
-    
-    if project_id == "E-MEXP-1183":
-        assert(template_data.shape[0] == 4)
-    if project_id == "E-GEOD-7704":
-        assert(template_data.shape[0] == 6)
-    if project_id == "E-GEOD-33245":
-        assert(template_data.shape[0] == 4)
+if project_id == "E-GEOD-33245":
+    assert(template_data.shape[0] == 4)
 
 
 # **Note:**
@@ -135,78 +132,29 @@ if os.path.exists(sample_id_metadata_file):
 # 
 # So there is an inconsistency in the samples used to learn a low-dimensional representation and those used to calculate DE statistics. This inconsistency should not not change the simulated experiments since all samples in the template experiment are moved the same amount in the latent space. The only way for this inconsistency to effect the simulated experiments is if the low dimensional space is significantly different including all the experiment samples vs only including a subset. However, we believe that such few samples will likely not effect the space. Furthermore, the dataset used to train the VAE should be a general representation of gene expression patterns and shouldn't have to be include the template experiment.
 
-# ### Normalize compendium 
-
-# In[8]:
-
-
-# 0-1 normalize per gene
-scaler = preprocessing.MinMaxScaler()
-original_data_scaled = scaler.fit_transform(original_compendium)
-original_data_scaled_df = pd.DataFrame(original_data_scaled,
-                                columns=original_compendium.columns,
-                                index=original_compendium.index)
-
-print(original_data_scaled_df.shape)
-original_data_scaled_df.head()
-
-
-# ### Save data files
-
-# In[9]:
-
-
-# Save data
-original_compendium.to_csv(
-    original_compendium_file, float_format='%.3f', sep='\t')
-
-template_data.to_csv(template_data_file, float_format='%.5f', sep='\t')
-
-original_data_scaled_df.to_csv(
-    normalized_data_file, float_format='%.3f', sep='\t')
-
-# Save scaler transform
-outfile = open(scaler_file,'wb')
-pickle.dump(scaler,outfile)
-outfile.close()
-
-# Save shared genes
-# In this case all genes are used
-shared_genes = list(original_compendium.columns)
-
-outfile = open(shared_genes_file,'wb')
-pickle.dump(shared_genes,outfile)
-outfile.close()
-
-
 # ### Train VAE 
 
-# In[10]:
+# In[6]:
 
 
-# Setup directories
-# Create VAE directories
-output_dirs = [os.path.join(base_dir, dataset_name, "models"),
-               os.path.join(base_dir, dataset_name, "logs")]
+# Create VAE directories if needed
+output_dirs = [
+    os.path.join(base_dir, dataset_name, "models"),
+    os.path.join(base_dir, dataset_name, "logs")
+]
 
-# Check if analysis output directory exist otherwise create
-for each_dir in output_dirs:
-    if os.path.exists(each_dir) == False:
-        print('creating new directory: {}'.format(each_dir))
-        os.makedirs(each_dir, exist_ok=True)
+NN_architecture = params['NN_architecture']
 
 # Check if NN architecture directory exist otherwise create
 for each_dir in output_dirs:
-    new_dir = os.path.join(each_dir, NN_architecture)
-    if os.path.exists(new_dir) == False:
-        print('creating new directory: {}'.format(new_dir))
-        os.makedirs(new_dir, exist_ok=True)
+    sub_dir = os.path.join(each_dir, NN_architecture)
+    os.makedirs(sub_dir, exist_ok=True)
 
 
-# In[11]:
+# In[7]:
 
 
 # Train VAE on new compendium data
-train_vae_modules.train_vae(config_file,
-                            normalized_data_file)
+train_vae_modules.train_vae(config_filename,
+                            normalized_compendium_filename)
 
