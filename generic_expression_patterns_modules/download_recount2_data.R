@@ -14,10 +14,10 @@ get_recount2_template_experiment <- function(project_id,
                                              raw_template_filename) {
 
   # Save current working directory
-  original_wd = getwd()
+  #original_wd = getwd()
 
   # Change working directory to `download_dir
-  setwd(download_dir)
+  #setwd(download_dir)
 
   # Get data associated with project ids
   # Download the RSE (RangedSummarizedExperiment) object.
@@ -43,7 +43,7 @@ get_recount2_template_experiment <- function(project_id,
   )
 
   # Set working directory back
-  setwd(original_wd)
+  #setwd(original_wd)
 }
 
 
@@ -60,7 +60,7 @@ get_recount2_sra_subset <- function(template_project_id,
   metadata <- all_metadata()
   write.table(
     metadata,
-    paste(base_dir, '/human_analysis/data/metadata/recount2_metadata.tsv', sep = ""),
+    paste(base_dir, '/human_general_analysis/data/metadata/recount2_metadata.tsv', sep = ""),
     sep = '\t',
     row.names = FALSE
   )
