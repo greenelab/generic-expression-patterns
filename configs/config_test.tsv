@@ -23,7 +23,7 @@ validation_frac	0.1
 project_id	"SRP012656"
 metadata_colname	'run'
 num_simulated	2
-rank_genes_by	"logFC"
+rank_genes_by	"log2FoldChange"
 num_recount2_experiments_to_download	3
 compare_genes	1
 gsea_statistic	'logFC'
