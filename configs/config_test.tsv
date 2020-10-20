@@ -26,3 +26,5 @@ num_simulated	2
 rank_genes_by	"logFC"
 num_recount2_experiments_to_download	3
 compare_genes	1
+gsea_statistic	'logFC'
+rank_pathways_by	"padj"
