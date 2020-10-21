@@ -13,20 +13,15 @@ get_recount2_template_experiment <- function(project_id,
                                              download_dir,
                                              raw_template_filename) {
 
-  # Save current working directory
-  #original_wd = getwd()
-
-  # Change working directory to `download_dir
-  #setwd(download_dir)
-
   # Get data associated with project ids
   # Download the RSE (RangedSummarizedExperiment) object.
   # The RSE object for the counts summarized at the gene level using the
   # Gencode v25 (GRCh38.p7, CHR) annotation as provided by Gencode.
-  if (!file.exists(file.path(project_id, 'rse_gene.Rdata'))) {
-    download_study(project_id)
+  project_dir <- paste(download_dir, project_id, sep='/')
+  if (!file.exists(file.path(project_dir, 'rse_gene.Rdata'))) {
+    download_study(project_id, outdir=project_dir)
   }
-  load(file.path(project_id, 'rse_gene.Rdata'), verbose = TRUE)
+  load(file.path(project_dir, 'rse_gene.Rdata'), verbose = TRUE)
 
   # Counts are the number of reads that map that each gene
   rse_gene_scaled <- scale_counts(rse_gene)
@@ -42,8 +37,6 @@ get_recount2_template_experiment <- function(project_id,
     col.names = NA
   )
 
-  # Set working directory back
-  #setwd(original_wd)
 }
 
 
@@ -171,11 +164,6 @@ download_recount2_sra <- function (metadata_dir,
   metadata <- metadata[metadata[, "read_count_as_reported_by_sra"] > 0,]
   project_ids <- unique(metadata$project)
 
-  # Save current working directory
-  original_wd = getwd()
-
-  # Change working directory to `download_dir`
-  setwd(download_dir)
 
   for (idx in 1:length(project_ids)) {
     pid <- project_ids[idx]
@@ -188,14 +176,15 @@ download_recount2_sra <- function (metadata_dir,
       next
     }
 
-    download_study(pid)
-    load(file.path(pid, 'rse_gene.Rdata'), verbose = TRUE)
+    project_dir <- paste(download_dir, pid, sep='/')
+    download_study(pid, outdir=project_dir)
+    load(file.path(project_dir, 'rse_gene.Rdata'), verbose = TRUE)
 
     data_counts <- assays(scale_counts(rse_gene))$counts
     t_data_counts <- t(data_counts)
     write.table(
       t_data_counts,
-      paste(download_dir, pid, 't_data_counts.tsv', sep = "/"),
+      paste(project_dir, 't_data_counts.tsv', sep = "/"),
       sep = '\t',
       row.names = TRUE,
       col.names = NA
@@ -206,6 +195,4 @@ download_recount2_sra <- function (metadata_dir,
   blank_df <- data.frame()
   write.table(blank_df, file = validation_filename, col.names = FALSE)
 
-  # Set working directory back
-  setwd(original_wd)
 }
