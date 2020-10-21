@@ -543,6 +543,35 @@ def process_raw_compendium_pseudomonas(
     normalize_compendium(processed_filename, normalized_filename, scaler_filename)
 
 
+def process_raw_compendium_recount2(
+    raw_filename,
+    gene_id_filename,
+    manual_mapping,
+    DE_prior_filename,
+    shared_genes_filename,
+    mapped_filename,
+    normalized_filename,
+    scaler_filename,
+):
+    """
+    Create mapped recount2 compendium data file based on raw compendium
+    data file (`raw_filename`), and normalize the mapped compendium.
+    """
+
+    # Create mapped recount2 compendium data file
+    map_recount2_data(
+        raw_filename,
+        gene_id_filename,
+        manual_mapping,
+        DE_prior_filename,
+        shared_genes_filename,
+        mapped_filename,
+    )
+
+    # Normalize mapped recount2 compendium data
+    normalize_compendium(mapped_filename, normalized_filename, scaler_filename)
+
+
 # Functions to format intermediate data files to prepare to compare gene/pathway
 # ranking:
 # * functions to concatenate simulated data results
