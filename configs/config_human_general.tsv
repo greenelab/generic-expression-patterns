@@ -8,10 +8,13 @@ mapped_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_pa
 normalized_compendium_filename	"https://recount2.s3.amazonaws.com/normalized_recount2_compendium_data.tsv"
 shared_genes_filename	"data/shared_genes_human.pickle"
 scaler_filename	"data/scaler_transform_human.pickle"
-hallmark_DB_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/hallmark_DB.gmt"
 reference_gene_filename	"https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
 reference_gene_name_col	"Gene_Name"
 reference_rank_col	"DE_Prior_Rank"
+rank_genes_by	"log2FoldChange"
+pathway_DB_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/hallmark_DB.gmt"
+gsea_statistic	'log2FoldChange'
+rank_pathways_by	"padj"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10
@@ -22,10 +25,6 @@ latent_dim	30
 epsilon_std	1.0
 validation_frac	0.25
 project_id	"SRP012656"
-metadata_colname	'run'
+metadata_colname	'gsm'
 num_simulated	25
-rank_genes_by	"log2FoldChange"
-rank_pathways_by	"padj"
 num_recount2_experiments_to_download	200
-gsea_statistic	'log2FoldChange'
-compare_genes	1

@@ -76,7 +76,6 @@ normalized_compendium_filename = params['normalized_compendium_filename']
 scaler_filename = params['scaler_filename']
 col_to_rank_genes = params['rank_genes_by']
 col_to_rank_pathways = params['rank_pathways_by']
-compare_genes = params['compare_genes']
 statistic = params['gsea_statistic']
 
 # Load metadata file with grouping assignments for samples
@@ -370,7 +369,7 @@ process.compare_gene_ranking(
 
 
 # Load pathway data
-hallmark_DB_filename = os.path.join(local_dir, "hallmark_DB.gmt")
+hallmark_DB_filename = params["pathway_DB_filename"]
 
 
 # In[24]:

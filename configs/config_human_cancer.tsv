@@ -11,6 +11,10 @@ scaler_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_Rani
 reference_gene_filename	"https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
 reference_gene_name_col	"Gene_Name"
 reference_rank_col	"DE_Prior_Rank"
+rank_genes_by	"logFC"
+pathway_DB_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/hallmark_DB.gmt"
+gsea_statistic	'logFC'
+rank_pathways_by	"padj"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10
@@ -23,8 +27,4 @@ validation_frac	0.25
 project_id	"GSE11352"
 metadata_colname	'gsm'
 num_simulated	25
-rank_genes_by	"logFC"
-rank_pathways_by	"padj"
 num_recount2_experiments_to_download	200
-gsea_statistic	'logFC'
-compare_genes	1

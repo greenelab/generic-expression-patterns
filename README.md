@@ -85,18 +85,18 @@ conda activate generic_expression
 
 pip install -e .
 ```
-5. Create a new analysis folder in the main directory. This is equivalent to the `human_analysis` directory
+5. Create a new analysis folder in the main directory. This is equivalent to the `human_general_analysis` directory
 6. Copy jupyter notebooks (1_process_data.ipynb, 2_identify_generic_genes_pathways.ipynb) into analysis directory.
-7. Customize `1_process_data.ipynb` to generate the following saved files: 1) compendium of gene expression data, 2) template experiment data, 3) normalized gene expression compendium. See examples of this processing in `human_analysis/` and `pseudomonas_analysis/`.
+7. Customize `1_process_data.ipynb` to generate the following saved files: 1) compendium of gene expression data, 2) template experiment data, 3) normalized gene expression compendium. See examples of this processing in `human_general_analysis/` and `pseudomonas_analysis/`.
 8. Required data files:
 * Gene expression compendium to use as input data. Specify path of data file in config file.
 * Metadata matrix (sample x experimental metadata) with sample id as index. Add file to `analysis_dir/data/metadata/`. Specify path of metadata file in config file.
 * Sample grouping matrix (sample x group) with group = [1 if control; 2 if case]. Add file to `analysis_dir/data/metadata/<project_id>_groups.tsv`.
-9. `2_identify_generic_genes_pathways.ipynb` will need to include `Compare gene ranking` cells as seen in `human_analysis/` if you would like to compare genes/genes sets with some reference ranking. 
+9. `2_identify_generic_genes_pathways.ipynb` will need to include `Compare gene ranking` cells as seen in `human_general_analysis/` if you would like to compare genes/genes sets with some reference ranking. 
 10. Update config file (see below)
 
 
-The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking.
+The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking. The ** is only used if using `get_recount2_sra_subset` (in download_recount2_data.R).
 
 Note: Some of these parameters are required by the imported [ponyo](https://github.com/greenelab/ponyo) modules. 
 
@@ -111,10 +111,14 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | mapped_compendium_filename | str: Compendium gene expression data file after replacing gene ids in header|
 | normalized_compendium_filename | str: Normalized compendium gene expression data file|
 | shared_genes_filename | str: Pickle file on your local machine where to write and store genes that will be examined. These genes are the intersection of genes in your dataset versus a reference to ensure that there are not Nans in downstream analysis|
-| scaler_transform_filename | str: Pickle file on your local machine where to write and store normalization transform to be used to process data for visualization|
+| scaler_filename | str: Pickle file on your local machine where to write and store normalization transform to be used to process data for visualization|
 | reference_gene_filename* | str: File that contains reference genes and their rank|
-| refrence_gene_name_col| str: Name of the column header that contains the reference genes. This is found in reference_gene_file*|
-| reference_rank_col | str: Name of the column header that contains the reference gene ranks. This is found in reference_gene_file*|
+| refrence_gene_name_col| str: Name of the column header that contains the reference genes. This is found in reference_gene_filename*|
+| reference_rank_col | str: Name of the column header that contains the reference gene ranks. This is found in reference_gene_filename*|
+| rank_genes_by | str:  Name of column header from DE association statistic results. This column will be use to rank genes. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
+| pathway_DB_filename* | str: File that contains pathways to use for GSEA|
+| gsea_statistic| str:  Statistic to use to rank genes for GSEA analysis. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
+| rank_pathways_by | str:  Name of column header from GSEA association statistic results. This column will be use to rank pathways. Select `NES`, `padj` if using DESeq to rank genes.|
 | NN_architecture | str: Name of neural network architecture to use. Format 'NN_<intermediate layer>_<latent layer>'|
 | learning_rate| float: Step size used for gradient descent. In other words, it's how quickly the  methods is learning|
 | batch_size | str: Training is performed in batches. So this determines the number of samples to consider at a given time|
@@ -123,10 +127,8 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | intermediate_dim| int: Size of the hidden layer|
 | latent_dim | int: Size of the bottleneck layer|
 | epsilon_std | float: Standard deviation of Normal distribution to sample latent space|
-| num_simulated| int: Simulate a compendia with these many experiments, created by shifting the template experiment these many times|
 | project_id | str:  Experiment id to use as a template experiment|
-| rank_genes_by | str:  Name of column header from DE association statistic results. This column will be use to rank genes. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
-| rank_pathways_by | str:  Name of column header from GSEA association statistic results. This column will be use to rank pathways. Select `NES`, `padj` if using DESeq to rank genes.|
-| num_recount2_experiments_to_download | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
-| gsea_statistic| str:  Statistic to use to rank genes for GSEA analysis. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
-| compare_genes | bool:  1 if comparing gene ranks with reference gene ranks. 0 if just identifying generic genes and gene sets but not comparing against a reference.|
+| metadata_colname | str:  Header of experiment metadata file to indicate column containing sample ids. This is used to extract gene expression data associated with project_id|
+| num_simulated| int: Simulate a compendia with these many experiments, created by shifting the template experiment these many times|
+| num_recount2_experiments_to_download** | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
+
