@@ -43,8 +43,6 @@ pandas2ri.activate()
 from ponyo import utils
 from generic_expression_patterns_modules import calc, process
 
-np.random.seed(123)
-
 
 # In[2]:
 
@@ -554,7 +552,7 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 
 
 # Get generic genes identified by Crow et. al.
-DE_prior_file = params['reference_gene_filename']
+DE_prior_filename = params['reference_gene_filename']
 ref_gene_col = params['reference_gene_name_col']
 ref_rank_col = params['reference_rank_col']
 
@@ -562,7 +560,7 @@ figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
 
 process.compare_gene_ranking(
     summary_gene_ranks,
-    DE_prior_file,
+    DE_prior_filename,
     ref_gene_col,
     ref_rank_col,
     figure_filename
@@ -613,7 +611,7 @@ os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
 # In[29]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_file <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_file <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")\n}')
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
 
 
 # ### Rank pathways 
