@@ -91,7 +91,7 @@ os.makedirs(template_download_dir, exist_ok=True)
 # In[5]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i template_download_dir -i raw_template_filename', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\nget_recount2_template_experiment(project_id, template_download_dir, raw_template_filename)")
+get_ipython().run_cell_magic('R', '-i project_id -i template_download_dir -i raw_template_filename', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/download_recount2_data.R'))\n\nget_recount2_template_experiment(project_id, template_download_dir, raw_template_filename)")
 
 
 # ### Download all recount2 SRA data
@@ -110,7 +110,7 @@ metadata_dir = local_dir
 # In[7]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_dir -i compendium_download_dir', "\nsource('../generic_expression_patterns_modules/download_recount2_data.R')\n\ndownload_recount2_sra(metadata_dir, compendium_download_dir)")
+get_ipython().run_cell_magic('R', '-i metadata_dir -i compendium_download_dir', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/download_recount2_data.R'))\n\ndownload_recount2_sra(metadata_dir, compendium_download_dir)")
 
 
 # ### Create raw recount2 compendium data file
@@ -136,7 +136,7 @@ gene_id_filename = os.path.join(local_dir, "ensembl_hgnc_mapping.tsv")
 # In[10]:
 
 
-get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename', '\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n# Input: raw_template_filename, output: gene_id_filename\n\nsource(\'../generic_expression_patterns_modules/process_names.R\')\n\n# Note: This mapping file from ensembl ids to hgnc symbols is based on the library("biomaRt")\n# that gets updated. In order to get the most up-to-date version, you can delete the \n# ensembl_hgnc_mapping file to re-run the script that generates this mapping.\n\nif (file.exists(gene_id_filename) == FALSE) {\n  get_ensembl_symbol_mapping(raw_template_filename, gene_id_filename)\n}')
+get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename', '\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n# Input: raw_template_filename, output: gene_id_filename\n\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/process_names.R\'))\n\n# Note: This mapping file from ensembl ids to hgnc symbols is based on the library("biomaRt")\n# that gets updated. In order to get the most up-to-date version, you can delete the \n# ensembl_hgnc_mapping file to re-run the script that generates this mapping.\n\nif (file.exists(gene_id_filename) == FALSE) {\n  get_ensembl_symbol_mapping(raw_template_filename, gene_id_filename)\n}')
 
 
 # ### Map ensembl gene IDs in template experiment data
