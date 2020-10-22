@@ -20,4 +20,6 @@ project_id	"E-GEOD-33245"
 metadata_colname	'ml_data_source'
 num_simulated	25
 rank_genes_by	"logFC"
+gsea_statistic	'log2FoldChange'
+rank_pathways_by	"padj"
 compare_genes	0

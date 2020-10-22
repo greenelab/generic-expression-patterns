@@ -73,6 +73,8 @@ processed_template_filename = params['processed_template_filename']
 normalized_compendium_filename = params['normalized_compendium_filename']
 scaler_filename = params['scaler_filename']
 col_to_rank_genes = params['rank_genes_by']
+col_to_rank_pathways = params['rank_pathways_by']
+statistic = params['gsea_statistic']
 
 # Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(
@@ -95,6 +97,11 @@ gene_summary_filename = os.path.join(
     dataset_name, 
     f"generic_gene_summary_{project_id}.tsv"
 )
+pathway_summary_filename = os.path.join(
+    base_dir, 
+    dataset_name, 
+    f"generic_pathway_summary_{project_id}.tsv"
+)
 
 
 # ### Simulate experiments using selected template experiment
@@ -109,7 +116,7 @@ gene_summary_filename = os.path.join(
 # In[5]:
 
 
-# Simulate multiple experiments
+"""# Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:           
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -126,13 +133,13 @@ for run_id in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        run_id)
+        run_id)"""
 
 
 # In[6]:
 
 
-# This step modifies the following files:
+"""# This step modifies the following files:
 # "<local_dir>/pseudo_experiments/selected_simulated_data_SRP012656_<n>.txt"
 if os.path.exists(sample_id_metadata_filename):
     # Read in metadata
@@ -146,7 +153,7 @@ if os.path.exists(sample_id_metadata_filename):
         num_runs,
         local_dir,
         project_id
-    )
+    )"""
 
 
 # ### Differential expression analysis
@@ -180,7 +187,7 @@ os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 # In[10]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats_limma(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\nget_DE_stats_limma(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
 # In[11]:
@@ -199,7 +206,7 @@ for i in range(num_runs):
 # In[12]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(\n        local_dir, \n        "pseudo_experiment/selected_simulated_data_",\n        project_id,\n        "_", \n        i,\n        ".txt",\n        sep=""\n    )\n    \n    run_output <- get_DE_stats_limma(\n        metadata_filename,\n        project_id, \n        simulated_data_filename,\n        "simulated",\n        local_dir,\n        i\n    )\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(paste0(base_dir,\'/generic_expression_patterns_modules/DE_analysis.R\'))\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(\n        local_dir, \n        "pseudo_experiment/selected_simulated_data_",\n        project_id,\n        "_", \n        i,\n        ".txt",\n        sep=""\n    )\n    \n    run_output <- get_DE_stats_limma(\n        metadata_filename,\n        project_id, \n        simulated_data_filename,\n        "simulated",\n        local_dir,\n        i\n    )\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
 
 
 # ### Rank genes
@@ -304,6 +311,183 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
+# In[21]:
+
+
+# Load pathway data
+adage_kegg_DB_filename = "https://raw.githubusercontent.com/greenelab/adage/master/Node_interpretation/pseudomonas_KEGG_terms.txt"
+
+
+# In[22]:
+
+
+adage_kegg_DB = pd.read_csv(adage_kegg_DB_filename, sep="\t", header=None)
+adage_kegg_DB.head()
+
+
+# In[23]:
+
+
+adage_kegg_DB.drop(columns=[1], inplace=True)
+adage_kegg_DB.head()
+
+
+# In[24]:
+
+
+adage_kegg_DB[2] = adage_kegg_DB[2].str.split(";").str.join("\t")
+
+
+# In[25]:
+
+
+adage_kegg_DB.head()
+
+
+# In[26]:
+
+
+adage_kegg_DB.shape
+
+
+# In[27]:
+
+
+import csv
+adage_kegg_DB.to_csv("adage_kegg_DB_tmp_filename.gmt", 
+                     quoting=csv.QUOTE_NONE,
+                     escapechar="\\",
+                     index=False,
+                     header=False,
+                     sep="\t"
+                    )
+
+
+# In[28]:
+
+
+with open("adage_kegg_DB_tmp_filename.gmt", "r") as f:
+    temp = f.read()
+
+
+# In[29]:
+
+
+with open("adage_kegg_DB_process_filename.gmt", "w") as of:
+    of.write(temp.replace("\\", ""))
+
+
+# In[30]:
+
+
+adage_kegg_DB_processed_filename = "adage_kegg_DB_process_filename.gmt"
+
+
+# In[31]:
+
+
+# Need to format data into tab-delimited matrix
+# with columns= KEGG pathway name, description, gene ids
+# Each gene ids is tab separated
+
+
+# In[32]:
+
+
+get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i adage_kegg_DB_processed_filename -i statistic -o template_enriched_pathways', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/GSEA_analysis.R'))\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, adage_kegg_DB_processed_filename, statistic)")
+
+
+# In[33]:
+
+
+print(template_enriched_pathways.shape)
+template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj')
+
+
+# In[34]:
+
+
+# Create "<local_dir>/GSEA_stats/" subdirectory
+os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
+
+
+# In[35]:
+
+
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_processed_filename -i num_runs -i statistic', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_file <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_file <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, adage_kegg_DB_processed_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")\n}')
+
+
 # ### Rank pathways 
 
+# In[36]:
+
+
+# Concatenate simulated experiments
+simulated_GSEA_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'GSEA')
+simulated_GSEA_stats_all.set_index('pathway', inplace=True)
+print(simulated_GSEA_stats_all.shape)
+
+
+# In[37]:
+
+
+# Aggregate statistics across all simulated experiments
+simulated_GSEA_summary_stats = calc.aggregate_stats(
+    col_to_rank_pathways,
+    simulated_GSEA_stats_all,
+    'GSEA'
+)
+
+simulated_GSEA_summary_stats.head()
+
+
+# In[38]:
+
+
+# Load association statistics for template experiment
+template_GSEA_stats = template_enriched_pathways.iloc[:, :-1]
+template_GSEA_stats.set_index('pathway', inplace=True)
+
+template_GSEA_stats.head()
+
+# Rank genes in template experiment
+template_GSEA_stats = calc.rank_genes_or_pathways(
+    col_to_rank_pathways,
+    template_GSEA_stats,
+    True
+)
+
+
+# In[39]:
+
+
+# Rank genes in simulated experiments
+simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(
+    col_to_rank_pathways,
+    simulated_GSEA_summary_stats,
+    False
+)
+
+
 # ### Pathway summary table
+
+# In[40]:
+
+
+# Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
+summary_pathway_ranks = process.generate_summary_table(
+    template_GSEA_stats,
+    simulated_GSEA_summary_stats,
+    col_to_rank_pathways,
+    local_dir
+)
+
+summary_pathway_ranks.head()
+
+
+# In[41]:
+
+
+# Create `pathway_summary_filename`
+summary_pathway_ranks.to_csv(pathway_summary_filename, sep='\t')
+
