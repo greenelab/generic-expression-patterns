@@ -4,7 +4,7 @@ library("fgsea")
 
 
 find_enriched_pathways <- function(DE_stats_file,
-                                   hallmark_DB_filename,
+                                   pathway_DB_filename,
                                    statistic) {
 
   # Read in data
@@ -36,7 +36,7 @@ find_enriched_pathways <- function(DE_stats_file,
   # feature 3: decreasing order
   rank_genes <- sort(rank_genes, decreasing = TRUE)
 
-  pathway_DB_data <- gmtPathways(hallmark_DB_filename)
+  pathway_DB_data <- gmtPathways(pathway_DB_filename)
 
   enrich_pathways <- fgsea(pathways = pathway_DB_data,
                            stats = rank_genes,

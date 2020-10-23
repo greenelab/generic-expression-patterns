@@ -7,6 +7,10 @@ processed_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression
 normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/normalized_pseudomonas_compendium_data.tsv"
 shared_genes_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/shared_genes_pseudomonas.pickle"
 scaler_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/scaler_transform_pseudomonas.pickle"
+rank_genes_by	"logFC"
+pathway_DB_filename	"https://raw.githubusercontent.com/greenelab/adage/master/Node_interpretation/pseudomonas_KEGG_terms.txt"
+gsea_statistic	'log2FoldChange'
+rank_pathways_by	"padj"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10
@@ -19,7 +23,3 @@ validation_frac	0.25
 project_id	"E-GEOD-33245"
 metadata_colname	'ml_data_source'
 num_simulated	25
-rank_genes_by	"logFC"
-gsea_statistic	'log2FoldChange'
-rank_pathways_by	"padj"
-compare_genes	0
