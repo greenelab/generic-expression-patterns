@@ -328,7 +328,9 @@ summary_gene_ranks = process.generate_summary_table(
     template_DE_stats,
     simulated_DE_summary_stats,
     col_to_rank_genes,
-    local_dir
+    local_dir,
+    'gene',
+    params
 )
 
 
@@ -494,7 +496,9 @@ summary_pathway_ranks = process.generate_summary_table(
     template_GSEA_stats,
     simulated_GSEA_summary_stats,
     col_to_rank_pathways,
-    local_dir
+    local_dir,
+    'pathway',
+    params
 )
 
 
