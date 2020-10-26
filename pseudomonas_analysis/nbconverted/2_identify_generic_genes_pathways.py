@@ -44,8 +44,6 @@ pandas2ri.activate()
 from ponyo import utils, simulate_expression_data
 from generic_expression_patterns_modules import calc, process
 
-np.random.seed(123)
-
 
 # In[2]:
 
@@ -53,10 +51,10 @@ np.random.seed(123)
 # Read in config variables
 base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
-config_file = os.path.abspath(os.path.join(base_dir,
+config_filename = os.path.abspath(os.path.join(base_dir,
                                            "configs",
                                            "config_pseudomonas_33245.tsv"))
-params = utils.read_config(config_file)
+params = utils.read_config(config_filename)
 
 
 # In[3]:
@@ -73,6 +71,8 @@ processed_template_filename = params['processed_template_filename']
 normalized_compendium_filename = params['normalized_compendium_filename']
 scaler_filename = params['scaler_filename']
 col_to_rank_genes = params['rank_genes_by']
+col_to_rank_pathways = params['rank_pathways_by']
+statistic = params['gsea_statistic']
 
 # Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(
@@ -94,6 +94,11 @@ gene_summary_filename = os.path.join(
     base_dir, 
     dataset_name, 
     f"generic_gene_summary_{project_id}.tsv"
+)
+pathway_summary_filename = os.path.join(
+    base_dir, 
+    dataset_name, 
+    f"generic_pathway_summary_{project_id}.tsv"
 )
 
 
@@ -180,7 +185,7 @@ os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 # In[10]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nget_DE_stats_limma(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\nget_DE_stats_limma(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
 # In[11]:
@@ -199,7 +204,7 @@ for i in range(num_runs):
 # In[12]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(\'../generic_expression_patterns_modules/DE_analysis.R\')\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(\n        local_dir, \n        "pseudo_experiment/selected_simulated_data_",\n        project_id,\n        "_", \n        i,\n        ".txt",\n        sep=""\n    )\n    \n    run_output <- get_DE_stats_limma(\n        metadata_filename,\n        project_id, \n        simulated_data_filename,\n        "simulated",\n        local_dir,\n        i\n    )\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(paste0(base_dir,\'/generic_expression_patterns_modules/DE_analysis.R\'))\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(\n        local_dir, \n        "pseudo_experiment/selected_simulated_data_",\n        project_id,\n        "_", \n        i,\n        ".txt",\n        sep=""\n    )\n    \n    run_output <- get_DE_stats_limma(\n        metadata_filename,\n        project_id, \n        simulated_data_filename,\n        "simulated",\n        local_dir,\n        i\n    )\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
 
 
 # ### Rank genes
@@ -277,7 +282,9 @@ summary_gene_ranks = process.generate_summary_table(
     template_DE_stats,
     simulated_DE_summary_stats,
     col_to_rank_genes,
-    local_dir
+    local_dir,
+    'gene',
+    params
 )
 
 summary_gene_ranks.head()
@@ -304,6 +311,134 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
+# In[21]:
+
+
+# Load pathway data
+adage_kegg_DB_filename = params['pathway_DB_filename']
+
+
+# In[22]:
+
+
+# Need to format data into tab-delimited matrix
+# with columns= KEGG pathway name, description, gene ids
+# Each gene ids is tab separated
+adage_kegg_DB_processed_filename = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    "adage_kegg_DB_process_filename.gmt"
+)
+process.format_pseudomonas_pathway_DB(adage_kegg_DB_filename, local_dir, adage_kegg_DB_processed_filename)
+
+
+# In[23]:
+
+
+get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i adage_kegg_DB_processed_filename -i statistic -o template_enriched_pathways', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/GSEA_analysis.R'))\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, adage_kegg_DB_processed_filename, statistic)")
+
+
+# In[24]:
+
+
+print(template_enriched_pathways.shape)
+template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj').head()
+
+
+# In[25]:
+
+
+# Create "<local_dir>/GSEA_stats/" subdirectory
+os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
+
+
+# In[26]:
+
+
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_processed_filename -i num_runs -i statistic', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, adage_kegg_DB_processed_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
+
+
 # ### Rank pathways 
 
+# In[27]:
+
+
+# Concatenate simulated experiments
+simulated_GSEA_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'GSEA')
+simulated_GSEA_stats_all.set_index('pathway', inplace=True)
+print(simulated_GSEA_stats_all.shape)
+
+
+# In[28]:
+
+
+# Aggregate statistics across all simulated experiments
+simulated_GSEA_summary_stats = calc.aggregate_stats(
+    col_to_rank_pathways,
+    simulated_GSEA_stats_all,
+    'GSEA'
+)
+
+simulated_GSEA_summary_stats.sort_values(by=('padj', 'median')).head()
+
+
+# In[29]:
+
+
+# Load association statistics for template experiment
+template_GSEA_stats = template_enriched_pathways.iloc[:, :-1]
+template_GSEA_stats.set_index('pathway', inplace=True)
+
+template_GSEA_stats.head()
+
+# Rank genes in template experiment
+template_GSEA_stats = calc.rank_genes_or_pathways(
+    col_to_rank_pathways,
+    template_GSEA_stats,
+    True
+)
+
+
+# In[30]:
+
+
+# Rank genes in simulated experiments
+simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(
+    col_to_rank_pathways,
+    simulated_GSEA_summary_stats,
+    False
+)
+
+
 # ### Pathway summary table
+
+# In[31]:
+
+
+# Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
+summary_pathway_ranks = process.generate_summary_table(
+    template_GSEA_stats,
+    simulated_GSEA_summary_stats,
+    col_to_rank_pathways,
+    local_dir,
+    'pathway',
+    params
+)
+
+summary_pathway_ranks.sort_values(by='Rank (simulated)', ascending=False).head()
+
+
+# In[32]:
+
+
+# Create `pathway_summary_filename`
+summary_pathway_ranks.to_csv(pathway_summary_filename, sep='\t')
+
+
+# **Quick check:**
+# 
+# Looks like Ribosomes are found to be significantly differentiated in the template and across 25 simulated experiments. So this pathway looks to be generic, which is consistent with findings from [Crow. et. al.](https://www.pnas.org/content/116/13/6491.abstract), using Human data. This is also consistent with [paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2679180/) which observed that Ribosome proteins have many different functions in *S. cerevisiae*, which might explain their variability across a wide range of contexts.
+# 
+# * Need to think about why it might make sense that Ribosomes being generic in Humans would also imply that they are generic in P. aeruginosa.

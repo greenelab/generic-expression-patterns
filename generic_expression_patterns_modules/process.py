@@ -7,6 +7,7 @@ This script provide supporting functions to run analysis notebooks.
 
 import os
 import pickle
+import csv
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -19,10 +20,11 @@ from generic_expression_patterns_modules import calc
 from ponyo import simulate_expression_data
 
 # Data processing functions including:
-# * functions to map ensembl gene ids to hgnc symbols
-# * functions to remove subsets of samples
-# * functions to transform data into integer for downstream DE analysis
-# * functions to normalize data
+# * function to map ensembl gene ids to hgnc symbols
+# * function to remove subsets of samples
+# * function to transform data into integer for downstream DE analysis
+# * function to normalize data
+# * function to format pseudomonas pathway data to input to GSEA
 
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
@@ -572,12 +574,55 @@ def process_raw_compendium_recount2(
     normalize_compendium(mapped_filename, normalized_filename, scaler_filename)
 
 
+def format_pseudomonas_pathway_DB(pathway_DB_filename, local_dir, out_filename):
+    """
+    This function reads in pseudomonas pathway data from 
+    `pathway_DB_filename` and formats and outputs it
+    to `output_filename` in order to be
+    used in GSEA_analysis.R
+
+    Note: Currently this function is specifically
+    customized to expect pathway_DB_filename = 
+    "https://raw.githubusercontent.com/greenelab/adage/master/Node_interpretation/pseudomonas_KEGG_terms.txt"
+
+    """
+    # Read in pathway data
+    pa_pathway_DB = pd.read_csv(
+        pathway_DB_filename,
+        names=["pathway id", "num genes", "genes"],
+        sep="\t",
+        header=None,
+    )
+
+    # Drop extra column
+    pa_pathway_DB.drop(columns=["num genes"], inplace=True)
+
+    # Make genes tab-separated
+    pa_pathway_DB["genes"] = pa_pathway_DB["genes"].str.split(";").str.join("\t")
+
+    # Need to temporarily write data to file in order
+    # to remove extra '\'
+    tmp_filename = os.path.join(local_dir, "pa_pathway_DB_tmp_filename.gmt")
+    pa_pathway_DB.to_csv(
+        tmp_filename,
+        quoting=csv.QUOTE_NONE,
+        escapechar="\\",
+        index=False,
+        header=False,
+        sep="\t",
+    )
+    with open(tmp_filename, "r") as ihf:
+        tmp = ihf.read()
+    with open(out_filename, "w") as ohf:
+        ohf.write(tmp.replace("\\", ""))
+
+
 # Functions to format intermediate data files to prepare to compare gene/pathway
 # ranking:
-# * functions to concatenate simulated data results
-# * functions to get absolute value of test statistics to use for ranking
-# * functions to generate summary data files
-# * functions to scale ranking
+# * function to concatenate simulated data results
+# * function to get absolute value of test statistics to use for ranking
+# * function to generate summary data files
+# * function to scale ranking
 
 
 def concat_simulated_data(local_dir, num_runs, project_id, data_type):
@@ -653,7 +698,12 @@ def abs_value_stats(simulated_DE_stats_all):
 
 
 def generate_summary_table(
-    template_DE_stats, simulated_DE_summary_stats, col_to_rank, local_dir
+    template_DE_stats,
+    simulated_DE_summary_stats,
+    col_to_rank,
+    local_dir,
+    pathway_or_gene,
+    params,
 ):
     """
     Generate a summary table of the template and summary statistics
@@ -668,6 +718,10 @@ def generate_summary_table(
         DE statistic to use to rank genes
     local_dir: str
         path to local machine where output file will be stored
+    pathway_or_gene: str
+        'pathway' or 'gene' to indicate which analysis
+    params: dict
+        parameter dictionary read in by config file
 
     Returns
     -------
@@ -692,23 +746,35 @@ def generate_summary_table(
     count_simulated = template_simulated_DE_stats[(col_to_rank, "count")]
     rank_simulated = template_simulated_DE_stats[("ranking", "")]
 
+    # Set variable strings depends on analysis
+    if pathway_or_gene.lower() == "pathway":
+        index_header = "Pathway ID"
+        test_statistic = params["rank_pathways_by"]
+
+    elif pathway_or_gene.lower() == "gene":
+        index_header = "Gene ID"
+        test_statistic = params["rank_genes_by"]
+        if test_statistic in ["logFC", "log2FoldChange"]:
+            test_statistic = f"abs({test_statistic})"
+
+    # Create summary table
     summary = pd.DataFrame(
         data={
-            "Gene ID": template_simulated_DE_stats.index,
+            index_header: template_simulated_DE_stats.index,
             "Adj P-value (Real)": template_simulated_DE_stats[col_name],
             "Rank (Real)": template_simulated_DE_stats["ranking"],
-            "Test statistic (Real)": template_simulated_DE_stats[col_to_rank],
+            f"{test_statistic} (Real)": template_simulated_DE_stats[col_to_rank],
             "Median adj p-value (simulated)": median_pval_simulated,
             "Rank (simulated)": rank_simulated,
-            "Mean test statistic (simulated)": mean_test_simulated,
+            f"Mean {test_statistic} (simulated)": mean_test_simulated,
             "Std deviation (simulated)": std_test_simulated,
             "Number of experiments (simulated)": count_simulated,
         }
     )
     summary["abs(Z score)"] = (
         abs(
-            summary["Test statistic (Real)"]
-            - summary["Mean test statistic (simulated)"]
+            summary[f"{test_statistic} (Real)"]
+            - summary[f"Mean {test_statistic} (simulated)"]
         )
     ) / summary["Std deviation (simulated)"]
 
@@ -1110,9 +1176,9 @@ def add_pseudomonas_gene_name_col(summary_gene_ranks, base_dir):
 
 # Functions related to visualizing trends in generic
 # genes/pathways found
-# * functions to generate summary dataframes
-# * functions to plot trends
-# * functions to compare groups of genes
+# * function to generate summary dataframes
+# * function to plot trends
+# * function to compare groups of genes
 
 
 def merge_abs_raw_dfs(abs_df, raw_df, condition):
