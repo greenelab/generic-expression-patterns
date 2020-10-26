@@ -11,6 +11,9 @@ scaler_filename	"Generic_expression_patterns_test/scaler_transform_human.pickle"
 reference_gene_filename	"https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
 reference_gene_name_col	"Gene_Name"
 reference_rank_col	"DE_Prior_Rank"
+rank_genes_by	"log2FoldChange"
+gsea_statistic	'logFC'
+rank_pathways_by	"padj"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	5
@@ -23,8 +26,4 @@ validation_frac	0.1
 project_id	"SRP012656"
 metadata_colname	'run'
 num_simulated	2
-rank_genes_by	"log2FoldChange"
 num_recount2_experiments_to_download	3
-compare_genes	1
-gsea_statistic	'logFC'
-rank_pathways_by	"padj"

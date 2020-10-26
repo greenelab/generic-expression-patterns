@@ -76,7 +76,7 @@ os.makedirs(template_download_dir, exist_ok=True)
 # In[12]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i template_download_dir -i raw_template_filename -i base_dir', "\nsource(paste(base_dir, 'generic_expression_patterns_modules/download_recount2_data.R', sep='/'))\n\nget_recount2_template_experiment(project_id, template_download_dir, raw_template_filename)")
+get_ipython().run_cell_magic('R', '-i project_id -i template_download_dir -i raw_template_filename -i base_dir', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/download_recount2_data.R'))\n\nget_recount2_template_experiment(project_id, template_download_dir, raw_template_filename)")
 
 
 # ## Test: Renaming gene ids
@@ -91,7 +91,7 @@ gene_id_filename = os.path.join(base_dir, dataset_name, "data", "metadata", "ens
 # In[14]:
 
 
-get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename -i base_dir', '\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n# Input: raw_template_filename, output: gene_id_filename\n\nsource(paste(base_dir, \'/generic_expression_patterns_modules/process_names.R\', sep=\'/\'))\n\n# Note: This mapping file from ensembl ids to hgnc symbols is based on the library("biomaRt")\n# that gets updated. In order to get the most up-to-date version, you can delete the \n# ensembl_hgnc_mapping file to re-run the script that generates this mapping.\n\nif (file.exists(gene_id_filename) == FALSE) {\n    get_ensembl_symbol_mapping(raw_template_filename, gene_id_filename)\n}')
+get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename -i base_dir', '\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n# Input: raw_template_filename, output: gene_id_filename\n\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/process_names.R\'))\n\n# Note: This mapping file from ensembl ids to hgnc symbols is based on the library("biomaRt")\n# that gets updated. In order to get the most up-to-date version, you can delete the \n# ensembl_hgnc_mapping file to re-run the script that generates this mapping.\n\nif (file.exists(gene_id_filename) == FALSE) {\n    get_ensembl_symbol_mapping(raw_template_filename, gene_id_filename)\n}')
 
 
 # ## Test: processing template data
