@@ -344,7 +344,7 @@ get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i 
 
 
 print(template_enriched_pathways.shape)
-template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj')
+template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj').head()
 
 
 # In[25]:
@@ -439,4 +439,6 @@ summary_pathway_ranks.to_csv(pathway_summary_filename, sep='\t')
 
 # **Quick check:**
 # 
-# Looks like Ribosomes are found to be significantly differentiated in the template and across 25 simulated experiments. So this pathway looks to be generic, which is consistent with [Crow. et. al.](https://www.pnas.org/content/116/13/6491.abstract)
+# Looks like Ribosomes are found to be significantly differentiated in the template and across 25 simulated experiments. So this pathway looks to be generic, which is consistent with findings from [Crow. et. al.](https://www.pnas.org/content/116/13/6491.abstract), using Human data. This is also consistent with [paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2679180/) which observed that Ribosome proteins have many different functions in *S. cerevisiae*, which might explain their variability across a wide range of contexts.
+# 
+# * Need to think about why it might make sense that Ribosomes being generic in Humans would also imply that they are generic in P. aeruginosa.

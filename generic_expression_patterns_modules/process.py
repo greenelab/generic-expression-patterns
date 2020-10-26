@@ -587,13 +587,18 @@ def format_pseudomonas_pathway_DB(pathway_DB_filename, local_dir, out_filename):
 
     """
     # Read in pathway data
-    pa_pathway_DB = pd.read_csv(pathway_DB_filename, sep="\t", header=None)
+    pa_pathway_DB = pd.read_csv(
+        pathway_DB_filename,
+        names=["pathway id", "num genes", "genes"],
+        sep="\t",
+        header=None,
+    )
 
     # Drop extra column
-    pa_pathway_DB.drop(columns=[1], inplace=True)
+    pa_pathway_DB.drop(columns=["num genes"], inplace=True)
 
     # Make genes tab-separated
-    pa_pathway_DB[2] = pa_pathway_DB[2].str.split(";").str.join("\t")
+    pa_pathway_DB["genes"] = pa_pathway_DB["genes"].str.split(";").str.join("\t")
 
     # Need to temporarily write data to file in order
     # to remove extra '\'
