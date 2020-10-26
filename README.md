@@ -113,7 +113,7 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | shared_genes_filename | str: Pickle file on your local machine where to write and store genes that will be examined. These genes are the intersection of genes in your dataset versus a reference to ensure that there are not Nans in downstream analysis|
 | scaler_filename | str: Pickle file on your local machine where to write and store normalization transform to be used to process data for visualization|
 | reference_gene_filename* | str: File that contains reference genes and their rank|
-| refrence_gene_name_col| str: Name of the column header that contains the reference genes. This is found in reference_gene_filename*|
+| reference_gene_name_col| str: Name of the column header that contains the reference genes. This is found in reference_gene_filename*|
 | reference_rank_col | str: Name of the column header that contains the reference gene ranks. This is found in reference_gene_filename*|
 | rank_genes_by | str:  Name of column header from DE association statistic results. This column will be use to rank genes. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
 | pathway_DB_filename* | str: File that contains pathways to use for GSEA|
