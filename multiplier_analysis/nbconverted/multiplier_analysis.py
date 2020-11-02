@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Multiplier analysis
@@ -9,15 +9,15 @@
 # 
 # While the PLIER model was trained on specific datasets, MULTIPLIER extended this approach to all of recount2, where the latent variables should correspond to specific pathways or gene sets of interest. Therefore, we will look at the coverage of generic genes versus specific genes across these MULTIPLIER latent variables.
 
-# In[1]:
+# In[19]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 import os
-import re
 import pandas as pd
+import seaborn as sns
 
 from generic_expression_patterns_modules import process
 
@@ -33,68 +33,21 @@ data_dir = os.path.join(base_dir, "human_general_analysis")
 # In[ ]:
 
 
-# TO DO: Move all functions to file
+# Output file
+output_figure_filename = "LV_coverage.svg"
 
+
+# ## Get gene data
 
 # In[3]:
 
 
-# Read in all files of the form "generic_gene_summary_*"
-# For each file, return list of generic genes and list of specific genes
-# Should it return dictionary of lists?
-def get_gene_summary_files(data_dir):
-    files = [os.path.join(data_dir,f) for f in os.listdir(data_dir) if re.match(r'generic_gene_summary_*', f)]
-    return files
-
-ls_data_files = get_gene_summary_files(data_dir)
-
-
-# In[4]:
-
-
-ls_data_files
+# Get all gene summary file paths
+ls_data_files = process.get_gene_summary_files(data_dir)
 
 
 # In[5]:
 
-
-def get_generic_specific_genes(list_files, z_threshold):
-    ls_genes = []
-    for file in list_files:
-        print(f"Reading data for {file}")
-        data = pd.read_csv(file, sep="\t", index_col=0, header=0)
-        print(data.shape)
-        
-        # Get predicted specific DEGs using z-score cutoff
-        ls_specific_genes = list(
-            (
-                data[(data[f"Test statistic (Real)"] > 1)
-                    & (data[f"abs(Z score)"] > z_threshold
-                    )
-                ]
-                .set_index("Gene ID")
-                .index
-            )
-        )
-        print(f"No. of specific DEGs using z-score: {len(ls_specific_genes)}")
-
-        # Get predicted generic DEGs using z-score cutoff
-        ls_generic_genes = list(
-            (
-                data[
-                    (data[f"Test statistic (Real)"] > 1)
-                    & (data[f"abs(Z score)"]< z_threshold
-                    )
-                ]
-                .set_index("Gene ID")
-                .index
-            )
-        )
-        print(f"No. of generic DEGs using z-score: {len(ls_generic_genes)}")
-    
-        ls_genes.append([ls_generic_genes, ls_specific_genes])
-    
-    return ls_genes
 
 # TO DO: add more accurate description here
 # Get predicted generic DEGs using z-score cutoff
@@ -107,10 +60,19 @@ def get_generic_specific_genes(list_files, z_threshold):
 # the number of P. aeruginosa genes
 
 zscore_threshold = 4.68
-ls_genes_out = get_generic_specific_genes(ls_data_files, zscore_threshold)
+ls_genes_out = process.get_generic_specific_genes(ls_data_files, zscore_threshold)
 
 # TO DO:
 # Is this how we want to define the genes? ranking?
+
+
+# ## Get LV data and filter
+
+# In[ ]:
+
+
+# TO DO
+# Filter multiplier matrix somehow
 
 
 # In[6]:
@@ -135,15 +97,25 @@ print(multiplier_model_z.shape)
 multiplier_model_z.head()
 
 
-# In[17]:
+# ## Quick looks at the data
+
+# In[8]:
 
 
 # Get a rough sense for how many genes contribute to a given LV
-# (i.e. how many genes have a value > 0 per LV)
+# (i.e. how many genes have a value > 0 for a given LV)
 (multiplier_model_z > 0).sum()
 
 
-# In[15]:
+# In[9]:
+
+
+# Get a rough sense for how many LV have a nonzero association with a known pathway/gene set
+# (i.e. how many genes have a value > 0 per LV)
+((multiplier_model_u > 0).sum()>0).sum()
+
+
+# In[10]:
 
 
 # One off just to get a sense for how many genes are being compared
@@ -157,19 +129,49 @@ print(len(our_genes))
 print(len(shared_genes))
 
 
-# In[9]:
+# ## Gene coverage of LV
+
+# In[17]:
 
 
-# Input: list of generic genes, specific genes, LV matrix
-# Compare coverage of generic genes vs LV
-# Compare coverage of specific genes vs LV
-# Find genes that have a nonzero contribution to LV
-# Return number of LV with at least one gene
+# Find the number of generic and specific genes that have a nonzero contribution to LV
+generic_cov = []
+specific_cov = []
+
+for ifile in range(len(ls_data_files)):
+    generic_genes = ls_genes_out[ifile][0]
+    specific_genes = ls_genes_out[ifile][1]
+    
+    generic_cov_i, specific_cov_i = process.get_LV_coverage(generic_genes, specific_genes, multiplier_model_z)
+    
+    generic_cov.append(generic_cov_i)
+    specific_cov.append(specific_cov_i)
+    
+gene_cov = pd.DataFrame({'coverage': generic_cov + specific_cov,
+                         'gene type': ['generic']*len(ls_data_files) + ['specific']*len(ls_data_files) 
+                      })
 
 
-# In[10]:
+# In[21]:
 
 
 # Plot coverage distribution given list of generic coverage, specific coverage
-# save plot
+print(generic_cov)
+print(specific_cov)
+
+sns.boxplot(data=gene_cov, x='gene type', y='coverage')
+
+
+# In[ ]:
+
+
+# Save plot
+fig.savefig(
+        output_figure_filename,
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )
 

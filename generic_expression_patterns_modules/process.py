@@ -8,6 +8,7 @@ This script provide supporting functions to run analysis notebooks.
 import os
 import pickle
 import csv
+import re
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -1593,3 +1594,70 @@ def plot_venn(degs_traditional, degs_specific, degs_generic):
         set_labels=("Traditional", "Generic"),
         ax=axes[1],
     )
+
+
+# Functions for multiplier analysis
+def get_gene_summary_files(data_dir):
+    """
+    This function returns a list of file paths for all files
+    of the form `generic_gene_summary_*` in data_dir
+    """
+    files = [
+        os.path.join(data_dir, f)
+        for f in os.listdir(data_dir)
+        if re.match(r"generic_gene_summary_*", f)
+    ]
+    return files
+
+
+def get_generic_specific_genes(list_files, z_threshold):
+    """
+    This function returns a list of generic genes and specific
+    genes, based on the statistics contained within the
+    summary dataframes
+    """
+    ls_genes = []
+    for file in list_files:
+        print(f"Reading data for {file}")
+        data = pd.read_csv(file, sep="\t", index_col=0, header=0)
+        print(data.shape)
+
+        # Get predicted specific DEGs using z-score cutoff
+        ls_specific_genes = list(
+            (
+                data[
+                    (data["Test statistic (Real)"] > 1)
+                    & (data["abs(Z score)"] > z_threshold)
+                ]
+                .set_index("Gene ID")
+                .index
+            )
+        )
+        print(f"No. of specific DEGs using z-score: {len(ls_specific_genes)}")
+
+        # Get predicted generic DEGs using z-score cutoff
+        ls_generic_genes = list(
+            (
+                data[
+                    (data["Test statistic (Real)"] > 1)
+                    & (data["abs(Z score)"] < z_threshold)
+                ]
+                .set_index("Gene ID")
+                .index
+            )
+        )
+        print(f"No. of generic DEGs using z-score: {len(ls_generic_genes)}")
+
+        ls_genes.append([ls_generic_genes, ls_specific_genes])
+
+    return ls_genes
+
+
+def get_LV_coverage(ls_generic_genes, ls_specific_genes, LV_matrix):
+    """
+    Returns the number of LVs with at least 1 nonzero gene contribution 
+    """
+    generic_gene_cov = ((LV_matrix.loc[ls_generic_genes] > 0).sum() > 0).sum()
+    specific_gene_cov = ((LV_matrix.loc[ls_specific_genes] > 0).sum() > 0).sum()
+
+    return generic_gene_cov, specific_gene_cov
