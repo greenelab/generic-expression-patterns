@@ -1,4 +1,4 @@
-	Gene ID	Adj P-value (Real)	Rank (Real)	Test statistic (Real)	Median adj p-value (simulated)	Rank (simulated)	Mean test statistic (simulated)	Std deviation (simulated)	Number of experiments (simulated)	abs(Z score)
+	Gene ID	Adj P-value (Real)	Rank (Real)	abs(log2FoldChange) (Real)	Median adj p-value (simulated)	Rank (simulated)	Mean abs(log2FoldChange) (simulated)	Std deviation (simulated)	Number of experiments (simulated)	abs(Z score)
 PAX7	PAX7	5.94766566495663e-13	17568.0	10.6941243975185	0.00023448820514759952	15459.0	2.5869055042621754	2.3737992255869975	21	3.415292584928516
 PRAME	PRAME	2.96345053790788e-15	17567.0	8.66496299445091	1.00273610177981e-05	16472.0	2.7498854847545084	2.5655191585284496	23	2.3056064461780195
 SLCO1B3	SLCO1B3	0.0005290056455446299	17566.0	8.32567155901911	1.689323153281722e-08	17678.0	4.15649957236059	3.052566351099292	23	1.3657924209107248
