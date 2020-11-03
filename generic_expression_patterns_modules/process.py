@@ -1610,11 +1610,36 @@ def get_gene_summary_files(data_dir):
     return files
 
 
+def process_multiplier_model_z(multiplier_model_z, multiplier_model_summary):
+    """
+    This function filters multiplier_model_z matrix to only
+    include those LV that are significantly associated with
+    a pathway or gene set (FDR < 0.05 in multiplier_model_summary)
+
+    This multiplier_model_summary was generated from the
+    https://github.com/greenelab/multi-plier/blob/7f4745847b45edf8fef3a49893843d9d40c258cf/23-explore_AAV_recount_LVs.Rmd
+    """
+    ls_significant_LVs = list(
+        f"LV{i}"
+        for i in multiplier_model_summary[multiplier_model_summary["FDR"] < 0.05][
+            "LV index"
+        ].unique()
+    )
+
+    multiplier_model_z_filtered = multiplier_model_z[ls_significant_LVs]
+
+    return multiplier_model_z_filtered
+
+
 def get_generic_specific_genes(list_files, z_threshold):
     """
     This function returns a list of generic genes and specific
     genes, based on the statistics contained within the
     summary dataframes
+
+    Here genes are determined as generic or specific based on their
+    z-score (i.e. how much gene's differential expression differs between
+    template vs null set)
     """
     ls_genes = []
     for file in list_files:
@@ -1624,27 +1649,13 @@ def get_generic_specific_genes(list_files, z_threshold):
 
         # Get predicted specific DEGs using z-score cutoff
         ls_specific_genes = list(
-            (
-                data[
-                    (data["Test statistic (Real)"] > 1)
-                    & (data["abs(Z score)"] > z_threshold)
-                ]
-                .set_index("Gene ID")
-                .index
-            )
+            (data[(data["abs(Z score)"] > z_threshold)].set_index("Gene ID").index)
         )
         print(f"No. of specific DEGs using z-score: {len(ls_specific_genes)}")
 
         # Get predicted generic DEGs using z-score cutoff
         ls_generic_genes = list(
-            (
-                data[
-                    (data["Test statistic (Real)"] > 1)
-                    & (data["abs(Z score)"] < z_threshold)
-                ]
-                .set_index("Gene ID")
-                .index
-            )
+            (data[(data["abs(Z score)"] < z_threshold)].set_index("Gene ID").index)
         )
         print(f"No. of generic DEGs using z-score: {len(ls_generic_genes)}")
 
@@ -1653,11 +1664,32 @@ def get_generic_specific_genes(list_files, z_threshold):
     return ls_genes
 
 
+def process_generic_specific_gene_lists(ls_generic_genes, ls_specific_genes, LV_matrix):
+    """
+    This function returns the list of generic genes and specific genes
+    that were included in the multiplier analysis. 
+
+    This prevents indexing by a gene that doesn't exist and resulting in NA values
+    """
+    multiplier_genes = list(LV_matrix.index)
+
+    generic_genes_processed = list(set(multiplier_genes).intersection(ls_generic_genes))
+
+    specific_genes_processed = list(
+        set(multiplier_genes).intersection(ls_specific_genes)
+    )
+
+    return generic_genes_processed, specific_genes_processed
+
+
 def get_LV_coverage(ls_generic_genes, ls_specific_genes, LV_matrix):
     """
-    Returns the number of LVs with at least 1 nonzero gene contribution 
+    Returns the list of LVs with at least 1 nonzero gene contribution
     """
-    generic_gene_cov = ((LV_matrix.loc[ls_generic_genes] > 0).sum() > 0).sum()
-    specific_gene_cov = ((LV_matrix.loc[ls_specific_genes] > 0).sum() > 0).sum()
+    LV_matrix_series = (LV_matrix.loc[ls_generic_genes] > 0).sum() > 0
+    generic_gene_cov = LV_matrix_series[LV_matrix_series].index
+
+    LV_matrix_series = (LV_matrix.loc[ls_specific_genes] > 0).sum() > 0
+    specific_gene_cov = LV_matrix_series[LV_matrix_series].index
 
     return generic_gene_cov, specific_gene_cov
