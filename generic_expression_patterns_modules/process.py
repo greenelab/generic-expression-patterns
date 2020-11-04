@@ -1693,3 +1693,41 @@ def get_LV_coverage(ls_generic_genes, ls_specific_genes, LV_matrix):
     specific_gene_cov = LV_matrix_series[LV_matrix_series].index
 
     return generic_gene_cov, specific_gene_cov
+
+
+def create_LV_df(ls_generic_LVs, ls_specific_LVs, multiplier_model_summary):
+    """
+    This function creates and saves 3 dataframes:
+    1. Significant pathways associated with shared LVs
+    2. Significant pathways associated with unique generic LVs
+    3. Significant pathways associated with unique specific LVs
+    """
+    shared_LVs = set(ls_generic_LVs).intersection(ls_specific_LVs)
+    generic_LVs = set(ls_generic_LVs).difference(ls_specific_LVs)
+    specific_LVs = set(ls_specific_LVs).difference(ls_generic_LVs)
+
+    all_LVs = [list(shared_LVs), list(generic_LVs), list(specific_LVs)]
+
+    # Use ids to keep track of group:
+    # 0: shared
+    # 1: generic only
+    # 2: specific only
+
+    grp_dict = {0: "shared", 1: "generic_only", 2: "specific_only"}
+
+    for LV_grp in range(len(all_LVs)):
+        if len(all_LVs[LV_grp]) > 0:
+            # Parse LV id
+            LV_ids = [int(i.split("LV")[-1]) for i in all_LVs[LV_grp]]
+
+            LV_df = multiplier_model_summary[
+                (multiplier_model_summary["LV index"].isin(LV_ids))
+                & (multiplier_model_summary["FDR"] < 0.05)
+            ]
+
+            output_filename = f"{grp_dict[LV_grp]}_LV_summary.tsv"
+            LV_df.to_csv(output_filename, sep="\t")
+
+        else:
+            print(f"No LVs in group: {grp_dict[LV_grp]}")
+
