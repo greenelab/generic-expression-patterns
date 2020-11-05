@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# # Multiplier analysis
+# # Coverage of MULTIPLIER LV
 # 
 # The goal of this notebook is to examine why genes were found to be generic. Specifically, this notebook is trying to answer the question: Are generic genes found in more multiplier latent variables compared to specific genes?
 # 
@@ -63,8 +63,7 @@ ls_data_files = process.get_gene_summary_files(data_dir)
 # In[5]:
 
 
-# TO DO: add more accurate description here
-# Get predicted generic DEGs using z-score cutoff
+# Identify generic and specific genes using z-score
 # Z-score cutoff was found by calculating invnorm(0.05/17754). 
 # To do this in python you can use the following code:
 # from scipy.stats import norm
@@ -75,9 +74,6 @@ ls_data_files = process.get_gene_summary_files(data_dir)
 
 zscore_threshold = 4.68
 ls_genes_out = process.get_generic_specific_genes(ls_data_files, zscore_threshold)
-
-# TO DO:
-# Is this how we want to define the genes? ranking?
 
 
 # ## Get LV data and filter
@@ -103,6 +99,7 @@ multiplier_model_summary.head()
 # In[8]:
 
 
+# Only select LVs that are signficantly associated with some pathways or gene set (i.e. FDR < 0.05)
 multiplier_model_z_processed = process.process_multiplier_model_z(multiplier_model_z, multiplier_model_summary)
 
 
@@ -171,7 +168,7 @@ venn2([set(generic_cov_ls), set(specific_cov_ls)],
      )
 
 
-# In[48]:
+# In[13]:
 
 
 # Create table of unique generic LVs, unique specific LVs, shared LVs
@@ -212,21 +209,29 @@ gene_cov = pd.DataFrame({'Proportion of significantly associated LVs covered': g
                       })
 
 
-# In[15]:
+# In[42]:
 
 
 # Plot coverage distribution given list of generic coverage, specific coverage
 print(generic_cov)
 print(specific_cov)
 
-sns.boxplot(data=gene_cov, x='gene type', y='Proportion of significantly associated LVs covered')
+import textwrap
+fig = sns.boxplot(data=gene_cov, 
+                  x='gene type', 
+                  y='Proportion of significantly associated LVs covered', 
+                  palette=['grey','powderblue'])
+fig.set_xlabel("Gene Type",fontsize=14)
+fig.set_ylabel(textwrap.fill("Proportion of significantly associated LVs covered", width=30),fontsize=14)
+fig.tick_params(labelsize=14)
+fig.set_title("")
 
 
-# In[16]:
+# In[17]:
 
 
 # Save plot
-fig.savefig(
+fig.figure.savefig(
         output_figure_filename,
         format="svg",
         bbox_inches="tight",
@@ -235,3 +240,10 @@ fig.savefig(
         dpi=300,
     )
 
+
+# **Takeaway:**
+# * On average, specific genes cover fewer pathway-associated LVs compared to generic genes, which were found to be linked to all pathway-associated LVs.
+# * This difference in coverage is correlated with the fact that there 1-6 specific genes identified compared to the 6000 generic genes found.
+# * Some of the LVs that were only found to have generic genes (see [table](generic_only_LV_summary.tsv)) include mainly immune response pathways (monocytes, mast cell activation), wound healing (collagen formation), cell signaling (focal adhesion, integrin1) 
+# 
+# **Overall, it looks like generic genes are associated with many pathways, acting as *gene hubs*, which is why they are "generic"**
