@@ -41,6 +41,8 @@ import pandas as pd
 import numpy as np
 import pickle
 
+np.random.seed(123)
+
 from rpy2.robjects import pandas2ri
 pandas2ri.activate()
 
@@ -318,7 +320,9 @@ summary_gene_ranks = process.generate_summary_table(
     template_DE_stats,
     simulated_DE_summary_stats,
     col_to_rank_genes,
-    local_dir
+    local_dir,
+    'gene',
+    params
 )
 
 summary_gene_ranks.head()
@@ -395,7 +399,7 @@ os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
 # In[27]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir', '\nsource(paste(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
 
 
 # ### Rank pathways 
@@ -460,7 +464,9 @@ summary_pathway_ranks = process.generate_summary_table(
     template_GSEA_stats,
     simulated_GSEA_summary_stats,
     col_to_rank_pathways,
-    local_dir
+    local_dir,
+    'pathway',
+    params
 )
 
 summary_pathway_ranks.head()
@@ -541,7 +547,7 @@ powers_rank_processed_filename = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_filename, sep="\t", )
 
 
-# In[39]:
+# In[38]:
 
 
 figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"
