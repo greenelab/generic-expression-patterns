@@ -1602,10 +1602,7 @@ def get_gene_summary_files(data_dir):
     This function returns a list of file paths for all files
     of the form `generic_gene_summary_*` in data_dir
     """
-    files = [
-        os.path.join(data_dir, f)
-        for f in os.listdir(data_dir)
-        if re.match(r"generic_gene_summary_*", f)
+    return glob.glob('{data_dir}/generic_gene_summary_*')
     ]
     return files
 
@@ -1730,4 +1727,3 @@ def create_LV_df(ls_generic_LVs, ls_specific_LVs, multiplier_model_summary):
 
         else:
             print(f"No LVs in group: {grp_dict[LV_grp]}")
-
