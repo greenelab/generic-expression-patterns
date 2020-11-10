@@ -1,11 +1,11 @@
 
 # coding: utf-8
 
-# # Coverage of MULTIPLIER LV
+# # Coverage of MultiPLIER LV
 # 
 # The goal of this notebook is to examine why genes were found to be generic. Specifically, this notebook is trying to answer the question: Are generic genes found in more multiplier latent variables compared to specific genes?
 # 
-# The PLIER model performs a matrix factorization of gene expression data to get two matrices: loadings (Z) and latent matrix (B). The loadings (Z) are constrained to aligned with curated pathways and gene sets specified by prior knowledge [Figure 1B of Taroni et. al.](https://doi.org/10.1016/j.cels.2019.04.003). This ensure that some but not all latent variables capture known biology. The way PLIER does this is by applying a penalty such that the individual latent variables represent a few gene sets in order to make the latent variables more interpretable. Ideally there would be one latent variable associated with one gene set unambiguously.
+# The PLIER model performs a matrix factorization of gene expression data to get two matrices: loadings (Z) and latent matrix (B). The loadings (Z) are constrained to aligned with curated pathways and gene sets specified by prior knowledge [Figure 1B of Taroni et. al.](https://www.cell.com/cell-systems/pdfExtended/S2405-4712(19)30119-X). This ensure that some but not all latent variables capture known biology. The way PLIER does this is by applying a penalty such that the individual latent variables represent a few gene sets in order to make the latent variables more interpretable. Ideally there would be one latent variable associated with one gene set unambiguously.
 # 
 # While the PLIER model was trained on specific datasets, MultiPLIER extended this approach to all of recount2, where the latent variables should correspond to specific pathways or gene sets of interest. Therefore, we will look at the coverage of generic genes versus specific genes across these MultiPLIER latent variables.
 
@@ -116,7 +116,7 @@ multiplier_model_z_processed.head()
 
 # Get a rough sense for how many genes contribute to a given LV
 # (i.e. how many genes have a value > 0 for a given LV)
-(multiplier_model_z > 0).sum()
+(multiplier_model_z > 0).sum().sort_values(ascending=True)
 
 
 # In[11]:
@@ -209,7 +209,7 @@ gene_cov = pd.DataFrame({'Proportion of significantly associated LVs covered': g
                       })
 
 
-# In[42]:
+# In[15]:
 
 
 # Plot coverage distribution given list of generic coverage, specific coverage
@@ -222,12 +222,12 @@ fig = sns.boxplot(data=gene_cov,
                   y='Proportion of significantly associated LVs covered', 
                   palette=['grey','powderblue'])
 fig.set_xlabel("Gene Type",fontsize=14)
-fig.set_ylabel(textwrap.fill("Proportion of significantly associated LVs covered", width=30),fontsize=14)
+fig.set_ylabel(textwrap.fill("Proportion of pathway-associated LVs covered", width=30),fontsize=14)
 fig.tick_params(labelsize=14)
-fig.set_title("")
+fig.set_title("Coverage of pathway-associated LVs", fontsize=16)
 
 
-# In[17]:
+# In[16]:
 
 
 # Save plot
@@ -243,7 +243,7 @@ fig.figure.savefig(
 
 # **Takeaway:**
 # * On average, specific genes cover fewer pathway-associated LVs compared to generic genes, which were found to be linked to all pathway-associated LVs.
-# * This difference in coverage is correlated with the fact that there 1-6 specific genes identified compared to the 6000 generic genes found.
+# * Warning: This difference in coverage is not surprising given the fact that there 1-6 specific genes identified compared to the 6000 generic genes found.
 # * Some of the LVs that were only found to have generic genes (see [table](generic_only_LV_summary.tsv)) include mainly immune response pathways (monocytes, mast cell activation), wound healing (collagen formation), cell signaling (focal adhesion, integrin1) 
 # 
 # **Overall, it looks like generic genes are associated with many pathways, acting as *gene hubs*, which is why they are "generic"**
