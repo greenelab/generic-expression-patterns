@@ -1601,10 +1601,13 @@ def get_gene_summary_files(data_dir):
     """
     This function returns a list of file paths for all files
     of the form `generic_gene_summary_*` in data_dir
+
+    Arguments
+    ---------
+    data_dir: str
+        Directory path containing `generic_gene_summary_*` files
     """
-    return glob.glob('{data_dir}/generic_gene_summary_*')
-    ]
-    return files
+    return glob(f"{data_dir}/generic_gene_summary_*")
 
 
 def process_multiplier_model_z(multiplier_model_z, multiplier_model_summary):
@@ -1615,6 +1618,14 @@ def process_multiplier_model_z(multiplier_model_z, multiplier_model_summary):
 
     This multiplier_model_summary was generated from the
     https://github.com/greenelab/multi-plier/blob/7f4745847b45edf8fef3a49893843d9d40c258cf/23-explore_AAV_recount_LVs.Rmd
+
+    Arguments
+    ---------
+    multiplier_model_z: df
+        Dataframe containing contribution of gene to LV (gene x LV matrix)
+
+    multiplier_model_summary: df
+        Dataframe containing summary statistics for which pathways LV are significantly associated
     """
     ls_significant_LVs = list(
         f"LV{i}"
@@ -1637,6 +1648,14 @@ def get_generic_specific_genes(list_files, z_threshold):
     Here genes are determined as generic or specific based on their
     z-score (i.e. how much gene's differential expression differs between
     template vs null set)
+
+    Arguments
+    ---------
+    list_files: ls
+        List containing file paths for all `generic_gene_summary_*` files
+
+    z_threshold: float
+        Threshold to use to differentiate between generic vs specific genes
     """
     ls_genes = []
     for file in list_files:
@@ -1646,7 +1665,7 @@ def get_generic_specific_genes(list_files, z_threshold):
 
         # Get predicted specific DEGs using z-score cutoff
         ls_specific_genes = list(
-            (data[(data["abs(Z score)"] > z_threshold)].set_index("Gene ID").index)
+            (data[(data["abs(Z score)"] >= z_threshold)].set_index("Gene ID").index)
         )
         print(f"No. of specific DEGs using z-score: {len(ls_specific_genes)}")
 
@@ -1667,6 +1686,17 @@ def process_generic_specific_gene_lists(ls_generic_genes, ls_specific_genes, LV_
     that were included in the multiplier analysis. 
 
     This prevents indexing by a gene that doesn't exist and resulting in NA values
+
+    Arguments
+    ---------
+    ls_generic_genes: list
+        List of generic genes returned from `get_generic_specific_genes`
+
+    ls_specific_genes: list
+        List of specific genes returned from `get_generic_specific_genes`
+
+    LV_matrix: df
+        Dataframe containing contribution of gene to LV (gene x LV matrix)
     """
     multiplier_genes = list(LV_matrix.index)
 
@@ -1682,6 +1712,17 @@ def process_generic_specific_gene_lists(ls_generic_genes, ls_specific_genes, LV_
 def get_LV_coverage(ls_generic_genes, ls_specific_genes, LV_matrix):
     """
     Returns the list of LVs with at least 1 nonzero gene contribution
+
+    Arguments
+    ---------
+    ls_generic_genes: list
+        List of processed generic genes returned from `process_generic_specific_gene_lists`
+
+    ls_specific_genes: list
+        List of processed specific genes returned from `process_generic_specific_gene_lists`
+
+    LV_matrix: df
+        Dataframe containing contribution of gene to LV (gene x LV matrix)
     """
     LV_matrix_series = (LV_matrix.loc[ls_generic_genes] > 0).sum() > 0
     generic_gene_cov = LV_matrix_series[LV_matrix_series].index
@@ -1698,6 +1739,17 @@ def create_LV_df(ls_generic_LVs, ls_specific_LVs, multiplier_model_summary):
     1. Significant pathways associated with shared LVs
     2. Significant pathways associated with unique generic LVs
     3. Significant pathways associated with unique specific LVs
+
+    Arguments
+    ---------
+    ls_generic_genes: list
+        List of processed generic genes returned from `process_generic_specific_gene_lists`
+
+    ls_specific_genes: list
+        List of processed specific genes returned from `process_generic_specific_gene_lists`
+
+    multiplier_model_summary: df
+        Dataframe containing summary statistics for which pathways LV are significantly associated
     """
     shared_LVs = set(ls_generic_LVs).intersection(ls_specific_LVs)
     generic_LVs = set(ls_generic_LVs).difference(ls_specific_LVs)
@@ -1712,18 +1764,18 @@ def create_LV_df(ls_generic_LVs, ls_specific_LVs, multiplier_model_summary):
 
     grp_dict = {0: "shared", 1: "generic_only", 2: "specific_only"}
 
-    for LV_grp in range(len(all_LVs)):
+    for LV_grp, LV_grp_name in grp_dict.items():
         if len(all_LVs[LV_grp]) > 0:
             # Parse LV id
-            LV_ids = [int(i.split("LV")[-1]) for i in all_LVs[LV_grp]]
+            LV_ids = [int(i.replace("LV", "")) for i in all_LVs[LV_grp]]
 
             LV_df = multiplier_model_summary[
                 (multiplier_model_summary["LV index"].isin(LV_ids))
                 & (multiplier_model_summary["FDR"] < 0.05)
             ]
 
-            output_filename = f"{grp_dict[LV_grp]}_LV_summary.tsv"
+            output_filename = f"{LV_grp_name}_LV_summary.tsv"
             LV_df.to_csv(output_filename, sep="\t")
 
         else:
-            print(f"No LVs in group: {grp_dict[LV_grp]}")
+            print(f"No LVs in group: {LV_grp_name}")
