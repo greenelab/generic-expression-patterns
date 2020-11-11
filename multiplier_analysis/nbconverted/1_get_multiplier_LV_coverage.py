@@ -16,6 +16,7 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 import os
+import random
 import pandas as pd
 import seaborn as sns
 
@@ -63,6 +64,20 @@ ls_data_files = process.get_gene_summary_files(data_dir)
 # In[5]:
 
 
+# Plot distribution of z-scores to get a sense
+data0 = pd.read_csv(ls_data_files[0], sep="\t", index_col=0, header=0)
+data1 = pd.read_csv(ls_data_files[1], sep="\t", index_col=0, header=0)
+data2 = pd.read_csv(ls_data_files[2], sep="\t", index_col=0, header=0)
+data3 = pd.read_csv(ls_data_files[3], sep="\t", index_col=0, header=0)
+sns.distplot(data0["abs(Z score)"])
+sns.distplot(data1["abs(Z score)"])
+sns.distplot(data2["abs(Z score)"])
+sns.distplot(data3["abs(Z score)"])
+
+
+# In[6]:
+
+
 # Identify generic and specific genes using z-score
 # Z-score cutoff was found by calculating invnorm(0.05/17754). 
 # To do this in python you can use the following code:
@@ -78,7 +93,7 @@ ls_genes_out = process.get_generic_specific_genes(ls_data_files, zscore_threshol
 
 # ## Get LV data and filter
 
-# In[6]:
+# In[7]:
 
 
 # Load multiplier models
@@ -90,20 +105,20 @@ multiplier_model_summary = pd.read_csv("multiplier_model_summary.tsv", sep="\t",
 multiplier_model_z = pd.read_csv("multiplier_model_z.tsv", sep="\t", index_col=0, header=0)
 
 
-# In[7]:
+# In[8]:
 
 
 multiplier_model_summary.head()
 
 
-# In[8]:
+# In[9]:
 
 
 # Only select LVs that are signficantly associated with some pathways or gene set (i.e. FDR < 0.05)
 multiplier_model_z_processed = process.process_multiplier_model_z(multiplier_model_z, multiplier_model_summary)
 
 
-# In[9]:
+# In[10]:
 
 
 multiplier_model_z_processed.head()
@@ -111,7 +126,7 @@ multiplier_model_z_processed.head()
 
 # ## Quick looks at the data
 
-# In[10]:
+# In[11]:
 
 
 # Get a rough sense for how many genes contribute to a given LV
@@ -119,7 +134,7 @@ multiplier_model_z_processed.head()
 (multiplier_model_z > 0).sum().sort_values(ascending=True)
 
 
-# In[11]:
+# In[12]:
 
 
 # One off just to get a sense for how many genes are being compared
@@ -135,7 +150,7 @@ print(len(shared_genes))
 
 # ## Gene coverage of LV
 
-# In[12]:
+# In[13]:
 
 
 generic_cov_ls = []
@@ -168,14 +183,14 @@ venn2([set(generic_cov_ls), set(specific_cov_ls)],
      )
 
 
-# In[13]:
+# In[14]:
 
 
 # Create table of unique generic LVs, unique specific LVs, shared LVs
 process.create_LV_df(generic_cov_ls, specific_cov_ls, multiplier_model_summary)
 
 
-# In[14]:
+# In[15]:
 
 
 # Find the number of generic and specific genes that have a nonzero contribution to LV
@@ -209,7 +224,7 @@ gene_cov = pd.DataFrame({'Proportion of significantly associated LVs covered': g
                       })
 
 
-# In[15]:
+# In[16]:
 
 
 # Plot coverage distribution given list of generic coverage, specific coverage
@@ -217,7 +232,7 @@ print(generic_cov)
 print(specific_cov)
 
 import textwrap
-fig = sns.boxplot(data=gene_cov, 
+fig = sns.swarmplot(data=gene_cov, 
                   x='gene type', 
                   y='Proportion of significantly associated LVs covered', 
                   palette=['grey','powderblue'])
@@ -227,7 +242,67 @@ fig.tick_params(labelsize=14)
 fig.set_title("Coverage of pathway-associated LVs", fontsize=16)
 
 
-# In[16]:
+# Its not surprising that there was more coverage for generic genes vs specific genes because there were many more generic genes found. What if we try to randomly sample a generic gene set that is of the same size as the number of specific genes?
+
+# In[17]:
+
+
+# Randomly generate generic gene list that is the same size as specific gene list
+# Re-run coverage analysis
+# Find the number of generic and specific genes that have a nonzero contribution to LV
+generic_cov_matched = []
+specific_cov_matched = []
+num_significant_LVs = multiplier_model_z_processed.shape[1]
+
+for ifile in range(len(ls_data_files)):
+    generic_genes = ls_genes_out[ifile][0]
+    specific_genes = ls_genes_out[ifile][1]
+    
+    # Only include those genes that are in multiplier otherwise will get NAs
+    generic_genes_processed, specific_genes_processed = process.process_generic_specific_gene_lists(
+        generic_genes, 
+        specific_genes, 
+        multiplier_model_z_processed
+    )
+    
+    # Randomly generate generic gene list that is the same size as specific gene list
+    generic_genes_processed_subset = random.sample(generic_genes_processed, len(specific_genes_processed))
+    print(len(generic_genes_processed_subset), len(specific_genes_processed))
+    
+    
+    generic_cov_i, specific_cov_i = process.get_LV_coverage(
+        generic_genes_processed_subset,
+        specific_genes_processed,
+        multiplier_model_z_processed
+    )
+    
+    generic_cov_matched.append(len(generic_cov_i)/num_significant_LVs)
+    specific_cov_matched.append(len(specific_cov_i)/num_significant_LVs)
+    
+gene_cov_matched = pd.DataFrame({'Proportion of significantly associated LVs covered': generic_cov_matched + specific_cov_matched,
+                         'gene type': ['generic']*len(ls_data_files) + ['specific']*len(ls_data_files) 
+                      })
+
+
+# In[18]:
+
+
+# Plot coverage distribution given list of generic coverage, specific coverage
+print(generic_cov_matched)
+print(specific_cov_matched)
+
+import textwrap
+fig2 = sns.swarmplot(data=gene_cov_matched, 
+                  x='gene type', 
+                  y='Proportion of significantly associated LVs covered', 
+                  palette=['grey','powderblue'])
+fig2.set_xlabel("Gene Type",fontsize=14)
+fig2.set_ylabel(textwrap.fill("Proportion of pathway-associated LVs covered", width=30),fontsize=14)
+fig2.tick_params(labelsize=14)
+fig2.set_title("Coverage of pathway-associated LVs", fontsize=16)
+
+
+# In[19]:
 
 
 # Save plot
@@ -243,7 +318,7 @@ fig.figure.savefig(
 
 # **Takeaway:**
 # * On average, specific genes cover fewer pathway-associated LVs compared to generic genes, which were found to be linked to all pathway-associated LVs.
-# * Warning: This difference in coverage is not surprising given the fact that there 1-6 specific genes identified compared to the 6000 generic genes found.
+# * Warning: This difference in coverage is not surprising given the fact that there 1-6 specific genes identified compared to the ~1000 generic genes found.
 # * Some of the LVs that were only found to have generic genes (see [table](generic_only_LV_summary.tsv)) include mainly immune response pathways (monocytes, mast cell activation), wound healing (collagen formation), cell signaling (focal adhesion, integrin1) 
 # 
 # **Overall, it looks like generic genes are associated with many pathways, acting as *gene hubs*, which is why they are "generic"**
