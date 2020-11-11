@@ -779,11 +779,6 @@ def generate_summary_table(
         )
     ) / summary["Std deviation (simulated)"]
 
-    # Save file
-    summary_file = os.path.join(local_dir, "gene_summary_table_" + col_to_rank + ".tsv")
-
-    summary.to_csv(summary_file, float_format="%.5f", sep="\t")
-
     return summary
 
 
