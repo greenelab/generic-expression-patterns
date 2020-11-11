@@ -1646,8 +1646,11 @@ def get_generic_specific_genes(list_files, z_threshold):
     summary dataframes
 
     Here genes are determined as generic or specific based on their
-    z-score (i.e. how much gene's differential expression differs between
-    template vs null set) and log fold change
+    ranking across multiple simulated experiments (i.e. generic genes
+    are those that are high ranked = genes were found to be consistently
+    changed across multiple simulated experiments; specific genes are those
+    that are low ranked = genes were found to not be consistently changed
+    across multiple simulated experiments)
 
     Arguments
     ---------
@@ -1666,10 +1669,7 @@ def get_generic_specific_genes(list_files, z_threshold):
         # Get predicted specific DEGs using z-score cutoff
         ls_specific_genes = list(
             (
-                data[
-                    (data["abs(log2FoldChange) (Real)"] > 1)
-                    & (data["abs(Z score)"] >= z_threshold)
-                ]
+                data[data["Rank  (simulated)"] < specific_threshold]
                 .set_index("Gene ID")
                 .index
             )
@@ -1679,10 +1679,7 @@ def get_generic_specific_genes(list_files, z_threshold):
         # Get predicted generic DEGs using z-score cutoff
         ls_generic_genes = list(
             (
-                data[
-                    (data["abs(log2FoldChange) (Real)"] > 1)
-                    & (data["abs(Z score)"] < z_threshold)
-                ]
+                data[data["Rank (simulated)"] >= generic_threshold]
                 .set_index("Gene ID")
                 .index
             )
