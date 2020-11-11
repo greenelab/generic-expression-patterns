@@ -41,13 +41,13 @@ import pandas as pd
 import numpy as np
 import pickle
 
-np.random.seed(123)
-
 from rpy2.robjects import pandas2ri
 pandas2ri.activate()
 
 from ponyo import utils, simulate_expression_data
 from generic_expression_patterns_modules import calc, process
+
+np.random.seed(123)
 
 
 # In[2]:
