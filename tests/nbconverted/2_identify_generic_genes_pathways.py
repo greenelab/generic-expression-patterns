@@ -406,8 +406,8 @@ expected_p = 4.5589621319725286e-173
 assert(
     np.all(
         np.isclose([r, p], [expected_r, expected_p])
-    
-    )
+    ),
+    ([r,p], [expected_r, expected_p])
 )
 
 
