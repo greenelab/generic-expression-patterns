@@ -199,7 +199,7 @@ for each_dir in output_dirs:
     os.makedirs(new_dir, exist_ok=True)
 
 
-# In[ ]:
+# In[13]:
 
 
 # Train VAE on new compendium data
@@ -209,7 +209,7 @@ train_vae_modules.train_vae(
 )
 
 
-# In[ ]:
+# In[14]:
 
 
 # Test reproducibility
