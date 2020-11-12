@@ -1639,9 +1639,9 @@ def process_multiplier_model_z(multiplier_model_z, multiplier_model_summary):
     return multiplier_model_z_filtered
 
 
-def get_generic_specific_genes(list_files, z_threshold):
+def get_generic_specific_genes(summary_filename, generic_threshold, specific_threshold):
     """
-    This function returns a list of generic genes and specific
+    This function returns a dictionary of generic genes and specific
     genes, based on the statistics contained within the
     summary dataframes
 
@@ -1654,94 +1654,129 @@ def get_generic_specific_genes(list_files, z_threshold):
 
     Arguments
     ---------
-    list_files: ls
-        List containing file paths for all `generic_gene_summary_*` files
+    summary_filename: str
+        File paths for `generic_gene_summary_*` file
 
-    z_threshold: float
-        Threshold to use to differentiate between generic vs specific genes
+    generic_threshold: int
+        Threshold to use to define generic genes
+
+    specific_threshold: int
+        Threshold to use to define specific genes
     """
-    ls_genes = []
-    for file in list_files:
-        print(f"Reading data for {file}")
-        data = pd.read_csv(file, sep="\t", index_col=0, header=0)
-        print(data.shape)
+    data = pd.read_csv(summary_filename, sep="\t", index_col=0, header=0)
+    print(data.shape)
 
-        # Get predicted specific DEGs using z-score cutoff
-        ls_specific_genes = list(
-            (
-                data[data["Rank  (simulated)"] < specific_threshold]
-                .set_index("Gene ID")
-                .index
-            )
+    # Remaining genes
+    ls_remaining_genes = list(
+        (
+            data[
+                (data["Rank (simulated)"] < generic_threshold)
+                & (data["Rank (simulated)"] > specific_threshold)
+            ]
+            .set_index("Gene ID")
+            .index
         )
-        print(f"No. of specific DEGs: {len(ls_specific_genes)}")
+    )
+    print(f"No. of generic genes: {len(ls_remaining_genes)}")
 
-        # Get predicted generic DEGs using z-score cutoff
-        ls_generic_genes = list(
-            (
-                data[data["Rank (simulated)"] >= generic_threshold]
-                .set_index("Gene ID")
-                .index
-            )
+    # Specific genes
+    ls_specific_genes = list(
+        (
+            data[data["Rank (simulated)"] <= specific_threshold]
+            .set_index("Gene ID")
+            .index
         )
-        print(f"No. of generic DEGs: {len(ls_generic_genes)}")
+    )
+    print(f"No. of specific genes: {len(ls_specific_genes)}")
 
-        ls_genes.append([ls_generic_genes, ls_specific_genes])
+    # Generic genes
+    ls_generic_genes = list(
+        (data[data["Rank (simulated)"] >= generic_threshold].set_index("Gene ID").index)
+    )
+    print(f"No. of generic genes: {len(ls_generic_genes)}")
 
-    return ls_genes
+    # Create dictionary
+    dict_genes = {
+        "generic": ls_generic_genes,
+        "specific": ls_specific_genes,
+        "remaining": ls_remaining_genes,
+    }
+
+    return dict_genes
 
 
-def process_generic_specific_gene_lists(ls_generic_genes, ls_specific_genes, LV_matrix):
+def process_generic_specific_gene_lists(dict_genes, LV_matrix):
     """
-    This function returns the list of generic genes and specific genes
+    This function returns the dictionary of generic genes and specific genes
     that were included in the multiplier analysis. 
 
     This prevents indexing by a gene that doesn't exist and resulting in NA values
 
     Arguments
     ---------
-    ls_generic_genes: list
-        List of generic genes returned from `get_generic_specific_genes`
-
-    ls_specific_genes: list
-        List of specific genes returned from `get_generic_specific_genes`
+    dict_genes: dict
+        Dictionary mapping gene ids to label="generic", "specific", "remaining"
 
     LV_matrix: df
         Dataframe containing contribution of gene to LV (gene x LV matrix)
     """
     multiplier_genes = list(LV_matrix.index)
 
-    generic_genes_processed = list(set(multiplier_genes).intersection(ls_generic_genes))
+    processed_dict_genes = {}
+    for gene_label, ls_genes in dict_genes.items():
+        ls_genes_processed = list(set(multiplier_genes).intersection(ls_genes))
 
-    specific_genes_processed = list(
-        set(multiplier_genes).intersection(ls_specific_genes)
-    )
+        processed_dict_genes[gene_label] = ls_genes_processed
 
-    return generic_genes_processed, specific_genes_processed
+    return processed_dict_genes
 
 
-def get_LV_coverage(ls_generic_genes, ls_specific_genes, LV_matrix):
+def get_nonzero_LV_coverage(dict_genes, LV_matrix):
     """
-    Returns the list of LVs with at least 1 nonzero gene contribution
+    Returns the dictionary containing the number of
+    LVs with that gene contained.
 
     Arguments
     ---------
-    ls_generic_genes: list
-        List of processed generic genes returned from `process_generic_specific_gene_lists`
-
-    ls_specific_genes: list
-        List of processed specific genes returned from `process_generic_specific_gene_lists`
+    dict_genes: dict
+        Dictionary mapping gene ids to label="generic", "specific", "remaining"
 
     LV_matrix: df
         Dataframe containing contribution of gene to LV (gene x LV matrix)
     """
-    LV_matrix_series = (LV_matrix.loc[ls_generic_genes] > 0).sum() > 0
-    generic_gene_cov = LV_matrix_series[LV_matrix_series].index
+    dict_nonzero_coverage = {}
+    for gene_label, ls_genes in dict_genes.items():
+        LV_series = (LV_matrix.loc[ls_genes] > 0).sum(axis=1)
 
-    LV_matrix_series = (LV_matrix.loc[ls_specific_genes] > 0).sum() > 0
-    specific_gene_cov = LV_matrix_series[LV_matrix_series].index
+        dict_nonzero_coverage[gene_label] = LV_series
 
-    return generic_gene_cov, specific_gene_cov
+    return dict_nonzero_coverage
+
+
+def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile):
+    """
+    TO DO
+
+    Arguments
+    ---------
+    dict_genes: dict
+        Dictionary mapping gene ids to label="generic", "specific", "remaining"
+
+    LV_matrix: df
+        Dataframe containing contribution of gene to LV (gene x LV matrix)
+
+    quantile: float(0,1)
+        Quantile to use to threshold weights
+    """
+    thresholds_per_LV = LV_matrix.quantile(quantile)
+
+    dict_highweight_coverage = {}
+    for gene_label, ls_genes in dict_genes.items():
+        LV_series = (LV_matrix > thresholds_per_LV).sum(axis=1)
+
+        dict_highweight_coverage[gene_label] = LV_series
+
+    return dict_highweight_coverage
 
 
 def create_LV_df(ls_generic_LVs, ls_specific_LVs, multiplier_model_summary):
