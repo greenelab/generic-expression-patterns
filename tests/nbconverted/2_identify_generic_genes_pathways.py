@@ -159,35 +159,35 @@ assert (os.path.getsize(sim_output1)>0 and os.path.getsize(sim_output2)>0)
 # In[9]:
 
 
-"""# Check reproducibility of simulated experiments using random seed
+# Check reproducibility of simulated experiments using random seed
 template_path = "data/test_simulated_data_SRP012656_0.txt"
 output_path = os.path.join(local_dir, "pseudo_experiment", "selected_simulated_data_SRP012656_0.txt")
 template_df = pd.read_csv(template_path, sep="\t", header=0, index_col=0)
 output_df = pd.read_csv(output_path, sep="\t", header=0, index_col=0)
 
-assert np.all(np.isclose(output_df.values, template_df.values)), (
+assert np.all(np.isclose(output_df.head(10).values, template_df.head(10).values)), (
     output_df.iloc[
         np.where(~np.all(np.isclose(output_df.values, template_df.values), axis=1))[0],
         np.where(~np.all(np.isclose(output_df.values, template_df.values), axis=0))[0],
     ],
-)"""
+)
 
 
 # In[10]:
 
 
-"""# Check reproducibility of simulated experiments
+# Check reproducibility of simulated experiments
 template_path = "data/test_simulated_data_SRP012656_1.txt"
 output_path = os.path.join(local_dir, "pseudo_experiment", "selected_simulated_data_SRP012656_1.txt")
 template_df = pd.read_csv(template_path, sep="\t", header=0, index_col=0)
 output_df = pd.read_csv(output_path, sep="\t", header=0, index_col=0)
 
-assert np.all(np.isclose(output_df.values, template_df.values)), (
+assert np.all(np.isclose(output_df.head(10).values, template_df.head(10).values)), (
     output_df.iloc[
         np.where(~np.all(np.isclose(output_df.values, template_df.values), axis=1))[0],
         np.where(~np.all(np.isclose(output_df.values, template_df.values), axis=0))[0],
     ]
-)"""
+)
 
 
 # ## Test: Differential expression analysis
@@ -361,7 +361,7 @@ template_path = "data/test_gene_summary_table.tsv"
 template_df = pd.read_csv(template_path, sep="\t", header=0, index_col=0)
 output_df = pd.read_csv(gene_summary_filename, sep="\t", header=0, index_col=0)
 
-assert (template_df["Gene ID"].values == output_df["Gene ID"].values).all(),template_df.loc[template_df["Gene ID"].values != output_df["Gene ID"].values,"Gene ID"]
+assert (template_df["Gene ID"].head(10).values == output_df["Gene ID"].head(10).values).all(),template_df.loc[template_df["Gene ID"].values != output_df["Gene ID"].values,"Gene ID"]
 
 assert np.all(np.isclose(
     template_df[["Rank (Real)", "Rank (simulated)"]].head(10).values,
@@ -378,7 +378,7 @@ assert np.all(np.isclose(
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[27]:
+# In[28]:
 
 
 # Get generic genes identified by Crow et. al.
@@ -413,33 +413,33 @@ assert(
 
 # ## Test: GSEA
 
-# In[28]:
+# In[29]:
 
 
 # Load pathway data
 hallmark_DB_filename = os.path.join(base_dir, dataset_name, "data", "metadata", "hallmark_DB.gmt")
 
 
-# In[29]:
+# In[30]:
 
 
 get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/GSEA_analysis.R'))\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)")
 
 
-# In[30]:
+# In[31]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
 os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
 
 
-# In[31]:
+# In[32]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir', '\nsource(paste0(base_dir,\'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_file <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_file <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n        \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")\n}')
 
 
-# In[32]:
+# In[33]:
 
 
 # Check GSEA stats files were created
@@ -448,7 +448,7 @@ GSEA_output2 = os.path.join(local_dir, "GSEA_stats", "GSEA_stats_simulated_data_
 assert (os.path.exists(DE_output1) and os.path.exists(DE_output2))
 
 
-# In[33]:
+# In[34]:
 
 
 # Check that GSEA stats files are non-empty
@@ -457,7 +457,7 @@ assert (os.path.getsize(GSEA_output1)>0 and os.path.getsize(GSEA_output2)>0)
 
 # ### Rank pathways
 
-# In[34]:
+# In[35]:
 
 
 # Concatenate simulated experiments
@@ -466,7 +466,7 @@ simulated_GSEA_stats_all.set_index('pathway', inplace=True)
 print(simulated_GSEA_stats_all.shape)
 
 
-# In[35]:
+# In[36]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -477,7 +477,7 @@ simulated_GSEA_summary_stats = calc.aggregate_stats(
 )
 
 
-# In[36]:
+# In[37]:
 
 
 # Load association statistics for template experiment
@@ -494,7 +494,7 @@ template_GSEA_stats = calc.rank_genes_or_pathways(
 )
 
 
-# In[37]:
+# In[38]:
 
 
 # Rank genes in simulated experiments
@@ -507,7 +507,7 @@ simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(
 
 # ### Pathway summary table
 
-# In[38]:
+# In[39]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
@@ -523,7 +523,7 @@ summary_pathway_ranks = process.generate_summary_table(
 
 # ## Test: Compare pathway ranking
 
-# In[39]:
+# In[40]:
 
 
 # Load Powers et. al. results file
@@ -536,7 +536,7 @@ powers_rank_filename = os.path.join(
 )
 
 
-# In[40]:
+# In[41]:
 
 
 # Read Powers et. al. data
@@ -545,7 +545,7 @@ powers_rank_df = pd.read_csv(powers_rank_filename, header=0, index_col=0)
 powers_rank_df.drop(['Category'], axis=1, inplace=True)
 
 
-# In[41]:
+# In[42]:
 
 
 # Count the number of experiments where a given pathway was found to be enriched (qvalue < 0.05)
@@ -564,7 +564,7 @@ powers_rank_stats_df = pd.DataFrame(
 )
 
 
-# In[42]:
+# In[43]:
 
 
 # Save reference file for input into comparison
@@ -579,7 +579,7 @@ powers_rank_processed_filename = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_filename, sep="\t", )
 
 
-# In[43]:
+# In[44]:
 
 
 figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"
