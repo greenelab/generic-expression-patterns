@@ -1718,6 +1718,9 @@ def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile):
     gene contributes a lot to (i.e. has a high weight contribution).
     This function returns a dictionary [gene id]: number of LVs
 
+    Note: We didn't normalize per LV so each LV has the same number
+    of high weight values.
+
     Arguments
     ---------
     dict_genes: dict

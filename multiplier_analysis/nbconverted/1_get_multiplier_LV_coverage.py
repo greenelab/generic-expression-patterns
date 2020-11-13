@@ -255,19 +255,25 @@ highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16
 
 
 # ## Get LVs that generic genes are highly weighted in
+# 
+# Currently, I get high weight genes if the gene weight > quantile threshold for that specific LV. Each LV has a different threshold based on its own distribution. So each LV has the same number of high weight genes. 
+# 
+# Should I have normalized the data per LV before calculating which genes are high weight per LV?
+# 
+# If I normalized then I could probably find a subset of LV that have high weight generic genes. Without this normalization all LVs have some high weight generic genes.
 
 # In[21]:
 
 
-thresholds_per_LV = multiplier_model_z.quantile(0.9)
-gene_ids = processed_dict_genes["generic"]
-multiplier_model_z[(multiplier_model_z > thresholds_per_LV)["LV1"] == True]
+#thresholds_per_LV = multiplier_model_z.quantile(0.9)
+#gene_ids = processed_dict_genes["generic"]
+#multiplier_model_z[(multiplier_model_z > thresholds_per_LV)["LV1"] == True]
 
 
 # In[22]:
 
 
-thresholds_per_LV
+#thresholds_per_LV
 
 
 # ## Save
