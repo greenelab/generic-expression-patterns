@@ -31,5 +31,5 @@ dependencies:
 - pip=19.2.1
 - pip:
   - matplotlib==3.0.0
-  - ponyo
+  - ponyo==0.2
   - matplotlib-venn
