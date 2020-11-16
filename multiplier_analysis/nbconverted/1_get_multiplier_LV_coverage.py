@@ -5,9 +5,14 @@
 # 
 # The goal of this notebook is to examine why genes were found to be generic. Specifically, this notebook is trying to answer the question: Are generic genes found in more multiplier latent variables compared to specific genes?
 # 
-# The PLIER model performs a matrix factorization of gene expression data to get two matrices: loadings (Z) and latent matrix (B). The loadings (Z) are constrained to aligned with curated pathways and gene sets specified by prior knowledge [Figure 1B of Taroni et. al.](https://www.cell.com/cell-systems/pdfExtended/S2405-4712\(19\)30119-X). This ensure that some but not all latent variables capture known biology. The way PLIER does this is by applying a penalty such that the individual latent variables represent a few gene sets in order to make the latent variables more interpretable. Ideally there would be one latent variable associated with one gene set unambiguously.
+# The PLIER model performs a matrix factorization of gene expression data to get two matrices: loadings (Z) and latent matrix (B). The loadings (Z) are constrained to aligned with curated pathways and gene sets specified by prior knowledge [Figure 1B of Taroni et. al.](https://www.cell.com/cell-systems/pdfExtended/S2405-4712(19)30119-X). This ensure that some but not all latent variables capture known biology. The way PLIER does this is by applying a penalty such that the individual latent variables represent a few gene sets in order to make the latent variables more interpretable. Ideally there would be one latent variable associated with one gene set unambiguously.
 # 
 # While the PLIER model was trained on specific datasets, MultiPLIER extended this approach to all of recount2, where the latent variables should correspond to specific pathways or gene sets of interest. Therefore, we will look at the coverage of generic genes versus other genes across these MultiPLIER latent variables, which represent biological patterns.
+# 
+# **Definitions:**
+# * Generic genes: Are genes that are consistently differentially expressed across multiple simulated experiments.
+# 
+# * Other genes: These are all other non-generic genes. These genes include those that are not consistently differentially expressed across simulated experiments - i.e. the genes are specifically changed in an experiment. It could also indicate genes that are consistently unchanged (i.e. housekeeping genes)
 
 # In[1]:
 
@@ -170,14 +175,14 @@ assert len(dict_nonzero_coverage["other"]) == len(processed_dict_genes["other"])
 
 
 # Quick look at the distribution of gene weights per LV
-sns.distplot(multiplier_model_z["LV2"])
+sns.distplot(multiplier_model_z["LV2"], kde=False)
 plt.yscale("log")
 
 
 # In[15]:
 
 
-dict_highweight_coverage = process.get_highweight_LV_coverage(processed_dict_genes, multiplier_model_z, 0.9)
+dict_highweight_coverage = process.get_highweight_LV_coverage(processed_dict_genes, multiplier_model_z)
 
 
 # In[16]:
@@ -254,26 +259,86 @@ highweight_fig.tick_params(labelsize=14)
 highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16)
 
 
+# ## Calculate statistics
+# * Is the reduction in generic coverage significant?
+# * Is the difference between generic versus other genes signficant?
+
 # ## Get LVs that generic genes are highly weighted in
 # 
-# Currently, I get high weight genes if the gene weight > quantile threshold for that specific LV. Each LV has a different threshold based on its own distribution. So each LV has the same number of high weight genes. 
-# 
-# Should I have normalized the data per LV before calculating which genes are high weight per LV?
-# 
-# If I normalized then I could probably find a subset of LV that have high weight generic genes. Without this normalization all LVs have some high weight generic genes.
+# Since we are using quantiles to get high weight genes per LV, each LV has the same number of high weight genes. For each set of high weight genes, we will get the proportion of generic vs other genes. We will select the LVs that have a high proportion of generic genes to examine. 
 
-# In[21]:
+# In[37]:
 
 
-#thresholds_per_LV = multiplier_model_z.quantile(0.9)
-#gene_ids = processed_dict_genes["generic"]
-#multiplier_model_z[(multiplier_model_z > thresholds_per_LV)["LV1"] == True]
+prop_highweight_generic_dict = {}
+thresholds_per_LV = multiplier_model_z.quantile(0.9)
+generic_gene_ids = processed_dict_genes["generic"]
+num_highweight_genes = (multiplier_model_z > thresholds_per_LV).sum()[0]
+for LV_id in multiplier_model_z.columns:
+    highweight_genes_per_LV = list(
+        multiplier_model_z[(multiplier_model_z > thresholds_per_LV)[LV_id] == True].index)
+
+    num_highweight_generic_genes = len(set(generic_gene_ids).intersection(highweight_genes_per_LV))
+    prop_highweight_generic_genes = num_highweight_generic_genes/num_highweight_genes
+    prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
 
 
-# In[22]:
+# In[50]:
 
 
-#thresholds_per_LV
+for k,v in prop_highweight_generic_dict.items():
+    if v>0.5:
+        print(k, v)
+
+
+# In[ ]:
+
+
+# Return selected rows from summary matrix
+
+
+# ## Try looking at coverage after normalization
+
+# In[ ]:
+
+
+# Normalize Z matrix per LV
+
+
+# In[ ]:
+
+
+# High weight LV coverage
+#dict_highweight_coverage = process.get_highweight_LV_coverage(processed_dict_genes, normalized_multiplier_model_z)
+
+
+# In[ ]:
+
+
+"""# Plot coverage distribution given list of generic coverage, specific coverage
+highweight_fig = sns.boxplot(data=all_coverage_df, 
+                             x='gene type',
+                             y='highweight LV coverage',
+                             notch=True,
+                             palette=['powderblue', 'grey']
+                            )
+plt.ylim(0, 700)
+highweight_fig.set_xlabel("Gene Type",fontsize=14)
+highweight_fig.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14)
+highweight_fig.tick_params(labelsize=14)
+highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16)"""
+
+
+# In[ ]:
+
+
+# t-test
+
+
+# In[ ]:
+
+
+# LV proportion
 
 
 # ## Save
@@ -303,9 +368,10 @@ highweight_fig.figure.savefig(
 
 
 # **Takeaway:**
-# * Generic and other genes have are present in a similar number of LVs. This isn't surprising since the number of genes that contribute to each LV is <1000.
+# * Generic and other genes are present in a similar number of LVs. This isn't surprising since the number of genes that contribute to each LV is <1000.
 # * Other genes are highly weighted in more LVs compared to generic genes
 # * So, generic genes contribute a little to many LVs versus other genes that contribute a lot to some LVs
-# * The LVs that were found to contribute alot to can be found in [table](generic_only_LV_summary.tsv). These LVs include -------mainly immune response pathways (monocytes, mast cell activation), wound healing (collagen formation), cell signaling (focal adhesion, integrin1) 
+# Needs to be updated
+# >>* The LVs that were found to contribute alot to can be found in [table](generic_only_LV_summary.tsv). These LVs include -------mainly immune response pathways (monocytes, mast cell activation), wound healing (collagen formation), cell signaling (focal adhesion, integrin1) 
 # 
 # **Overall, it looks like generic genes are associated with many pathways, acting as *gene hubs*, which is why they are "generic"**

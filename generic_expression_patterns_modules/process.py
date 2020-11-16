@@ -1712,7 +1712,7 @@ def get_nonzero_LV_coverage(dict_genes, LV_matrix):
     return dict_nonzero_coverage
 
 
-def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile):
+def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile=0.9):
     """
     This function count the number of LVs that each
     gene contributes a lot to (i.e. has a high weight contribution).
@@ -1730,7 +1730,7 @@ def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile):
         Dataframe containing contribution of gene to LV (gene x LV matrix)
 
     quantile: float(0,1)
-        Quantile to use to threshold weights
+        Quantile to use to threshold weights. Default set to 90th quantile.
     """
     thresholds_per_LV = LV_matrix.quantile(quantile)
 
