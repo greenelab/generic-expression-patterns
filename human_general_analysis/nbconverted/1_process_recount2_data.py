@@ -34,6 +34,13 @@ from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process
 
 
+# In[ ]:
+
+
+# Set seeds to get reproducible VAE trained models
+process.set_all_seeds()
+
+
 # ### Set parameters for data processing
 # 
 # Most parameters are read from `config_filename`. We manually selected bioproject [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764) as the template experiment, which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients with 2 replicates each.
