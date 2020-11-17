@@ -8,7 +8,6 @@ This script provide supporting functions to run analysis notebooks.
 import os
 import pickle
 import csv
-import re
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -1743,49 +1742,80 @@ def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile=0.9):
     return dict_highweight_coverage
 
 
-def create_LV_df(ls_generic_LVs, ls_specific_LVs, multiplier_model_summary):
+def get_prop_highweight_generic_genes(dict_genes, LV_matrix, quantile=0.9):
     """
-    This function creates and saves 3 dataframes:
-    1. Significant pathways associated with shared LVs
-    2. Significant pathways associated with unique generic LVs
-    3. Significant pathways associated with unique specific LVs
+    This function returns a dictionary mapping 
+    [LV id]: proportion of high weight generic genes
 
     Arguments
     ---------
-    ls_generic_genes: list
-        List of processed generic genes returned from `process_generic_specific_gene_lists`
+    Arguments
+    ---------
+    dict_genes: dict
+        Dictionary mapping gene ids to label="generic", "other"
 
-    ls_specific_genes: list
-        List of processed specific genes returned from `process_generic_specific_gene_lists`
+    LV_matrix: df
+        Dataframe containing contribution of gene to LV (gene x LV matrix)
 
+    quantile: float(0,1)
+        Quantile to use to threshold weights. Default set to 90th quantile.
+    """
+    prop_highweight_generic_dict = {}
+    thresholds_per_LV = LV_matrix.quantile(quantile)
+    generic_gene_ids = dict_genes["generic"]
+    num_highweight_genes = (LV_matrix > thresholds_per_LV).sum()[0]
+
+    for LV_id in LV_matrix.columns:
+        highweight_genes_per_LV = list(
+            LV_matrix[(LV_matrix > thresholds_per_LV)[LV_id] == True].index
+        )
+
+        num_highweight_generic_genes = len(
+            set(generic_gene_ids).intersection(highweight_genes_per_LV)
+        )
+        prop_highweight_generic_genes = (
+            num_highweight_generic_genes / num_highweight_genes
+        )
+        prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
+
+    return prop_highweight_generic_dict
+
+
+def create_LV_df(
+    prop_highweight_generic_dict,
+    multiplier_model_summary,
+    proportion_generic,
+    out_filename,
+):
+    """
+    This function creates and saves dataframe that contains the metadata
+    associated with the LV that is contributed most by generic genes
+
+    Arguments
+    ---------
+    prop_highweight_generic_dict: dict
+        Dictionary mapping LV_id: proportion of generic genes that are high weight
+    
     multiplier_model_summary: df
         Dataframe containing summary statistics for which pathways LV are significantly associated
+
+    proportion_generic: float
+        Threshold for the proportion of high weight genes to be generic in a LV
     """
-    shared_LVs = set(ls_generic_LVs).intersection(ls_specific_LVs)
-    generic_LVs = set(ls_generic_LVs).difference(ls_specific_LVs)
-    specific_LVs = set(ls_specific_LVs).difference(ls_generic_LVs)
+    generic_LV = []
+    for k, v in prop_highweight_generic_dict.items():
+        if v > proportion_generic:
+            print(k, v)
+            generic_LV.append(k)
 
-    all_LVs = [list(shared_LVs), list(generic_LVs), list(specific_LVs)]
+    if len(generic_LV) > 0:
+        LV_ids = [int(i.replace("LV", "")) for i in generic_LV]
 
-    # Use ids to keep track of group:
-    # 0: shared
-    # 1: generic only
-    # 2: specific only
+        LV_df = multiplier_model_summary[
+            multiplier_model_summary["LV index"].isin(LV_ids)
+        ]
 
-    grp_dict = {0: "shared", 1: "generic_only", 2: "specific_only"}
+        LV_df.to_csv(out_filename, sep="\t")
+    else:
+        print("No LVs with high proportion of generic genes")
 
-    for LV_grp, LV_grp_name in grp_dict.items():
-        if len(all_LVs[LV_grp]) > 0:
-            # Parse LV id
-            LV_ids = [int(i.replace("LV", "")) for i in all_LVs[LV_grp]]
-
-            LV_df = multiplier_model_summary[
-                (multiplier_model_summary["LV index"].isin(LV_ids))
-                & (multiplier_model_summary["FDR"] < 0.05)
-            ]
-
-            output_filename = f"{LV_grp_name}_LV_summary.tsv"
-            LV_df.to_csv(output_filename, sep="\t")
-
-        else:
-            print(f"No LVs in group: {LV_grp_name}")

@@ -263,56 +263,83 @@ highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16
 # * Is the reduction in generic coverage significant?
 # * Is the difference between generic versus other genes signficant?
 
+# In[39]:
+
+
+# Test: mean number of LVs generic genes present in vs mean number of LVs that generic gene is high weight in
+import scipy
+generic_nonzero = all_coverage_df[all_coverage_df["gene type"]=="generic"]["nonzero LV coverage"].values
+generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["highweight LV coverage"].values
+
+(stats, pvalue) = scipy.stats.ttest_ind(generic_nonzero, generic_highweight)
+print(pvalue)
+
+
+# In[40]:
+
+
+# Test: mean number of LVs generic genes present in vs mean number of LVs other genes present in
+other_highweight = all_coverage_df[all_coverage_df["gene type"]=="other"]["highweight LV coverage"].values
+generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["highweight LV coverage"].values
+
+(stats, pvalue) = scipy.stats.ttest_ind(other_highweight, generic_highweight)
+print(pvalue)
+
+
+# In[41]:
+
+
+# Check that coverage of other and generic genes across all LVs is NOT signficantly different
+other_nonzero = all_coverage_df[all_coverage_df["gene type"]=="other"]["nonzero LV coverage"].values
+generic_nonzero = all_coverage_df[all_coverage_df["gene type"]=="generic"]["nonzero LV coverage"].values
+
+(stats, pvalue) = scipy.stats.ttest_ind(other_nonzero, generic_nonzero)
+print(pvalue)
+
+
 # ## Get LVs that generic genes are highly weighted in
 # 
 # Since we are using quantiles to get high weight genes per LV, each LV has the same number of high weight genes. For each set of high weight genes, we will get the proportion of generic vs other genes. We will select the LVs that have a high proportion of generic genes to examine. 
 
-# In[37]:
+# In[21]:
 
 
-prop_highweight_generic_dict = {}
-thresholds_per_LV = multiplier_model_z.quantile(0.9)
-generic_gene_ids = processed_dict_genes["generic"]
-num_highweight_genes = (multiplier_model_z > thresholds_per_LV).sum()[0]
-for LV_id in multiplier_model_z.columns:
-    highweight_genes_per_LV = list(
-        multiplier_model_z[(multiplier_model_z > thresholds_per_LV)[LV_id] == True].index)
-
-    num_highweight_generic_genes = len(set(generic_gene_ids).intersection(highweight_genes_per_LV))
-    prop_highweight_generic_genes = num_highweight_generic_genes/num_highweight_genes
-    prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
+# Get proportion of generic genes per LV
+prop_highweight_generic_dict = process.get_prop_highweight_generic_genes(
+    processed_dict_genes,
+    multiplier_model_z)
 
 
-# In[50]:
-
-
-for k,v in prop_highweight_generic_dict.items():
-    if v>0.5:
-        print(k, v)
-
-
-# In[ ]:
+# In[22]:
 
 
 # Return selected rows from summary matrix
+multiplier_model_summary = pd.read_csv("multiplier_model_summary.tsv", sep="\t", index_col=0, header=0)
+process.create_LV_df(
+    prop_highweight_generic_dict, 
+    multiplier_model_summary,
+    0.4, 
+    "Generic_LV_summary_table.tsv")
 
 
 # ## Try looking at coverage after normalization
+# 
+# Below we will perform the same analysis: examine the coverage of generic and other genes as high weight in LVs. But for this analysis we will normalize the weight matrix (Z) first. We expect the results will be similar unless there is dramatic skewing in the LV distributions.
 
-# In[ ]:
+# In[23]:
 
 
 # Normalize Z matrix per LV
 
 
-# In[ ]:
+# In[24]:
 
 
-# High weight LV coverage
+# High weight LV coverage -- need to define a new function
 #dict_highweight_coverage = process.get_highweight_LV_coverage(processed_dict_genes, normalized_multiplier_model_z)
 
 
-# In[ ]:
+# In[25]:
 
 
 """# Plot coverage distribution given list of generic coverage, specific coverage
@@ -329,21 +356,29 @@ highweight_fig.tick_params(labelsize=14)
 highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16)"""
 
 
-# In[ ]:
+# In[26]:
 
 
 # t-test
 
 
-# In[ ]:
+# In[27]:
 
 
-# LV proportion
+# Get proportion of 
+# process.create_LV_df(prop_highweight_generic_dict, multiplier_model_summary, 0.4)
+
+
+# In[28]:
+
+
+# Return selected rows from summary matrix
+#process.create_LV_df(prop_highweight_generic_dict, multiplier_model_summary, 0.4, "Normalized_generic_LV_summmary_table.tsv")
 
 
 # ## Save
 
-# In[23]:
+# In[29]:
 
 
 # Save plot
