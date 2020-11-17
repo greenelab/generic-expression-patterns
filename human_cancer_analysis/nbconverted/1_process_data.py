@@ -28,6 +28,13 @@ from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process
 
 
+# In[ ]:
+
+
+# Set seeds to get reproducible VAE trained models
+process.set_all_seeds()
+
+
 # ### Set parameters for data processing
 # 
 # Most parameters are read from `config_filename`. We manually selected bioproject [GSE11352](https://www.ncbi.nlm.nih.gov/gds/?term=GSE11352[Accession]) as the template experiment, which contains breast cell lines treated with estradiol at 12H, 24H and 48H.

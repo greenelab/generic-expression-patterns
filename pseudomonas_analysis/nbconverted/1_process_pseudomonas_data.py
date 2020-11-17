@@ -24,7 +24,12 @@ import pickle
 from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process, calc
 
-np.random.seed(123)
+
+# In[ ]:
+
+
+# Set seeds to get reproducible VAE trained models
+process.set_all_seeds()
 
 
 # ### Set parameters for data processing
