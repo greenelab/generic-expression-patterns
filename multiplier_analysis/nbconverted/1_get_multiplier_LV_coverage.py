@@ -23,9 +23,11 @@ get_ipython().run_line_magic('autoreload', '2')
 import os
 import random
 import textwrap
+import scipy
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 
 import rpy2.robjects as ro
 from rpy2.robjects import pandas2ri
@@ -199,7 +201,7 @@ assert len(dict_highweight_coverage["other"]) == len(processed_dict_genes["other
 # In[17]:
 
 
-all_coverage = []
+"""all_coverage = []
 for gene_label in dict_genes.keys():
     merged_df = pd.DataFrame(
         dict_nonzero_coverage[gene_label],
@@ -215,12 +217,17 @@ for gene_label in dict_genes.keys():
     merged_df['gene type'] = gene_label
     all_coverage.append(merged_df)
 
-all_coverage_df = pd.concat(all_coverage)
+all_coverage_df = pd.concat(all_coverage)"""
 
 
 # In[18]:
 
 
+all_coverage_df = process.assemble_coverage_df(
+    processed_dict_genes,
+    dict_nonzero_coverage,
+    dict_highweight_coverage
+)
 all_coverage_df.head()
 
 
@@ -263,11 +270,10 @@ highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16
 # * Is the reduction in generic coverage significant?
 # * Is the difference between generic versus other genes signficant?
 
-# In[39]:
+# In[21]:
 
 
 # Test: mean number of LVs generic genes present in vs mean number of LVs that generic gene is high weight in
-import scipy
 generic_nonzero = all_coverage_df[all_coverage_df["gene type"]=="generic"]["nonzero LV coverage"].values
 generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["highweight LV coverage"].values
 
@@ -275,7 +281,7 @@ generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["h
 print(pvalue)
 
 
-# In[40]:
+# In[22]:
 
 
 # Test: mean number of LVs generic genes present in vs mean number of LVs other genes present in
@@ -286,7 +292,7 @@ generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["h
 print(pvalue)
 
 
-# In[41]:
+# In[23]:
 
 
 # Check that coverage of other and generic genes across all LVs is NOT signficantly different
@@ -301,7 +307,7 @@ print(pvalue)
 # 
 # Since we are using quantiles to get high weight genes per LV, each LV has the same number of high weight genes. For each set of high weight genes, we will get the proportion of generic vs other genes. We will select the LVs that have a high proportion of generic genes to examine. 
 
-# In[21]:
+# In[24]:
 
 
 # Get proportion of generic genes per LV
@@ -310,7 +316,7 @@ prop_highweight_generic_dict = process.get_prop_highweight_generic_genes(
     multiplier_model_z)
 
 
-# In[22]:
+# In[25]:
 
 
 # Return selected rows from summary matrix
@@ -318,7 +324,7 @@ multiplier_model_summary = pd.read_csv("multiplier_model_summary.tsv", sep="\t",
 process.create_LV_df(
     prop_highweight_generic_dict, 
     multiplier_model_summary,
-    0.4, 
+    0.5, 
     "Generic_LV_summary_table.tsv")
 
 
@@ -326,24 +332,62 @@ process.create_LV_df(
 # 
 # Below we will perform the same analysis: examine the coverage of generic and other genes as high weight in LVs. But for this analysis we will normalize the weight matrix (Z) first. We expect the results will be similar unless there is dramatic skewing in the LV distributions.
 
-# In[23]:
+# In[26]:
 
 
 # Normalize Z matrix per LV
+scaler = MinMaxScaler()
+
+# Fitting (2 minutes, ~8 GB of RAM)
+normalized_multiplier_model_z = scaler.fit_transform(multiplier_model_z)
+normalized_multiplier_model_z_df = pd.DataFrame(
+    normalized_multiplier_model_z,
+    columns=multiplier_model_z.columns,
+    index=multiplier_model_z.index,
+)
 
 
-# In[24]:
+# In[27]:
 
 
-# High weight LV coverage -- need to define a new function
-#dict_highweight_coverage = process.get_highweight_LV_coverage(processed_dict_genes, normalized_multiplier_model_z)
+sns.distplot(normalized_multiplier_model_z_df["LV10"], kde=False)
 
 
-# In[25]:
+# In[28]:
 
 
-"""# Plot coverage distribution given list of generic coverage, specific coverage
-highweight_fig = sns.boxplot(data=all_coverage_df, 
+# Calculate 2 standard deviations from mean per LV and use that
+(normalized_multiplier_model_z_df.mean()+2*normalized_multiplier_model_z_df.std()).median()
+
+
+# In[29]:
+
+
+# Get coverage of high weight generic genes
+# Use threshold cutoff of 0.063 (~ 2 standard deviations from above calculations)
+dict_highweight_coverage_normalized = process.get_highweight_LV_coverage(
+    processed_dict_genes,
+    normalized_multiplier_model_z_df,
+    True
+)
+
+
+# In[30]:
+
+
+all_coverage_normalized_df = process.assemble_coverage_df(
+    processed_dict_genes,
+    dict_nonzero_coverage,
+    dict_highweight_coverage_normalized
+)
+all_coverage_normalized_df.head()
+
+
+# In[31]:
+
+
+# Plot coverage distribution given list of generic coverage, specific coverage
+highweight_fig = sns.boxplot(data=all_coverage_normalized_df, 
                              x='gene type',
                              y='highweight LV coverage',
                              notch=True,
@@ -353,32 +397,60 @@ plt.ylim(0, 700)
 highweight_fig.set_xlabel("Gene Type",fontsize=14)
 highweight_fig.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14)
 highweight_fig.tick_params(labelsize=14)
-highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16)"""
+highweight_fig.set_title("Number of LVs genes contribute highly to (normalized)", fontsize=16)
 
 
-# In[26]:
+# In[32]:
 
 
-# t-test
+# Test: mean number of LVs generic genes present in vs mean number of LVs that generic gene is high weight in
+generic_nonzero = all_coverage_normalized_df[
+    all_coverage_normalized_df["gene type"]=="generic"]["nonzero LV coverage"].values
+generic_highweight = all_coverage_normalized_df[
+    all_coverage_normalized_df["gene type"]=="generic"]["highweight LV coverage"].values
+
+(stats, pvalue) = scipy.stats.ttest_ind(generic_nonzero, generic_highweight)
+print(pvalue)
 
 
-# In[27]:
+# In[33]:
 
 
-# Get proportion of 
-# process.create_LV_df(prop_highweight_generic_dict, multiplier_model_summary, 0.4)
+# Test: mean number of LVs generic genes present in vs mean number of LVs other genes present in
+other_highweight = all_coverage_normalized_df[
+    all_coverage_normalized_df["gene type"]=="other"]["highweight LV coverage"].values
+generic_highweight = all_coverage_normalized_df[
+    all_coverage_normalized_df["gene type"]=="generic"]["highweight LV coverage"].values
+
+(stats, pvalue) = scipy.stats.ttest_ind(other_highweight, generic_highweight)
+print(pvalue)
 
 
-# In[28]:
+# In[34]:
+
+
+# Get proportion of generic genes per LV
+prop_highweight_generic_dict = process.get_prop_highweight_generic_genes(
+    processed_dict_genes,
+    normalized_multiplier_model_z_df,
+    True
+)
+
+
+# In[35]:
 
 
 # Return selected rows from summary matrix
-#process.create_LV_df(prop_highweight_generic_dict, multiplier_model_summary, 0.4, "Normalized_generic_LV_summmary_table.tsv")
+process.create_LV_df(
+    prop_highweight_generic_dict,
+    multiplier_model_summary,
+    0.4,
+    "Normalized_generic_LV_summmary_table.tsv")
 
 
 # ## Save
 
-# In[29]:
+# In[36]:
 
 
 # Save plot
@@ -406,7 +478,6 @@ highweight_fig.figure.savefig(
 # * Generic and other genes are present in a similar number of LVs. This isn't surprising since the number of genes that contribute to each LV is <1000.
 # * Other genes are highly weighted in more LVs compared to generic genes
 # * So, generic genes contribute a little to many LVs versus other genes that contribute a lot to some LVs
-# Needs to be updated
-# >>* The LVs that were found to contribute alot to can be found in [table](generic_only_LV_summary.tsv). These LVs include -------mainly immune response pathways (monocytes, mast cell activation), wound healing (collagen formation), cell signaling (focal adhesion, integrin1) 
+# * The LV that was found to contain a high proportion of generic genes can be found in [table](Generic_LV_summary_table.tsv). The single LV includes pathways related to immune response (neutraphils), signaling (DMAP_ERY2), wound healing ( megakaryocyte platelet production) 
 # 
 # **Overall, it looks like generic genes are associated with many pathways, acting as *gene hubs*, which is why they are "generic"**

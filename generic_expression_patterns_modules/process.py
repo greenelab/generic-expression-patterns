@@ -1711,13 +1711,15 @@ def get_nonzero_LV_coverage(dict_genes, LV_matrix):
     return dict_nonzero_coverage
 
 
-def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile=0.9):
+def get_highweight_LV_coverage(
+    dict_genes, LV_matrix, if_normalized=False, quantile=0.9
+):
     """
     This function count the number of LVs that each
     gene contributes a lot to (i.e. has a high weight contribution).
     This function returns a dictionary [gene id]: number of LVs
 
-    Note: We didn't normalize per LV so each LV has the same number
+    Note: If we didn't normalize per LV so each LV has the same number
     of high weight values.
 
     Arguments
@@ -1728,21 +1730,70 @@ def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile=0.9):
     LV_matrix: df
         Dataframe containing contribution of gene to LV (gene x LV matrix)
 
+    if_normalized: bool
+        True if LV_matrix is normalized per LV
+
     quantile: float(0,1)
         Quantile to use to threshold weights. Default set to 90th quantile.
     """
-    thresholds_per_LV = LV_matrix.quantile(quantile)
+    if if_normalized:
+        threshold = 0.063
+        dict_highweight_coverage = {}
+        for gene_label, ls_genes in dict_genes.items():
+            LV_series = (LV_matrix > threshold).sum(axis=1)[ls_genes]
 
-    dict_highweight_coverage = {}
-    for gene_label, ls_genes in dict_genes.items():
-        LV_series = (LV_matrix > thresholds_per_LV).sum(axis=1)[ls_genes]
+            dict_highweight_coverage[gene_label] = LV_series
+    else:
+        thresholds_per_LV = LV_matrix.quantile(quantile)
 
-        dict_highweight_coverage[gene_label] = LV_series
+        dict_highweight_coverage = {}
+        for gene_label, ls_genes in dict_genes.items():
+            LV_series = (LV_matrix > thresholds_per_LV).sum(axis=1)[ls_genes]
+
+            dict_highweight_coverage[gene_label] = LV_series
 
     return dict_highweight_coverage
 
 
-def get_prop_highweight_generic_genes(dict_genes, LV_matrix, quantile=0.9):
+def assemble_coverage_df(dict_genes, nonzero_dict, highweight_dict):
+    """
+    This function assembles the coverage dfs into
+    one df to be used for plotting
+
+    Arguments
+    ---------
+    dict_genes: dict
+        Dictionary mapping gene ids to label="generic", "other"
+
+    nonzero_dict: dict
+        Dictionary mapping [gene type]: number of LVs present
+
+    highweight_dict: dict
+        Dictionary mapping [gene type]: number of LVs gene is highweight in
+
+    """
+    all_coverage = []
+    for gene_label in dict_genes.keys():
+        merged_df = pd.DataFrame(
+            nonzero_dict[gene_label], columns=["nonzero LV coverage"]
+        ).merge(
+            pd.DataFrame(
+                highweight_dict[gene_label], columns=["highweight LV coverage"]
+            ),
+            left_index=True,
+            right_index=True,
+        )
+        merged_df["gene type"] = gene_label
+        all_coverage.append(merged_df)
+
+    all_coverage_df = pd.concat(all_coverage)
+
+    return all_coverage_df
+
+
+def get_prop_highweight_generic_genes(
+    dict_genes, LV_matrix, if_normalized=False, quantile=0.9
+):
     """
     This function returns a dictionary mapping 
     [LV id]: proportion of high weight generic genes
@@ -1756,27 +1807,48 @@ def get_prop_highweight_generic_genes(dict_genes, LV_matrix, quantile=0.9):
 
     LV_matrix: df
         Dataframe containing contribution of gene to LV (gene x LV matrix)
+    
+    if_normalized: bool
+        True if LV_matrix is normalized per LV
 
     quantile: float(0,1)
         Quantile to use to threshold weights. Default set to 90th quantile.
     """
+
     prop_highweight_generic_dict = {}
-    thresholds_per_LV = LV_matrix.quantile(quantile)
     generic_gene_ids = dict_genes["generic"]
-    num_highweight_genes = (LV_matrix > thresholds_per_LV).sum()[0]
 
-    for LV_id in LV_matrix.columns:
-        highweight_genes_per_LV = list(
-            LV_matrix[(LV_matrix > thresholds_per_LV)[LV_id] == True].index
-        )
+    if if_normalized:
+        for LV_id in LV_matrix.columns:
+            threshold = 0.063
+            num_highweight_genes = (LV_matrix > threshold).sum()[0]
+            highweight_genes_per_LV = list(
+                LV_matrix[(LV_matrix > quantile)[LV_id] == True].index
+            )
 
-        num_highweight_generic_genes = len(
-            set(generic_gene_ids).intersection(highweight_genes_per_LV)
-        )
-        prop_highweight_generic_genes = (
-            num_highweight_generic_genes / num_highweight_genes
-        )
-        prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
+            num_highweight_generic_genes = len(
+                set(generic_gene_ids).intersection(highweight_genes_per_LV)
+            )
+            prop_highweight_generic_genes = (
+                num_highweight_generic_genes / num_highweight_genes
+            )
+            prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
+    else:
+        thresholds_per_LV = LV_matrix.quantile(quantile)
+        num_highweight_genes = (LV_matrix > thresholds_per_LV).sum()[0]
+
+        for LV_id in LV_matrix.columns:
+            highweight_genes_per_LV = list(
+                LV_matrix[(LV_matrix > thresholds_per_LV)[LV_id] == True].index
+            )
+
+            num_highweight_generic_genes = len(
+                set(generic_gene_ids).intersection(highweight_genes_per_LV)
+            )
+            prop_highweight_generic_genes = (
+                num_highweight_generic_genes / num_highweight_genes
+            )
+            prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
 
     return prop_highweight_generic_dict
 
