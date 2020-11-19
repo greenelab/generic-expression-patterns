@@ -16,7 +16,7 @@ If you want to perform a new DE analysis in a different biological **context** (
 
 
 **Goal:**
-* To develop a method that can automatically identify generic genes and pathways
+To develop a method that can automatically identify generic genes and pathways
 
 **Results:**
 Our method ranking was consistent with previously published ranking. These generic genes appear to act as gene hubs, which are associated with many biological processes. 
@@ -72,7 +72,7 @@ pip install -e .
 * The processed template file can be found [here](human_analysis/data/processed_recount2_template.tsv)
 * The scaler file can be found [here](human_analysis/data/scaler_transform_human.pickle)
 
-**How to run using your own data**
+**How to analyze your own data**
 
 In order to run this simulation on your own gene expression data the following steps should be performed:
 
