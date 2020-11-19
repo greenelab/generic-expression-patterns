@@ -1,10 +1,10 @@
-# Rank pathways analysis
+# Detecting generic gene expression signals
 
-**Alexandra J Lee, James C Costello and Casey S Greene**
+**Alexandra J. Lee, Rani K. Powers, Dallas L. Mould, Dongbo Hu, Georgia Doing, Jake Crawford, James C. Costello, Deborah A. Hogan, Casey S. Greene**
 
 **May 2020**
 
-**University of Pennsylvania, University of Colorado Anschutz Medical Campus**
+**University of Pennsylvania, University of Colorado Anschutz Medical Campus, Dartmouth College**
 
 **Rationale**: People performing differential expression (DE) analysis found that some genes and subsequent pathways are more likely to be differentially expressed even across a wide range of experimental designs ([Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793 ); [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491)). 
 
@@ -12,20 +12,32 @@ Given that there exist these commonly DE genes and subsequent pathways, it is im
 
 
 **Challenge**: 
-Current methods, including Powers et. al. and Crow et. al., to identify generic genes and pathways rely on manual curation. This curation effort included collecting a large set of samples with corresponding metadata, process data and perform DE analysis to get ranked list of genes.
+Current methods, including Powers et. al. and Crow et. al., to identify generic genes and pathways rely on manual curation. This curation effort included collecting a large set of samples with corresponding metadata, processing data and performing DE analysis to get ranked list of genes.
 
-If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require a lot of manual effort. Similarly, using a different statistical method will require re-curation effort
+If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require re-curation. Similarly, using a different statistical method will require re-curation. This curation effor it very time intensive.
 
 
-**Goal of this study:**
-* To show that our compendia simulation method, [ponyo](https://github.com/greenelab/ponyo) can automatically identify generic genes and pathways
+**Goal:**
+* To develop a method that can automatically identify generic genes and pathways
 
 **Results:**
 * We found a set of general generic genes (i.e. genes found to be generic in both recount2 and crow et. al., which contain a mix of experiments)
-* We developed a method to automatically identify generic genes in different contexts without having to perform experiments and curate. 
+* We developed a method to automatically identify generic genes in different contexts using public datasets without having to curate. 
+
+## Directory Structure
+| Folder/file | Description |
+| --- | --- | 
+| [configs](configs) | This folder contains configuration files used to set hyperparameters for the different experiments |
+| [generic_expression_patterns_modules](generic_expression_patterns_modules) | This folder contains supporting functions that other notebooks in this repository will use |
+| [human_cancer_analysis](human_cancer_analysis) | This folder contains analysis notebooks to identify generic signals using Powers et. al. dataset to train VAE |
+| [human_general_analysis](human_generla_analysis) | This folder contains analysis notebooks to identify generic signalsusing [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset to train VAE |
+| [multiplier_analysis](multiplier_analysis) | This folder contains analysis notebooks to coverage of generic genes across [MultiPLIER latent variables](https://www.cell.com/cell-systems/pdfExtended/S2405-4712\(19\)30119-X)) |
+| [pseudomonas_analysis](pseudomonas_analysis) |  This folder contains analysis notebooks to identify generic signalsusing *P. aeruginosa* dataset to train VAE |
 
 
-## How to run notebooks from generic-expression-patterns
+## Usage
+
+### How to run notebooks from generic-expression-patterns
 
 **Operating Systems:** Mac OS, Linux
 
@@ -60,7 +72,7 @@ pip install -e .
 * The processed template file can be found [here](human_analysis/data/processed_recount2_template.tsv)
 * The scaler file can be found [here](human_analysis/data/scaler_transform_human.pickle)
 
-## How to run using your own data
+### How to run using your own data
 
 In order to run this simulation on your own gene expression data the following steps should be performed:
 
@@ -132,3 +144,5 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | num_simulated| int: Simulate a compendia with these many experiments, created by shifting the template experiment these many times|
 | num_recount2_experiments_to_download** | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
 
+## Acknowledgements
+We would like to thank David Nicholson, Ben Heil, Jake Crawford, Georgia Doing and Milton Pividori for insightful discussions and code review
