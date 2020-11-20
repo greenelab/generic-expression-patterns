@@ -12,7 +12,7 @@ Given that there exist these commonly DE genes and subsequent pathways, it is im
 **Challenge**: 
 Current methods, including Powers et. al. and Crow et. al., to identify generic genes and pathways rely on manual curation. This curation effort included collecting a large set of samples with corresponding metadata, processing data and performing DE analysis to get ranked list of genes.
 
-If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require re-curation. Similarly, using a different statistical method will require re-curation. This curation effor it very time intensive.
+If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require re-curation. Similarly, using a different statistical method will require re-curation. This curation effort is very time intensive.
 
 
 **Goal:**
