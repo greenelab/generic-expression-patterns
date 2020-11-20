@@ -387,17 +387,17 @@ all_coverage_normalized_df.head()
 
 
 # Plot coverage distribution given list of generic coverage, specific coverage
-highweight_fig = sns.boxplot(data=all_coverage_normalized_df, 
+highweight_fig2 = sns.boxplot(data=all_coverage_normalized_df, 
                              x='gene type',
                              y='highweight LV coverage',
                              notch=True,
                              palette=['powderblue', 'grey']
                             )
 plt.ylim(0, 700)
-highweight_fig.set_xlabel("Gene Type",fontsize=14)
-highweight_fig.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14)
-highweight_fig.tick_params(labelsize=14)
-highweight_fig.set_title("Number of LVs genes contribute highly to (normalized)", fontsize=16)
+highweight_fig2.set_xlabel("Gene Type",fontsize=14)
+highweight_fig2.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14)
+highweight_fig2.tick_params(labelsize=14)
+highweight_fig2.set_title("Number of LVs genes contribute highly to (normalized)", fontsize=16)
 
 
 # In[32]:
