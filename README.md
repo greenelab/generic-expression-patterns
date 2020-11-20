@@ -39,7 +39,7 @@ We developed a method to automatically identify generic genes and pathways using
 
 **How to run notebooks from generic-expression-patterns**
 
-*Operating Systems:* Mac OS, Linux
+*Operating Systems:* Mac OS, Linux (Note: bioconda libraries not available in Windows)
 
 In order to run this simulation on your own gene expression data the following steps should be performed:
 
