@@ -67,17 +67,17 @@ panel_1a = make_figure_panel(
 )
 panel_1b = make_figure_panel(
     "../human_general_analysis/logs/NN_2500_30/tybalt_2layer_30latent_hist.svg",
-    0.7,
-    0.7,
+    0.6,
+    0.6,
     600,
-    30
+    10
 )
 panel_1c = make_figure_panel(
     "fig1C.svg",
-    4,
-    4,
+    4.2,
+    4.2,
     30,
-    300
+    250
 )
 ## TO DO
 # Add panel showing volcano plots of example simulated experiments
@@ -87,9 +87,9 @@ panel_1c = make_figure_panel(
 # In[5]:
 
 
-panel_1a_label = sg.TextElement(10, 20, "A", size=22, weight="bold", font="Verdana")
-panel_1b_label = sg.TextElement(600, 20, "B", size=22, weight="bold", font="Verdana")
-panel_1c_label = sg.TextElement(10, 300, "C", size=22, weight="bold", font="Verdana")
+panel_1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
+panel_1b_label = sg.TextElement(580, 20, "B", size=18, weight="bold", font="Verdana")
+panel_1c_label = sg.TextElement(10, 260, "C", size=18, weight="bold", font="Verdana")
 
 
 # In[6]:
@@ -123,55 +123,55 @@ figure_1.save("output/figure_1.svg")
 # Create panels for figure 2
 panel_2a = make_figure_panel(
     "fig2A.svg",
-    2.5,
-    2.5,
+    2,
+    2,
     30,
     10
 )
 panel_2b = make_figure_panel(
     "../human_cancer_analysis/gene_ranking_logFC.svg",
-    0.7,
-    0.7,
-    30,
-    350
+    0.6,
+    0.6,
+    470,
+    30
 )
 panel_2c = make_figure_panel(
     "../human_general_analysis/gene_ranking_log2FoldChange.svg",
-    0.7,
-    0.7,
-    300,
-    350
+    0.6,
+    0.6,
+    700,
+    30
 )
 panel_2d = make_figure_panel(
     "fig2D.svg",
-    2.5,
-    2.5,
+    2,
+    2,
     30,
-    700
+    300
 )
 panel_2e = make_figure_panel(
     "../human_cancer_analysis/pathway_ranking_padj.svg",
-    0.7,
-    0.7,
-    600,
-    700
+    0.6,
+    0.6,
+    470,
+    300
 )
 
 
 # In[9]:
 
 
-panel_2a_label = sg.TextElement(10, 20, "A", size=22, weight="bold", font="Verdana")
-panel_2b_label = sg.TextElement(10, 350, "B", size=22, weight="bold", font="Verdana")
-panel_2c_label = sg.TextElement(300, 350, "C", size=22, weight="bold", font="Verdana")
-panel_2d_label = sg.TextElement(10, 700, "D", size=22, weight="bold", font="Verdana")
-panel_2e_label = sg.TextElement(600, 700, "E", size=22, weight="bold", font="Verdana")
+panel_2a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
+panel_2b_label = sg.TextElement(450, 20, "B", size=18, weight="bold", font="Verdana")
+panel_2c_label = sg.TextElement(680, 20, "C", size=18, weight="bold", font="Verdana")
+panel_2d_label = sg.TextElement(10, 310, "D", size=18, weight="bold", font="Verdana")
+panel_2e_label = sg.TextElement(450, 310, "E", size=18, weight="bold", font="Verdana")
 
 
 # In[10]:
 
 
-figure_2 = sg.SVGFigure("1000", "1200")
+figure_2 = sg.SVGFigure("1000", "800")
 figure_2.append([
     etree.Element("rect", {"width":"100%", "height":"100%", "fill":"white"}),
     panel_2a, 
@@ -222,8 +222,8 @@ panel_3b = make_figure_panel(
 # In[13]:
 
 
-panel_3a_label = sg.TextElement(10, 20, "A", size=22, weight="bold", font="Verdana")
-panel_3b_label = sg.TextElement(500, 20, "B", size=22, weight="bold", font="Verdana")
+panel_3a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
+panel_3b_label = sg.TextElement(480, 20, "B", size=18, weight="bold", font="Verdana")
 
 
 # In[14]:
