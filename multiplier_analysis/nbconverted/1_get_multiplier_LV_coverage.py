@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Coverage of MultiPLIER LV
@@ -242,11 +242,10 @@ nonzero_fig = sns.boxplot(
     notch=True,
     palette=['powderblue', 'grey']
                          )
-plt.ylim(0, 700)
-nonzero_fig.set_xlabel("Gene Type",fontsize=14)
-nonzero_fig.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14)
+nonzero_fig.set_xlabel("Gene Type",fontsize=14, fontname="Verdana")
+nonzero_fig.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14, fontname="Verdana")
 nonzero_fig.tick_params(labelsize=14)
-nonzero_fig.set_title("Number of LVs genes are present in", fontsize=16)
+nonzero_fig.set_title("Number of LVs genes are present in", fontsize=16, fontname="Verdana")
 
 
 # In[20]:
@@ -259,11 +258,10 @@ highweight_fig = sns.boxplot(data=all_coverage_df,
                              notch=True,
                              palette=['powderblue', 'grey']
                             )
-plt.ylim(0, 700)
-highweight_fig.set_xlabel("Gene Type",fontsize=14)
-highweight_fig.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14)
+highweight_fig.set_xlabel("Gene Type",fontsize=14, fontname="Verdana")
+highweight_fig.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14, fontname="Verdana")
 highweight_fig.tick_params(labelsize=14)
-highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16)
+highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16, fontname="Verdana")
 
 
 # ## Calculate statistics

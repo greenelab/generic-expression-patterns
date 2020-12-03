@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Identify generic genes and pathways
@@ -762,7 +762,7 @@ powers_rank_processed_filename = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_filename, sep="\t", )
 
 
-# In[53]:
+# In[40]:
 
 
 figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"
