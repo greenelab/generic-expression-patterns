@@ -33,4 +33,4 @@ dependencies:
   - matplotlib==3.0.0
   - ponyo==0.2
   - matplotlib-venn
-  - svgutils
+  - svgutils==0.3.1
