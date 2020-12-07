@@ -1039,7 +1039,7 @@ def compare_gene_ranking(
     )
 
     fig.set_axis_labels(
-        "Our preliminary method", "DE prior (Crow et. al. 2019)", fontsize=14
+        "SOPHIE", "DE prior (Crow et. al. 2019)", fontsize=14, fontname="Verdana"
     )
 
     fig.savefig(
@@ -1081,12 +1081,14 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
         data=shared_pathway_rank_scaled_df,
         x="Rank (simulated)",
         y=ref_rank_col,
-        color="slateblue",
-        s=100,
+        color="#15527d",
+        s=50,
+        alpha=0.7,
+        edgecolors="face",
     )
 
-    fig.set_xlabel("Our preliminary method", fontsize=14)
-    fig.set_ylabel("Powers et. al. 2018", fontsize=14)
+    fig.set_xlabel("SOPHIE", fontsize=14, fontname="Verdana")
+    fig.set_ylabel("Powers et. al. 2018", fontsize=14, fontname="Verdana")
 
     fig.figure.savefig(
         output_figure_filename,
