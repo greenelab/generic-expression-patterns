@@ -240,9 +240,10 @@ nonzero_fig = sns.boxplot(
     x='gene type',
     y='nonzero LV coverage',
     notch=True,
-    palette=['powderblue', 'grey']
+    palette=['#2c7fb8', 'lightgrey']
                          )
-nonzero_fig.set_xlabel("Gene Type",fontsize=14, fontname="Verdana")
+nonzero_fig.set_xlabel(None)
+nonzero_fig.set_xticklabels(['generic genes', 'other genes'], fontsize=14, fontname="Verdana")
 nonzero_fig.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14, fontname="Verdana")
 nonzero_fig.tick_params(labelsize=14)
 nonzero_fig.set_title("Number of LVs genes are present in", fontsize=16, fontname="Verdana")
@@ -256,9 +257,10 @@ highweight_fig = sns.boxplot(data=all_coverage_df,
                              x='gene type',
                              y='highweight LV coverage',
                              notch=True,
-                             palette=['powderblue', 'grey']
+                             palette=['#2c7fb8', 'lightgrey']
                             )
-highweight_fig.set_xlabel("Gene Type",fontsize=14, fontname="Verdana")
+highweight_fig.set_xlabel(None)
+highweight_fig.set_xticklabels(['generic genes', 'other genes'], fontsize=14, fontname="Verdana")
 highweight_fig.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14, fontname="Verdana")
 highweight_fig.tick_params(labelsize=14)
 highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16, fontname="Verdana")
