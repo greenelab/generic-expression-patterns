@@ -67,8 +67,8 @@ panel_1a = make_figure_panel(
 )
 panel_1b = make_figure_panel(
     "../human_general_analysis/logs/NN_2500_30/tybalt_2layer_30latent_hist.svg",
-    0.6,
-    0.6,
+    0.8,
+    0.8,
     600,
     10
 )
