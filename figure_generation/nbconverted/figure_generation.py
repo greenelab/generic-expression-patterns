@@ -80,8 +80,13 @@ panel_1c = make_figure_panel(
     250
 )
 ## TO DO
-# Add panel showing volcano plots of example simulated experiments
-# Annotate volcano with name of DEGs
+panel_1d = make_figure_panel(
+    "../human_general_analysis/example_simulated_volcano.svg",
+    0.9,
+    0.9,
+    30,
+    700
+)
 
 
 # In[5]:
@@ -90,6 +95,7 @@ panel_1c = make_figure_panel(
 panel_1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_1b_label = sg.TextElement(580, 20, "B", size=18, weight="bold", font="Verdana")
 panel_1c_label = sg.TextElement(10, 260, "C", size=18, weight="bold", font="Verdana")
+panel_1d_label = sg.TextElement(10, 710, "D", size=18, weight="bold", font="Verdana")
 
 
 # In[6]:
@@ -101,9 +107,11 @@ figure_1.append([
     panel_1a, 
     panel_1b,
     panel_1c,
+    panel_1d,
     panel_1a_label,
     panel_1b_label,
-    panel_1c_label
+    panel_1c_label,
+    panel_1d_label
 ])
 display(SVG(figure_1.to_str()))
 
