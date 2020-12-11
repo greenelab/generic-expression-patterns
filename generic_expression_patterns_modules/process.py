@@ -168,7 +168,35 @@ def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
         simulated_data = simulated_data.drop(samples_to_remove)
 
         # Save
-        simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
+        simulated_data.to_csv(simulated_data_file, sep="\t")
+
+
+def subset_samples_template(template_filename, samples_to_remove):
+    """
+    Removes user selected samples from the template experiment. This function
+    overwrites the data in the template gene expression data files.
+
+    Arguments
+    ---------
+    samples_to_remove: lst
+        list of samples ids to remove from each simulated experiment
+    num_runs: int
+        Number of simulated experiments
+    local_dir: str
+        Local directory containing simulated experiments
+    project_id: str
+        Project id to use to retrieve simulated experiments
+
+    """
+
+    # Read simulated data
+    template_data = pd.read_csv(template_filename, header=0, sep="\t", index_col=0)
+
+    # Drop samples
+    template_data = template_data.drop(samples_to_remove)
+
+    # Save
+    template_data.to_csv(template_data_file, sep="\t")
 
 
 def recast_int(num_runs, local_dir, project_id):
@@ -203,6 +231,30 @@ def recast_int(num_runs, local_dir, project_id):
 
         # Save
         simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
+
+
+def recast_int_template(template_filename):
+    """
+    Re-casts simulated experiment data to integer to use DESeq.
+
+    Arguments
+    ---------
+    num_runs: int
+        Number of simulated experiments
+    local_dir: str
+        Local directory containing simulated experiments
+    project_id: str
+        Project id to use to retrieve simulated experiments
+
+    """
+    # Read template data
+    template_data = pd.read_csv(template_filename, header=0, sep="\t", index_col=0)
+
+    # Cast as int
+    template_data = template_data.astype(int)
+
+    # Save
+    template_data.to_csv(template_filename, float_format="%.5f", sep="\t")
 
 
 def create_recount2_compendium(download_dir, output_filename):

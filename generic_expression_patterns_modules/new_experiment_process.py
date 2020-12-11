@@ -24,7 +24,7 @@ def transpose_save(input_gene_expression_filename, output_gene_expression_filena
 
 def compare_match_features(template_filename, compendium_filename):
     """
-    This function checks that the feature space matches between 
+    This function checks that the feature space matches between
     template experiment and VAE model.  
     (i.e. ensure genes in template and VAE model are the same).
     
@@ -89,7 +89,9 @@ def compare_match_features(template_filename, compendium_filename):
     return mapped_template_experiment
 
 
-def normalize_template_experiment(mapped_template_experiment, scaler_filename):
+def normalize_template_experiment(
+    mapped_template_experiment, scaler_filename, output_filename
+):
     """
     mapped_template_experiment: df
         Dataframe of template experiment after mapping gene ids
@@ -109,7 +111,7 @@ def normalize_template_experiment(mapped_template_experiment, scaler_filename):
         index=mapped_template_experiment.index,
     )
 
-    return processed_template_experiment_df
+    processed_template_experiment_df.to_csv(output_filename, sep="\t")
 
 
 def embed_shift_template_experiment(
