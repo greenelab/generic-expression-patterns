@@ -1,6 +1,6 @@
 local_dir	"/home/alexandra/Documents/Data/Generic_expression_patterns/"
 raw_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/Costello_BladderCancer_ResistantCells_Counts_12-8-20.txt"
-processed_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/Costello_BladderCancer_ResistantCells_Counts_12-8-20_transposed.txt"
+processed_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/Costello_BladderCancer_ResistantCells_Counts_12-8-20_processed.txt"
 mapped_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/mapped_recount2_compendium.tsv"
 normalized_compendium_filename	"https://recount2.s3.amazonaws.com/normalized_recount2_compendium_data.tsv"
 scaler_filename	"../human_general_analysis/data/scaler_transform_human.pickle"

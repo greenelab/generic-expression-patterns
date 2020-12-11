@@ -196,7 +196,7 @@ def subset_samples_template(template_filename, samples_to_remove):
     template_data = template_data.drop(samples_to_remove)
 
     # Save
-    template_data.to_csv(template_data_file, sep="\t")
+    template_data.to_csv(template_filename, sep="\t")
 
 
 def recast_int(num_runs, local_dir, project_id):
