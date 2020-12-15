@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import glob
 from keras.models import load_model
+import matplotlib.pyplot as plt
+from matplotlib_venn import venn2
 
 
 def transpose_save(input_gene_expression_filename, output_gene_expression_filename):
@@ -71,20 +73,22 @@ def compare_match_features(template_filename, compendium_filename):
     ## TEMP HACK SOLUTION until I retrain VAE to get consistent columns
     # between mapped_compendium and normalized_compendium
     # Training dataset used for existing VAE model
-    local_dir = "/home/alexandra/Documents/Data/Generic_expression_patterns/"
-    mapped_compendium_filename = os.path.join(
-        local_dir, "mapped_recount2_compendium.tsv"
-    )
-    mapped_compendium = pd.read_csv(
-        mapped_compendium_filename, sep="\t", index_col=0, header=0
-    )
-    median_gene_expression = mapped_compendium[only_compendium_genes].median().to_dict()
+    # local_dir = "/home/alexandra/Documents/Data/Generic_expression_patterns/"
+    # mapped_compendium_filename = os.path.join(
+    #    local_dir, "mapped_recount2_compendium.tsv"
+    # )
+    # mapped_compendium = pd.read_csv(
+    #    mapped_compendium_filename, sep="\t", index_col=0, header=0
+    # )
+    median_gene_expression = compendium[only_compendium_genes].median().to_dict()
     tmp2_template_experiment = tmp_template_experiment.assign(**median_gene_expression)
 
     assert len(tmp2_template_experiment.columns) == len(compendium.columns)
 
     # sort template experiment columns to be in the same order as the compendium
     mapped_template_experiment = tmp2_template_experiment[compendium.columns]
+
+    mapped_template_experiment.to_csv(template_filename, sep="\t")
 
     return mapped_template_experiment
 
@@ -270,3 +274,136 @@ def embed_shift_template_experiment(
     simulated_data_encoded_df.to_csv(
         out_encoded_filename, float_format="%.3f", sep="\t"
     )
+
+
+def get_and_save_DEG_lists(summary_df, test_statistic, p_threshold, z_threshold):
+    """
+    Get list of DEGs using traditional criteria (log2FC and p-value)
+    and using z-score cutoff. Return different combinations of gene
+    lists.
+
+    Arguments
+    ---------
+    summary_df: df
+        df of results for one of the E-GEOD-33245 conditions ('1v2', '1v3', '1v4' or '1v5')
+        returned from `merge_abs_raw_dfs`
+    """
+    # Get DEGs using traditional criteria
+    degs_traditional = list(
+        (
+            summary_df[
+                (summary_df[f"abs({test_statistic}) (Real)"] > 1)
+                & (summary_df[f"Adj P-value (Real)"] < p_threshold)
+            ]
+            .set_index("Gene ID")
+            .index
+        )
+    )
+    print(f"No. of DEGs using traditional criteria: {len(degs_traditional)}")
+
+    # Get predicted specific DEGs using z-score cutoff
+    degs_specific = list(
+        (
+            summary_df[
+                (summary_df[f"abs({test_statistic}) (Real)"] > 1)
+                & (summary_df[f"abs(Z score)"].abs() > z_threshold)
+            ]
+            .set_index("Gene ID")
+            .index
+        )
+    )
+    print(f"No. of specific DEGs using z-score: {len(degs_specific)}")
+
+    # Get predicted generic DEGs using z-score cutoff
+    # Z-score cutoff was found by calculating the score
+    # whose invnorm(0.05/5549). Here we are using a p-value = 0.05
+    # with a Bonferroni correction for 5549 tests, which are
+    # the number of P. aeruginosa genes
+    degs_generic = list(
+        (
+            summary_df[
+                (summary_df[f"abs({test_statistic}) (Real)"] > 1)
+                & (summary_df[f"abs(Z score)"].abs() < z_threshold)
+            ]
+            .set_index("Gene ID")
+            .index
+        )
+    )
+    print(f"No. of generic DEGs using z-score: {len(degs_generic)}")
+
+    # Get intersection of DEGs using traditional and z-score criteria
+    degs_intersect = list(set(degs_traditional).intersection(degs_specific))
+    print(
+        f"No. of traditional DEGs that are specific by z-score criteria: {len(degs_intersect)}"
+    )
+
+    # Get specific DEGs that were NOT found using traditional criteria
+    degs_diff = list(set(degs_specific).difference(degs_intersect))
+    print(
+        f"No. of specific DEGs that were not found by traditional criteria: {len(degs_diff)}"
+    )
+
+    # Get intersection of DEGs using traditional and z-score criteria
+    degs_intersect_generic = list(set(degs_traditional).intersection(degs_generic))
+    print(
+        f"No. of traditional DEGs that are generic by z-score criteria: {len(degs_intersect_generic)}"
+    )
+
+    # Set `Gene ID` as index
+    # summary_df.set_index("Gene ID", inplace=True)
+
+    gene_id_names_intersect = summary_df.loc[degs_intersect, "Gene ID"]
+    gene_id_names_diff = summary_df.loc[degs_diff, "Gene ID"]
+    gene_id_names_generic = summary_df.loc[degs_generic, "Gene ID"]
+
+    gene_lists_df = pd.DataFrame(
+        {
+            "Traditional + specific DEGs": gene_id_names_intersect,
+            "Specific only DEGs": gene_id_names_diff,
+            "Generic DEGs": gene_id_names_generic,
+        }
+    )
+
+    return (
+        gene_lists_df,
+        degs_traditional,
+        degs_specific,
+        degs_generic,
+        degs_intersect,
+        degs_intersect_generic,
+        degs_diff,
+    )
+
+
+def plot_venn(degs_traditional, degs_specific, degs_generic):
+    """
+    Create venn diagram to compare the genes that were found
+    to be DE using traditional criteria vs genes that are
+    specific (i.e. high z-score) or generic (i.e. low z-score)
+
+    Arguments
+    ---------
+    degs_traditional: list
+        List of genes found to pass traditional DE criteria
+        (log2FC > 1 and FDR adjusted p-value < 0.05).
+    degs_specific: list
+        List of genes that were found to have log2 FC > 1
+        and z-score > 4.44
+    degs_generic: list
+        List of genes that were found to have log2 FC > 1
+        and z-score < 4.44
+    """
+    fig, axes = plt.subplots(ncols=2, nrows=1, figsize=(15, 4))
+
+    venn2(
+        [set(degs_traditional), set(degs_specific)],
+        set_labels=("Traditional", "Specific"),
+        ax=axes[0],
+    )
+
+    venn2(
+        [set(degs_traditional), set(degs_generic)],
+        set_labels=("Traditional", "Generic"),
+        ax=axes[1],
+    )
+

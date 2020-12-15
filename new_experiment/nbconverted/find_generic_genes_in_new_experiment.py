@@ -51,7 +51,7 @@ config_filename = os.path.abspath(
 params = utils.read_config(config_filename)
 
 
-# In[11]:
+# In[4]:
 
 
 # Load params
@@ -89,7 +89,8 @@ scaler_filename = params['scaler_filename']
 col_to_rank_genes = params['rank_genes_by']
 
 sample_id_metadata_filename = os.path.join(
-    local_dir,
+    "data",
+    "metadata",
     f"{project_id}_process_samples.tsv"
 )
 
@@ -119,8 +120,9 @@ new_experiment_process.transpose_save(template_filename, transposed_template_fil
 # (i.e. ensure genes in template and VAE model are the same).
 mapped_template_experiment = new_experiment_process.compare_match_features(
     transposed_template_filename,
-    normalized_compendium_filename
+    mapped_compendium_filename
 )
+mapped_template_filename = transposed_template_filename
 
 
 # In[8]:
@@ -169,11 +171,10 @@ for run_id in range(num_runs):
 # 
 # NOTE: Eventually provide the ability to use other methods
 
-# In[13]:
+# In[10]:
 
 
 # Modify template and simulated experiments based on comparison
-
 if os.path.exists(sample_id_metadata_filename):
     # Read in metadata
     metadata = pd.read_csv(sample_id_metadata_filename, sep='\t', header=0, index_col=0)
@@ -191,52 +192,53 @@ if os.path.exists(sample_id_metadata_filename):
     
 # Modify template experiment
 process.subset_samples_template(
-    processed_template_filename,
+    mapped_template_filename,
     sample_ids_to_drop,
 )
 
 
-# In[14]:
+# In[11]:
 
 
 # Round simulated and template read counts to int in order to run DESeq.
 # This step modifies the following files again:
 # "<local_dir>/pseudo_experiments/selected_simulated_data_SRP012656_<n>.txt"
 process.recast_int(num_runs, local_dir, project_id)
-process.recast_int_template(processed_template_filename)
+process.recast_int_template(mapped_template_filename)
 
 
-# In[15]:
+# In[12]:
 
 
 # Load metadata file with grouping assignments for samples
 metadata_filename = os.path.join(
-    local_dir,
+    "data",
+    "metadata",
     f"{project_id}_groups.tsv"
 )
 
 
-# In[16]:
+# In[13]:
 
 
 # Check whether ordering of sample ids is consistent between gene expression data and metadata
-process.compare_and_reorder_samples(processed_template_filename, metadata_filename)
+process.compare_and_reorder_samples(mapped_template_filename, metadata_filename)
 
 
-# In[17]:
+# In[14]:
 
 
 # Create subdirectory: "<local_dir>/DE_stats/"
 os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 
 
-# In[18]:
+# In[15]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# File created: "<local_dir>/DE_stats/DE_stats_template_data_SRP012656_real.txt"\nget_DE_stats_DESeq(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i mapped_template_filename -i local_dir -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# File created: "<local_dir>/DE_stats/DE_stats_template_data_SRP012656_real.txt"\nget_DE_stats_DESeq(metadata_filename,\n                   project_id, \n                   mapped_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
-# In[19]:
+# In[16]:
 
 
 # Check whether ordering of sample ids is consistent between gene expression data and metadata
@@ -250,13 +252,13 @@ for i in range(num_runs):
     process.compare_and_reorder_samples(simulated_data_filename, metadata_filename)
 
 
-# In[20]:
+# In[17]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# Files created: "<local_dir>/DE_stats/DE_stats_simulated_data_SRP012656_<n>.txt"\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(local_dir, \n                                     "pseudo_experiment/selected_simulated_data_",\n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    get_DE_stats_DESeq(metadata_filename,\n                       project_id, \n                       simulated_data_filename,\n                       "simulated",\n                       local_dir,\n                       i)\n}')
 
 
-# In[21]:
+# In[18]:
 
 
 # Quick validation
@@ -374,7 +376,7 @@ def make_volcano_plot_simulated(
     fig.suptitle(f"Example simulated experiments based on {project_id}", fontsize=16, fontname="Verdana")
 
 
-# In[22]:
+# In[19]:
 
 
 # Check number of DEGs
@@ -395,7 +397,7 @@ selected = template_DE_stats[(template_DE_stats['padj']<0.01) & (abs(template_DE
 print(selected.shape)
 
 
-# In[23]:
+# In[20]:
 
 
 make_volcano_plot_template(
@@ -404,7 +406,7 @@ make_volcano_plot_template(
 )
 
 
-# In[24]:
+# In[21]:
 
 
 simulated_DE_stats_dir = os.path.join(local_dir, "DE_stats")
@@ -420,7 +422,7 @@ make_volcano_plot_simulated(
 # 
 # Add description
 
-# In[25]:
+# In[22]:
 
 
 # Concatenate simulated experiments
@@ -429,14 +431,14 @@ simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, proj
 print(simulated_DE_stats_all.shape)
 
 
-# In[26]:
+# In[23]:
 
 
 # Take absolute value of logFC and t statistic
 simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
 
 
-# In[27]:
+# In[24]:
 
 
 # Aggregate statistics across all simulated experiments
@@ -447,7 +449,7 @@ simulated_DE_summary_stats = calc.aggregate_stats(
 )
 
 
-# In[28]:
+# In[25]:
 
 
 # Take absolute value of logFC and t statistic
@@ -461,7 +463,7 @@ template_DE_stats = calc.rank_genes_or_pathways(
 )
 
 
-# In[29]:
+# In[26]:
 
 
 # Rank genes in simulated experiments
@@ -476,7 +478,7 @@ simulated_DE_summary_stats = calc.rank_genes_or_pathways(
 # 
 # Description of table columns
 
-# In[30]:
+# In[27]:
 
 
 # Get summary table
@@ -493,14 +495,14 @@ summary_gene_ranks = process.generate_summary_table(
 summary_gene_ranks.sort_values(by="abs(Z score)", ascending=False).head(10)
 
 
-# In[33]:
+# In[28]:
 
 
 # Take a look at which genes were generic based on ranking
 summary_gene_ranks.sort_values(by="Rank (simulated)", ascending=False).head(20)
 
 
-# In[32]:
+# In[29]:
 
 
 # Save
