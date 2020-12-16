@@ -1,9 +1,11 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Application: new experiment
 # 
-# This notebook allows users to find generic genes in their experiment of interest using an existing VAE model
+# This notebook allows users to find specific genes in their experiment of interest using an existing VAE model
+# 
+# This notebook will generate a `generic_gene_summary_<experiment id>.tsv` file that contains a z-score per gene that indicates how specific a gene is the experiment in question.
 
 # In[1]:
 
@@ -27,16 +29,17 @@ from generic_expression_patterns_modules import process, new_experiment_process,
 
 # ## User input
 # 
-# User needs to define the following:
+# User needs to define the following in the [config file](../configs/config_new_experiment.tsv):
 # 
 # 1. Template experiment. This is the experiment you are interested in studying
 # 2. Training compendium used to train VAE, including unnormalized gene mapped version and normalized version
 # 3. Scaler transform used to normalize the training compendium
 # 4. Directory containing trained VAE model
-# 5. Experiment id to use to label newly create simulated experiments
+# 5. Experiment id to label newly create simulated experiments
 # 
-# ## TO DO:
-# #If want to train a new model then need to have gene expression data of what form, gene ids of what form? Instructions???
+# The user also needs to provide metadata files:
+# 1. `<experiment id>_process_samples.tsv` contains 2 columns (sample ids, label that indicates if the sample is kept or removed). See [example](data/metadata/cis-gem-par-KU1919_process_samples.tsv). **Note: This file is not required if the user wishes to use all the samples in the template experiment file.**
+# 2. `<experiment id>_groups.tsv` contains 2 columns: sample ids, group label to perform DE analysis. See [example](data/metadata/cis-gem-par-KU1919_groups.tsv)
 
 # In[3]:
 
@@ -54,7 +57,7 @@ params = utils.read_config(config_filename)
 # In[4]:
 
 
-# Load params
+# Load config params
 
 # Local directory to store intermediate files
 local_dir = params['local_dir']
@@ -88,10 +91,24 @@ scaler_filename = params['scaler_filename']
 # Test statistic used to rank genes by
 col_to_rank_genes = params['rank_genes_by']
 
+
+# In[ ]:
+
+
+# Load metadata files
+
+# Load metadata file with processing information
 sample_id_metadata_filename = os.path.join(
     "data",
     "metadata",
     f"{project_id}_process_samples.tsv"
+)
+
+# Load metadata file with grouping assignments for samples
+metadata_filename = os.path.join(
+    "data",
+    "metadata",
+    f"{project_id}_groups.tsv"
 )
 
 
@@ -145,9 +162,6 @@ new_experiment_process.normalize_template_experiment(
 
 
 # Simulate experiments based on template experiment
-# Embed template experiment into learned latent space
-# Linearly shift template experiment to different locations of the latent space
-
 normalized_data = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
 processed_template_data = pd.read_csv(processed_template_filename, sep="\t", index_col=0, header=0)
 
@@ -166,10 +180,8 @@ for run_id in range(num_runs):
 
 # ## Differential expression analysis
 # 
-# * If data is RNA-seq then use DESeq2
-# * If data is microarray then use Limma
-# 
-# NOTE: Eventually provide the ability to use other methods
+# * If data is RNA-seq then use DESeq2 (using human_general_analysis model)
+# * If data is microarray then use Limma (using human_cancer_analysis, pseudomonas_analysis models)
 
 # In[10]:
 
@@ -190,11 +202,11 @@ if os.path.exists(sample_id_metadata_filename):
         project_id
     )
     
-# Modify template experiment
-process.subset_samples_template(
-    mapped_template_filename,
-    sample_ids_to_drop,
-)
+    # Modify template experiment
+    process.subset_samples_template(
+        mapped_template_filename,
+        sample_ids_to_drop,
+    )
 
 
 # In[11]:
@@ -202,20 +214,9 @@ process.subset_samples_template(
 
 # Round simulated and template read counts to int in order to run DESeq.
 # This step modifies the following files again:
-# "<local_dir>/pseudo_experiments/selected_simulated_data_SRP012656_<n>.txt"
+# "<local_dir>/pseudo_experiments/selected_simulated_data_<project_id>_<n>.txt"
 process.recast_int(num_runs, local_dir, project_id)
 process.recast_int_template(mapped_template_filename)
-
-
-# In[12]:
-
-
-# Load metadata file with grouping assignments for samples
-metadata_filename = os.path.join(
-    "data",
-    "metadata",
-    f"{project_id}_groups.tsv"
-)
 
 
 # In[13]:
@@ -223,6 +224,16 @@ metadata_filename = os.path.join(
 
 # Check whether ordering of sample ids is consistent between gene expression data and metadata
 process.compare_and_reorder_samples(mapped_template_filename, metadata_filename)
+
+# Check whether ordering of sample ids is consistent between gene expression data and metadata
+for i in range(num_runs):
+    simulated_data_filename = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        f"selected_simulated_data_{project_id}_{i}.txt"
+    )
+        
+    process.compare_and_reorder_samples(simulated_data_filename, metadata_filename)
 
 
 # In[14]:
@@ -238,25 +249,15 @@ os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i mapped_template_filename -i local_dir -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# File created: "<local_dir>/DE_stats/DE_stats_template_data_SRP012656_real.txt"\nget_DE_stats_DESeq(metadata_filename,\n                   project_id, \n                   mapped_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
-# In[16]:
-
-
-# Check whether ordering of sample ids is consistent between gene expression data and metadata
-for i in range(num_runs):
-    simulated_data_filename = os.path.join(
-        local_dir,
-        "pseudo_experiment",
-        f"selected_simulated_data_{project_id}_{i}.txt"
-    )
-        
-    process.compare_and_reorder_samples(simulated_data_filename, metadata_filename)
-
-
 # In[17]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# Files created: "<local_dir>/DE_stats/DE_stats_simulated_data_SRP012656_<n>.txt"\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(local_dir, \n                                     "pseudo_experiment/selected_simulated_data_",\n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    get_DE_stats_DESeq(metadata_filename,\n                       project_id, \n                       simulated_data_filename,\n                       "simulated",\n                       local_dir,\n                       i)\n}')
 
+
+# ## Quick validation
+# 
+# Examine volcano plot of the template experiment and example simulated experiments.
 
 # In[18]:
 
@@ -474,6 +475,45 @@ simulated_DE_summary_stats = calc.rank_genes_or_pathways(
 )
 
 
+# ## (if needed) Get raw test statistic values
+
+# In[ ]:
+
+
+abs_test_statistics = ["logFC", "log2FoldChange", "t", "NES"]
+if test_statistic in abs_test_statistics:
+    # Concatenate simulated experiments
+    simulated_DE_stats_all_raw = process.concat_simulated_data(local_dir, num_runs, project_id, 'DE')
+    
+    # Aggregate statistics across all simulated experiments
+    simulated_DE_summary_stats_raw = calc.aggregate_stats(
+        col_to_rank_genes,
+        simulated_DE_stats_all_raw,
+        'DE'
+    )
+    
+    # Rank genes in template experiment
+    template_DE_stats_raw = calc.rank_genes_or_pathways(
+        col_to_rank_genes,      
+        template_DE_stats,
+        True
+    )
+    # Rank genes in simulated experiments
+    simulated_DE_summary_stats_raw = calc.rank_genes_or_pathways(
+        col_to_rank_genes,
+        simulated_DE_summary_stats_raw,
+        False
+    )
+    summary_gene_ranks_raw = process.generate_summary_table(
+        template_DE_stats_raw,
+        simulated_DE_summary_stats_raw,
+        col_to_rank_genes,
+        local_dir,
+        'gene',
+        params
+    )
+
+
 # ## Summary table
 # 
 # Description of table columns
@@ -482,7 +522,6 @@ simulated_DE_summary_stats = calc.rank_genes_or_pathways(
 
 
 # Get summary table
-# Description of table columns here
 summary_gene_ranks = process.generate_summary_table(
     template_DE_stats,
     simulated_DE_summary_stats,
@@ -495,11 +534,10 @@ summary_gene_ranks = process.generate_summary_table(
 summary_gene_ranks.sort_values(by="abs(Z score)", ascending=False).head(10)
 
 
-# In[28]:
+# In[ ]:
 
 
-# Take a look at which genes were generic based on ranking
-summary_gene_ranks.sort_values(by="Rank (simulated)", ascending=False).head(20)
+# Create 
 
 
 # In[29]:

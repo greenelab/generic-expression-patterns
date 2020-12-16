@@ -199,6 +199,22 @@ def subset_samples_template(template_filename, samples_to_remove):
     template_data.to_csv(template_filename, sep="\t")
 
 
+def process_samples_for_DE():
+    """
+    This function processes samples in the template and simulated
+    experiments to prepare for DE analysis.
+
+    These processing steps includes:
+    1. Removing samples that are not included in the comparison.
+    These "extra" samples occur when an experiment contains multiple
+    comparisons.
+    2. Checks that the ordering of samples in the metadata file
+    are consistent with the ordering in the gene expression data
+    matrix. If the ordering is not consistent, then samples in
+    the gene expression data matrix are re-ordered.
+    """
+
+
 def recast_int(num_runs, local_dir, project_id):
     """
     Re-casts simulated experiment data to integer to use DESeq.
