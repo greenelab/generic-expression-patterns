@@ -134,75 +134,12 @@ def replace_ensembl_ids(expression_df, gene_id_mapping):
     return updated_expression_df
 
 
-def subset_samples(samples_to_remove, num_runs, local_dir, project_id):
-    """
-    Removes user selected samples from the simulated experiments. This function
-    overwrites the data in the simulated gene expression data files.
-
-    Arguments
-    ---------
-    samples_to_remove: lst
-        list of samples ids to remove from each simulated experiment
-    num_runs: int
-        Number of simulated experiments
-    local_dir: str
-        Local directory containing simulated experiments
-    project_id: str
-        Project id to use to retrieve simulated experiments
-
-    """
-
-    for i in range(num_runs):
-        simulated_data_file = os.path.join(
-            local_dir,
-            "pseudo_experiment",
-            "selected_simulated_data_" + project_id + "_" + str(i) + ".txt",
-        )
-
-        # Read simulated data
-        simulated_data = pd.read_csv(
-            simulated_data_file, header=0, sep="\t", index_col=0
-        )
-
-        # Drop samples
-        simulated_data = simulated_data.drop(samples_to_remove)
-
-        # Save
-        simulated_data.to_csv(simulated_data_file, sep="\t")
-
-
-def subset_samples_template(template_filename, samples_to_remove):
-    """
-    Removes user selected samples from the template experiment. This function
-    overwrites the data in the template gene expression data files.
-
-    Arguments
-    ---------
-    samples_to_remove: lst
-        list of samples ids to remove from each simulated experiment
-    num_runs: int
-        Number of simulated experiments
-    local_dir: str
-        Local directory containing simulated experiments
-    project_id: str
-        Project id to use to retrieve simulated experiments
-
-    """
-
-    # Read simulated data
-    template_data = pd.read_csv(template_filename, header=0, sep="\t", index_col=0)
-
-    # Drop samples
-    template_data = template_data.drop(samples_to_remove)
-
-    # Save
-    template_data.to_csv(template_filename, sep="\t")
-
-
-def process_samples_for_DE():
+def process_samples_for_limma(
+    expression_filename, process_metadata_filename, grp_metadata_filename,
+):
     """
     This function processes samples in the template and simulated
-    experiments to prepare for DE analysis.
+    experiments to prepare for DE analysis using DESeq.
 
     These processing steps includes:
     1. Removing samples that are not included in the comparison.
@@ -212,65 +149,137 @@ def process_samples_for_DE():
     are consistent with the ordering in the gene expression data
     matrix. If the ordering is not consistent, then samples in
     the gene expression data matrix are re-ordered.
-    """
-
-
-def recast_int(num_runs, local_dir, project_id):
-    """
-    Re-casts simulated experiment data to integer to use DESeq.
 
     Arguments
-    ---------
-    num_runs: int
-        Number of simulated experiments
-    local_dir: str
-        Local directory containing simulated experiments
-    project_id: str
-        Project id to use to retrieve simulated experiments
+    ----------
+    expression_filename: str
+        File containing unnormalized gene expression data for 
+        either template or simulated experiments
+
+    process_metadata_filename: str
+        File containing assignment for which samples to drop
+
+    grp_metadata_filename: str
+        File containing group assigments for samples to use
+        for DESeq analysis
 
     """
 
-    for i in range(num_runs):
-        simulated_data_file = os.path.join(
-            local_dir,
-            "pseudo_experiment",
-            "selected_simulated_data_" + project_id + "_" + str(i) + ".txt",
-        )
+    # Read data
+    expression = pd.read_csv(expression_filename, sep="\t", index_col=0, header=0)
+    process_metadata = pd.read_csv(
+        process_metadata_filename, sep="\t", index_col=0, header=0
+    )
+    grp_metadata = pd.read_csv(grp_metadata_filename, sep="\t", header=0, index_col=0)
 
-        # Read simulated data
-        simulated_data = pd.read_csv(
-            simulated_data_file, header=0, sep="\t", index_col=0
-        )
+    # Get samples ids to remove
+    samples_to_remove = list(
+        process_metadata[process_metadata["processing"] == "drop"].index
+    )
 
-        # Cast as int
-        simulated_data = simulated_data.astype(int)
+    # Remove samples
+    expression = expression.drop(samples_to_remove)
 
-        # Save
-        simulated_data.to_csv(simulated_data_file, float_format="%.5f", sep="\t")
+    # Check ordering of sample ids is consistent between gene expression data and metadata
+    metadata_sample_ids = grp_metadata.index
+    expression_sample_ids = expression.index
 
-
-def recast_int_template(template_filename):
-    """
-    Re-casts simulated experiment data to integer to use DESeq.
-
-    Arguments
-    ---------
-    num_runs: int
-        Number of simulated experiments
-    local_dir: str
-        Local directory containing simulated experiments
-    project_id: str
-        Project id to use to retrieve simulated experiments
-
-    """
-    # Read template data
-    template_data = pd.read_csv(template_filename, header=0, sep="\t", index_col=0)
-
-    # Cast as int
-    template_data = template_data.astype(int)
+    if metadata_sample_ids.equals(expression_sample_ids):
+        print("sample ids are ordered correctly")
+    else:
+        # Convert gene expression ordering to be the same as
+        # metadata sample ordering
+        print("sample ids don't match, going to re-order gene expression samples")
+        expression = expression.reindex(metadata_sample_ids)
 
     # Save
-    template_data.to_csv(template_filename, float_format="%.5f", sep="\t")
+    expression.to_csv(expression_filename, sep="\t")
+
+
+def process_samples_for_DESeq(
+    expression_filename,
+    process_metadata_filename,
+    grp_metadata_filename,
+    count_threshold=None,
+):
+    """
+    This function processes samples in the template and simulated
+    experiments to prepare for DE analysis using DESeq.
+
+    These processing steps includes:
+    1. Removing samples that are not included in the comparison.
+    These "extra" samples occur when an experiment contains multiple
+    comparisons.
+    2. Removes genes with 0 counts across all samples
+    3. (Optionally) filters genes with mean gene expression below
+    some user defined threshold
+    4. Case count values as integers
+    5. Checks that the ordering of samples in the metadata file
+    are consistent with the ordering in the gene expression data
+    matrix. If the ordering is not consistent, then samples in
+    the gene expression data matrix are re-ordered.
+
+    Arguments
+    ----------
+    expression_filename: str
+        File containing unnormalized gene expression data for 
+        either template or simulated experiments
+
+    process_metadata_filename: str
+        File containing assignment for which samples to drop
+
+    grp_metadata_filename: str
+        File containing group assigments for samples to use
+        for DESeq analysis
+
+    count_threshold: int
+        Remove genes that have mean count <= count_threshold
+    
+    """
+
+    # Read data
+    expression = pd.read_csv(expression_filename, sep="\t", index_col=0, header=0)
+    process_metadata = pd.read_csv(
+        process_metadata_filename, sep="\t", index_col=0, header=0
+    )
+    grp_metadata = pd.read_csv(grp_metadata_filename, sep="\t", header=0, index_col=0)
+
+    # Get samples ids to remove
+    samples_to_remove = list(
+        process_metadata[process_metadata["processing"] == "drop"].index
+    )
+
+    # Remove samples
+    expression = expression.drop(samples_to_remove)
+
+    # Remove genes with 0 counts
+    all_zero_genes = list(expression.columns[(expression == 0).all()])
+    expression = expression.drop(all_zero_genes)
+
+    assert len(list(expression.columns[(expression == 0).all()])) == 0
+
+    # Remove genes below a certain threshold (if provided)
+    if count_threshold != None:
+        genes_to_keep = expression.loc[:, expression.mean() <= count_threshold].columns
+        expression = expression[genes_to_keep]
+
+    # Cast as int
+    expression = expression.astype(int)
+
+    # Check ordering of sample ids is consistent between gene expression data and metadata
+    metadata_sample_ids = grp_metadata.index
+    expression_sample_ids = expression.index
+
+    if metadata_sample_ids.equals(expression_sample_ids):
+        print("sample ids are ordered correctly")
+    else:
+        # Convert gene expression ordering to be the same as
+        # metadata sample ordering
+        print("sample ids don't match, going to re-order gene expression samples")
+        expression = expression.reindex(metadata_sample_ids)
+
+    # Save
+    expression.to_csv(expression_filename, sep="\t")
 
 
 def create_recount2_compendium(download_dir, output_filename):
@@ -777,12 +786,12 @@ def concat_simulated_data(local_dir, num_runs, project_id, data_type):
 
 def abs_value_stats(simulated_DE_stats_all):
     """
-    This function takes the absolute value of columns=[`logFC`, `t`].
+    This function takes the absolute value of columns=[`logFC`, `t`, `NES`].
     For ranking genes, we only care about the magnitude of the change for
-    the logFC and t statistic, but not the direction.
+    the logFC, t, NES statistic, but not the direction.
 
     The ranking for each gene will be based on the mean absolute value of either
-    logFC or t statistic, depending on the user selection
+    logFC, t, NES statistic, depending on the user selection
     """
     if "logFC" in simulated_DE_stats_all.columns:
         simulated_DE_stats_all["logFC"] = simulated_DE_stats_all["logFC"].abs()
@@ -798,8 +807,9 @@ def abs_value_stats(simulated_DE_stats_all):
 
 
 def generate_summary_table(
-    template_DE_stats,
-    simulated_DE_summary_stats,
+    template_stats_filename,
+    template_ranking_summary,
+    simulated_ranking_summary,
     col_to_rank,
     local_dir,
     pathway_or_gene,
@@ -810,10 +820,13 @@ def generate_summary_table(
 
     Arguments
     ---------
-    template_DE_stats: df
-        dataframe containing DE statistics for template experiment
-    simulated_DE_summary_stats: df
-        dataframe containing aggregated DE statistics across all simulated experiments
+    template_stats_filename: str
+        File containing DE or GSEA statistics for template experiment
+    template_ranking_summary: df
+        dataframe containing DE or GSEA statistics and ranking for template experiment
+    simulated_ranking_summary: df
+        dataframe containing aggregated DE or GSEA statistics across all simulated experiments
+        and ranking
     col_to_rank: str
         DE statistic to use to rank genes
     local_dir: str
@@ -828,54 +841,74 @@ def generate_summary_table(
     Dataframe summarizing gene ranking for template and simulated experiments
 
     """
-    # Merge template statistics with simulated statistics
-    template_simulated_DE_stats = template_DE_stats.merge(
-        simulated_DE_summary_stats, left_index=True, right_index=True
+    # Read in template experiment
+    template_stats = pd.read_csv(
+        template_stats_filename, sep="\t", index_col=0, header=0
     )
-    print(template_simulated_DE_stats.shape)
+
+    # Merge template statistics with simulated statistics
+    template_simulated_summary_stats = template_ranking_summary.merge(
+        simulated_ranking_summary, left_index=True, right_index=True
+    )
+    shared_genes = list(template_simulated_summary_stats.index)
 
     # Parse columns
-    if "adj.P.Val" in template_simulated_DE_stats.columns:
-        median_pval_simulated = template_simulated_DE_stats[("adj.P.Val", "median")]
+    if "adj.P.Val" in template_simulated_summary_stats.columns:
+        median_pval_simulated = template_simulated_summary_stats[
+            ("adj.P.Val", "median")
+        ]
         col_name = "adj.P.Val"
     else:
-        median_pval_simulated = template_simulated_DE_stats[("padj", "median")]
+        median_pval_simulated = template_simulated_summary_stats[("padj", "median")]
         col_name = "padj"
-    mean_test_simulated = template_simulated_DE_stats[(col_to_rank, "mean")]
-    std_test_simulated = template_simulated_DE_stats[(col_to_rank, "std")]
-    count_simulated = template_simulated_DE_stats[(col_to_rank, "count")]
-    rank_simulated = template_simulated_DE_stats[("ranking", "")]
+    mean_test_simulated = template_simulated_summary_stats[(col_to_rank, "mean")]
+    std_test_simulated = template_simulated_summary_stats[(col_to_rank, "std")]
+    count_simulated = template_simulated_summary_stats[(col_to_rank, "count")]
+    rank_simulated = template_simulated_summary_stats[("ranking", "")]
+
+    # Get raw values for test statistic if we took the abs
+    # for ranking.
+    # If test statistic is either log2 fold change,
+    # t-statistic, Normalized Enrichment Score
+    # then we want to also report the raw
+    # value for users to know the directionality
+    abs_stats_terms = ["t", "NES", "logFC", "log2FoldChange"]
 
     # Set variable strings depends on analysis
     if pathway_or_gene.lower() == "pathway":
         index_header = "Pathway ID"
         test_statistic = params["rank_pathways_by"]
+        if test_statistic in abs_stats_terms:
+            test_statistic_label = f"abs({test_statistic})"
 
     elif pathway_or_gene.lower() == "gene":
         index_header = "Gene ID"
         test_statistic = params["rank_genes_by"]
-        if test_statistic in ["logFC", "log2FoldChange"]:
-            test_statistic = f"abs({test_statistic})"
+        if test_statistic in abs_stats_terms:
+            test_statistic_label = f"abs({test_statistic})"
 
     # Create summary table
     summary = pd.DataFrame(
         data={
-            index_header: template_simulated_DE_stats.index,
-            "Adj P-value (Real)": template_simulated_DE_stats[col_name],
-            "Rank (Real)": template_simulated_DE_stats["ranking"],
-            f"{test_statistic} (Real)": template_simulated_DE_stats[col_to_rank],
+            index_header: template_simulated_summary_stats.index,
+            "Adj P-value (Real)": template_simulated_summary_stats[col_name],
+            "Rank (Real)": template_simulated_summary_stats["ranking"],
+            f"{test_statistic_label} (Real)": template_simulated_summary_stats[
+                col_to_rank
+            ],
+            f"{test_statistic} (Real)": template_stats.loc[
+                shared_genes, test_statistic
+            ],
             "Median adj p-value (simulated)": median_pval_simulated,
             "Rank (simulated)": rank_simulated,
-            f"Mean {test_statistic} (simulated)": mean_test_simulated,
+            f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
             "Std deviation (simulated)": std_test_simulated,
             "Number of experiments (simulated)": count_simulated,
         }
     )
-    summary["abs(Z score)"] = (
-        abs(
-            summary[f"{test_statistic} (Real)"]
-            - summary[f"Mean {test_statistic} (simulated)"]
-        )
+    summary["Z score"] = (
+        summary[f"{test_statistic_label} (Real)"]
+        - summary[f"Mean {test_statistic_label} (simulated)"]
     ) / summary["Std deviation (simulated)"]
 
     return summary
@@ -927,6 +960,10 @@ def merge_ranks_to_compare(
     )
 
     # Get your rank of shared genes
+    # Note: ranking was performed before intersection
+    # So there will be some jumps in the ranking due to
+    # genes that were not shared, but the ordering should
+    # still be preserved
     your_rank_df = pd.DataFrame(
         your_summary_ranks_df.loc[shared_genes_or_pathways, "Rank (simulated)"]
     )

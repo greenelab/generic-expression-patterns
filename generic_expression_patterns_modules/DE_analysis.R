@@ -134,7 +134,7 @@ get_DE_stats_DESeq <- function(metadata_file,
 
   deseq_object <- DESeq(ddset)
 
-  deseq_results <- results(deseq_object)
+  deseq_results <- results(deseq_object, independentFiltering=FALSE)
 
   deseq_results_df <-  as.data.frame(deseq_results)
 
