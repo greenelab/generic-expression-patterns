@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Application: new experiment
@@ -130,6 +130,18 @@ transposed_template_filename = "/home/alexandra/Documents/Data/Generic_expressio
 new_experiment_process.transpose_save(template_filename, transposed_template_filename)
 
 
+# In[ ]:
+
+
+### Subset samples
+
+
+# In[ ]:
+
+
+### Filter out genes with with 0 counts
+
+
 # In[7]:
 
 
@@ -176,6 +188,19 @@ for run_id in range(num_runs):
         latent_dim,
         run_id
     )
+
+
+# In[ ]:
+
+
+### Subset simulated samples
+
+
+# In[ ]:
+
+
+### Filter out genes
+### Without re-simulating, check that the number of simulated experiments is the same
 
 
 # ## Differential expression analysis
