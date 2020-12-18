@@ -102,7 +102,11 @@ def make_volcano_plot_template(
         )
     
     f.set_xlabel("log2 Fold Change", fontsize=14, fontname="Verdana")
-    f.set_ylabel("-log10(FDR adjusted p-value)", fontsize=14, fontname="Verdana")
+    f.set_ylabel(
+      "-log10(FDR adjusted p-value)", 
+      fontsize=14, 
+      fontname="Verdana"
+     )
     f.set_title(f"Template experiment ({project_id})", fontsize=16, fontname="Verdana")
     
     # Save plot
