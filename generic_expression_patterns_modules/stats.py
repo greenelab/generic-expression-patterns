@@ -42,7 +42,7 @@ def format_pseudomonas_pathway_DB(pathway_DB_filename, local_dir, out_filename):
     to `output_filename` in order to be
     used in GSEA_analysis.R
 
-    Note: Currently this function is specifically
+    NOTE: Currently this function is specifically
     customized to expect pathway_DB_filename = 
     "https://raw.githubusercontent.com/greenelab/adage/master/Node_interpretation/pseudomonas_KEGG_terms.txt"
 
@@ -79,7 +79,10 @@ def format_pseudomonas_pathway_DB(pathway_DB_filename, local_dir, out_filename):
 
 
 def process_samples_for_limma(
-    expression_filename, process_metadata_filename, grp_metadata_filename,
+    expression_filename,
+    process_metadata_filename,
+    grp_metadata_filename,
+    out_expression_filename=None,
 ):
     """
     This function processes samples in the template and simulated
@@ -97,15 +100,17 @@ def process_samples_for_limma(
     Arguments
     ----------
     expression_filename: str
-        File containing unnormalized gene expression data for 
+        File containing unnormalized gene expression data for
         either template or simulated experiments
-
     process_metadata_filename: str
         File containing assignment for which samples to drop
-
     grp_metadata_filename: str
         File containing group assigments for samples to use
         for DESeq analysis
+    out_expression_filename (optional): str
+        File to save processed gene expression data to.
+        If not provided processed gene expression data will
+        be output to the same input filename   
 
     """
 
@@ -137,7 +142,10 @@ def process_samples_for_limma(
         expression = expression.reindex(metadata_sample_ids)
 
     # Save
-    expression.to_csv(expression_filename, sep="\t")
+    if out_expression_filename != None:
+        expression.to_csv(out_expression_filename, sep="\t")
+    else:
+        expression.to_csv(expression_filename, sep="\t")
 
 
 def process_samples_for_DESeq(
@@ -167,18 +175,19 @@ def process_samples_for_DESeq(
     Arguments
     ----------
     expression_filename: str
-        File containing unnormalized gene expression data for 
+        File containing unnormalized gene expression data for
         either template or simulated experiments
-
     process_metadata_filename: str
         File containing assignment for which samples to drop
-
     grp_metadata_filename: str
         File containing group assigments for samples to use
         for DESeq analysis
-
     count_threshold: int
         Remove genes that have mean count <= count_threshold
+    out_expression_filename (optional): str
+        File to save processed gene expression data to.
+        If not provided processed gene expression data will
+        be output to the same input filename  
     
     """
 
@@ -197,6 +206,9 @@ def process_samples_for_DESeq(
     # Remove samples
     expression = expression.drop(samples_to_remove)
 
+    # Cast as int
+    expression = expression.astype(int)
+
     # Remove genes with 0 counts
     all_zero_genes = list(expression.columns[(expression == 0).all()])
     expression = expression.drop(columns=all_zero_genes)
@@ -205,11 +217,8 @@ def process_samples_for_DESeq(
 
     # Remove genes below a certain threshold (if provided)
     if count_threshold != None:
-        genes_to_keep = expression.loc[:, expression.mean() <= count_threshold].columns
+        genes_to_keep = expression.loc[:, expression.mean() >= count_threshold].columns
         expression = expression[genes_to_keep]
-
-    # Cast as int
-    expression = expression.astype(int)
 
     # Check ordering of sample ids is consistent between gene expression data and metadata
     metadata_sample_ids = grp_metadata.index

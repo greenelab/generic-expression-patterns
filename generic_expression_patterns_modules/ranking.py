@@ -25,7 +25,7 @@ from sklearn.preprocessing import MinMaxScaler
 def concat_simulated_data(local_dir, num_runs, project_id, data_type):
     """
     This function will concatenate the simulated experiments into a single dataframe
-    in order to aggregate statistics across all experiments.
+    in order to aggregate statistics across all simulated experiments.
 
     Arguments
     ---------
@@ -35,8 +35,7 @@ def concat_simulated_data(local_dir, num_runs, project_id, data_type):
         Number of simulated experiments
     project_id: str
         Project id to use to retrieve simulated experiments
-    data_type: str
-        Either 'DE' or 'GSEA'
+    data_type: 'DE' or 'GSEA'
 
     Returns
     -------
@@ -75,7 +74,7 @@ def concat_simulated_data(local_dir, num_runs, project_id, data_type):
 def abs_value_stats(simulated_DE_stats_all):
     """
     This function takes the absolute value of columns=[`logFC`, `t`, `NES`].
-    For ranking genes, we only care about the magnitude of the change for
+    For ranking genes or pathways, we only care about the magnitude of the change for
     the logFC, t, NES statistic, but not the direction.
 
     The ranking for each gene will be based on the mean absolute value of either
@@ -104,7 +103,11 @@ def generate_summary_table(
     params,
 ):
     """
-    Generate a summary table of the template and summary statistics
+    Generate a summary table of that includes DE association or
+    enrichment statistics for the template experiment and summary
+    statistics for the simulated experiments. This table also
+    includes gene or pathway ranking and a score to indicate
+    specificity of each gene or pathway to the template in question.
 
     Arguments
     ---------
@@ -228,7 +231,7 @@ def merge_ranks_to_compare(
     your_summary_ranks_df, reference_ranks_file, reference_name_col, reference_rank_col,
 ):
     """
-    Given dataframes of your ranking of genes or pathways
+    Given dataframes of simulation-based ranking of genes or pathways
     and reference ranking of genes or pathways.
     This function merges the ranking into one dataframe
     to be able to compare, `shared_gene_rank_df`
@@ -300,7 +303,7 @@ def merge_ranks_to_compare(
 
 def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
     """
-    In the case where the reference ranking and your ranking are not
+    In the case where the reference ranking and simulation-based ranking are not
     in the same range, this function scales the reference ranking
     to be in the range as your ranking.
 
@@ -341,8 +344,9 @@ def get_shared_rank_scaled(
     summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type
 ):
     """
-    Returns shared rank scaled dataframe and correlation values based on
-    input `summary_df` and other parameters.
+    Returns `shared rank scaled` dataframe, which contains the ranking
+    using the simulation-based approach and the reference manual method.
+    This function also returns correlation values comparing those two rankings.
 
     Arguments
     ------------
@@ -355,8 +359,7 @@ def get_shared_rank_scaled(
         Name of column header containing reference gene symbols
     ref_rank_col: str
         Name of column header containing reference ranks of genes
-    data_type: str
-        Either 'DE' or 'GSEA'
+    data_type: 'DE' or 'GSEA'
 
     Returns
     -------
@@ -493,53 +496,6 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
     return correlations
 
 
-def concat_simulated_data_columns(local_dir, num_runs, project_id, data_type):
-    """
-    This function will concatenate the simulated experiments into a single dataframe
-    in order to aggregate statistics across all experiments.
-
-    Arguments
-    ---------
-    local_dir: str
-        Local directory containing simulated experiments
-    num_runs: int
-        Number of simulated experiments
-    project_id: str
-        Project id to use to retrieve simulated experiments
-    data_type: str
-        Either 'DE' or 'GSEA'
-
-    Returns
-    -------
-    Dataframe containing all simulated experiments concatenated together
-
-    """
-
-    # Only "DE" and "GSEA" data types are supported.
-    if data_type not in ["DE", "GSEA"]:
-        raise Exception(f"Unknown data_type: {data_type}")
-
-    simulated_stats_all = pd.DataFrame()
-    for i in range(num_runs):
-        simulated_stats_filename = os.path.join(
-            local_dir,
-            f"{data_type}_stats",
-            f"{data_type}_stats_simulated_data_{project_id}_{i}.txt",
-        )
-        # Read results
-        simulated_stats = pd.read_csv(
-            simulated_stats_filename, header=0, sep="\t", index_col=0
-        )
-
-        # Concatenate df
-        simulated_stats_all = pd.concat(
-            [simulated_stats_all, simulated_stats["NES"]], axis=1
-        )
-
-    simulated_stats_all.index = simulated_stats.index
-    return simulated_stats_all
-
-
 def add_pseudomonas_gene_name_col(summary_gene_ranks, base_dir):
     """
     This function adds a column to the input dataframe
@@ -606,8 +562,7 @@ def spearman_ci(ci, gene_rank_df, num_permutations, data_type):
         Dataframe containing the our rank and Crow et. al. rank
     num_permutations: int
         The number of permutations to estimate the confidence interval
-    data_type: str
-        Either 'DE' or 'GSEA'
+    data_type: 'DE' or 'GSEA'
     """
     if data_type.lower() == "de":
         r, p = stats.spearmanr(
@@ -648,7 +603,8 @@ def spearman_ci(ci, gene_rank_df, num_permutations, data_type):
 
 def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
     """
-    Aggregate statistics across all simulated experiments
+    Aggregate DE or GSEA statistics across all simulated experiments
+    after simulated experiments have been concatenated together.
 
     Arguments
     ---------
@@ -657,8 +613,7 @@ def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
         statistics results table.
     simulated_stats_all: df
         Dataframe of concatenated simulated experiments
-    data_type: str
-        Either 'DE' or 'GSEA'
+    data_type: 'DE' or 'GSEA'
 
     Returns
     --------
@@ -716,8 +671,8 @@ def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
 def rank_genes_or_pathways(col_to_rank, DE_summary_stats, is_template):
     """
     Returns the input dataframe (`DE_summary_stats`) that has been modified such that
-    genes are ranked by the selected statistic, `col_to_rank` 
-    (if the input is the template experiment) or the median of the selected statistic
+    genes are ranked by the selected statistic, `col_to_rank` (if the input is the 
+    template experiment) or the median of the selected statistic
     (if the input is the simulated experiments).
     The ordering of the ranking depends on the statistic selected.
 
@@ -728,7 +683,7 @@ def rank_genes_or_pathways(col_to_rank, DE_summary_stats, is_template):
     DE_summary_stats: df
         dataframe containing gene ranking for either template or simulated experiments
     is_template: bool
-        if the DE_summary_stats df is for the template experiment or simulated experiments    
+        if the DE_summary_stats df is for the template experiment or simulated experiments
 
     """
 

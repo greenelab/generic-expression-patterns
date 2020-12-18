@@ -3,6 +3,13 @@ Author: Alexandra Lee
 Date Created: 16 June 2020
 
 This script provide supporting functions to run analysis notebooks.
+
+Data processing functions including:
+* function to map ensembl gene ids to hgnc symbols
+* function to remove subsets of samples
+* function to transform data into integer for downstream DE and GSEA analyses
+* function to normalize data
+* function to format pseudomonas pathway data to input to GSEA
 """
 
 import os
@@ -48,14 +55,6 @@ def set_all_seeds(np_seed=42, rn_seed=12345, tf_seed=1234):
     # The below tf.set_random_seed() will make random number generation
     # in the TensorFlow backend have a well-defined initial state.
     tf.set_random_seed(tf_seed)
-
-
-# Data processing functions including:
-# * function to map ensembl gene ids to hgnc symbols
-# * function to remove subsets of samples
-# * function to transform data into integer for downstream DE analysis
-# * function to normalize data
-# * function to format pseudomonas pathway data to input to GSEA
 
 
 def replace_ensembl_ids(expression_df, gene_id_mapping):
