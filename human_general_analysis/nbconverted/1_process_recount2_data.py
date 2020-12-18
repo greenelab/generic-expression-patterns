@@ -152,7 +152,6 @@ get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename 
 # Output files generated in this step: 
 # - `shared_genes_filename`: pickled list of shared genes (created only if it doesn't exist yet)
 # - `mapped_template_filename`: template data with column names mapped to hgnc gene symbols
-# - `processed_template_filename`: template data with some sample rows dropped
 
 # In[12]:
 
@@ -164,25 +163,14 @@ manual_mapping = {
     "ENSG00000255374.3": "TAS2R45",                       
 }
 
-# metadata file with grouping assignments for samples
-sample_id_metadata_filename = os.path.join(
-    base_dir,
-    dataset_name,
-    "data",
-    "metadata",
-    f"{project_id}_process_samples.tsv"
-)
-
-process.process_raw_template_recount2(
+process.map_recount2_data(
     raw_template_filename,
     gene_id_filename,
     manual_mapping,
     DE_prior_filename,
     shared_genes_filename,
     mapped_template_filename,
-    sample_id_metadata_filename,
-    processed_template_filename
-)
+    )
 
 
 # ### Map ensembl gene IDs in raw compendium file and normalize it
