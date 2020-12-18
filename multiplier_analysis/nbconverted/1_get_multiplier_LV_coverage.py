@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Coverage of MultiPLIER LV
@@ -34,7 +34,7 @@ from rpy2.robjects import pandas2ri
 from rpy2.robjects.conversion import localconverter
 
 from ponyo import utils
-from generic_expression_patterns_modules import process
+from generic_expression_patterns_modules import multiplier
 
 
 # In[2]:
@@ -68,7 +68,7 @@ highweight_figure_filename = "highweight_LV_coverage.svg"
 
 
 # Get gene summary file
-ls_data_filename = process.get_gene_summary_file(data_dir)
+ls_data_filename = multiplier.get_gene_summary_file(data_dir)
 
 # Check that there is only one file returned
 assert len(ls_data_filename) == 1
@@ -119,7 +119,7 @@ multiplier_model_z = pd.read_csv("multiplier_model_z.tsv", sep="\t", index_col=0
 
 
 generic_threshold = 10000
-dict_genes = process.get_generic_specific_genes(data, generic_threshold)
+dict_genes = multiplier.get_generic_specific_genes(data, generic_threshold)
 
 
 # In[9]:
@@ -138,7 +138,7 @@ print(len(shared_genes))
 
 
 # Drop gene ids not used in multiplier analysis
-processed_dict_genes = process.process_generic_specific_gene_lists(dict_genes, multiplier_model_z)
+processed_dict_genes = multiplier.process_generic_specific_gene_lists(dict_genes, multiplier_model_z)
 
 
 # In[11]:
@@ -159,7 +159,7 @@ assert len(shared_genes) == len(processed_dict_genes["generic"]) + len(processed
 # In[12]:
 
 
-dict_nonzero_coverage = process.get_nonzero_LV_coverage(processed_dict_genes, multiplier_model_z)
+dict_nonzero_coverage = multiplier.get_nonzero_LV_coverage(processed_dict_genes, multiplier_model_z)
 
 
 # In[13]:
@@ -184,7 +184,7 @@ plt.yscale("log")
 # In[15]:
 
 
-dict_highweight_coverage = process.get_highweight_LV_coverage(processed_dict_genes, multiplier_model_z)
+dict_highweight_coverage = multiplier.get_highweight_LV_coverage(processed_dict_genes, multiplier_model_z)
 
 
 # In[16]:
@@ -223,7 +223,7 @@ all_coverage_df = pd.concat(all_coverage)"""
 # In[18]:
 
 
-all_coverage_df = process.assemble_coverage_df(
+all_coverage_df = multiplier.assemble_coverage_df(
     processed_dict_genes,
     dict_nonzero_coverage,
     dict_highweight_coverage
@@ -311,7 +311,7 @@ print(pvalue)
 
 
 # Get proportion of generic genes per LV
-prop_highweight_generic_dict = process.get_prop_highweight_generic_genes(
+prop_highweight_generic_dict = multiplier.get_prop_highweight_generic_genes(
     processed_dict_genes,
     multiplier_model_z)
 
@@ -321,7 +321,7 @@ prop_highweight_generic_dict = process.get_prop_highweight_generic_genes(
 
 # Return selected rows from summary matrix
 multiplier_model_summary = pd.read_csv("multiplier_model_summary.tsv", sep="\t", index_col=0, header=0)
-process.create_LV_df(
+multiplier.create_LV_df(
     prop_highweight_generic_dict, 
     multiplier_model_summary,
     0.5, 
@@ -365,7 +365,7 @@ sns.distplot(normalized_multiplier_model_z_df["LV10"], kde=False)
 
 # Get coverage of high weight generic genes
 # Use threshold cutoff of 0.063 (~ 2 standard deviations from above calculations)
-dict_highweight_coverage_normalized = process.get_highweight_LV_coverage(
+dict_highweight_coverage_normalized = multiplier.get_highweight_LV_coverage(
     processed_dict_genes,
     normalized_multiplier_model_z_df,
     True
@@ -375,7 +375,7 @@ dict_highweight_coverage_normalized = process.get_highweight_LV_coverage(
 # In[30]:
 
 
-all_coverage_normalized_df = process.assemble_coverage_df(
+all_coverage_normalized_df = multiplier.assemble_coverage_df(
     processed_dict_genes,
     dict_nonzero_coverage,
     dict_highweight_coverage_normalized
@@ -430,7 +430,7 @@ print(pvalue)
 
 
 # Get proportion of generic genes per LV
-prop_highweight_generic_dict = process.get_prop_highweight_generic_genes(
+prop_highweight_generic_dict = multiplier.get_prop_highweight_generic_genes(
     processed_dict_genes,
     normalized_multiplier_model_z_df,
     True
@@ -441,7 +441,7 @@ prop_highweight_generic_dict = process.get_prop_highweight_generic_genes(
 
 
 # Return selected rows from summary matrix
-process.create_LV_df(
+multiplier.create_LV_df(
     prop_highweight_generic_dict,
     multiplier_model_summary,
     0.4,
