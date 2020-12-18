@@ -119,7 +119,7 @@ for run_id in range(num_runs):
 
 # ## Test: Processing template experiment
 # 
-# `processed_template_experiment`: samples...
+# `processed_template_filename`: template data with some sample rows dropped
 
 # In[5]:
 
@@ -297,6 +297,26 @@ summary_gene_ranks = ranking.generate_summary_table(
     'gene',
     params
 )
+
+
+# In[39]:
+
+
+summary_gene_ranks.head()
+
+
+# In[41]:
+
+
+# Some genes will have NaN's in the simulated statistics columns. These are genes that were filtered 
+# due to low expression and therefore the corresponding Z-score for this gene is NaN
+summary_gene_ranks.isna().any()
+
+
+# In[45]:
+
+
+summary_gene_ranks[summary_gene_ranks.isna().any(axis=1)]
 
 
 # In[19]:

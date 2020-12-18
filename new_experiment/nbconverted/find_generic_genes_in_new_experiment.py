@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Application: new experiment
@@ -24,7 +24,7 @@ import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 from ponyo import utils
-from generic_expression_patterns_modules import process, new_experiment_process, calc
+from generic_expression_patterns_modules import process, new_experiment_process, stats, ranking
 
 
 # ## User input
@@ -92,7 +92,7 @@ scaler_filename = params['scaler_filename']
 col_to_rank_genes = params['rank_genes_by']
 
 
-# In[ ]:
+# In[5]:
 
 
 # Load metadata files
@@ -112,16 +112,18 @@ metadata_filename = os.path.join(
 )
 
 
-# In[5]:
+# In[6]:
 
 
 # Output filename
 gene_summary_filename = f"generic_gene_summary_{project_id}.tsv"
 
 
-# ## Process
+# ## Map template experiment to same space as compendium
+# 
+# TO DO: Consolidate these functions
 
-# In[6]:
+# In[7]:
 
 
 # Template experiment needs to be of the form sample x gene
@@ -130,19 +132,7 @@ transposed_template_filename = "/home/alexandra/Documents/Data/Generic_expressio
 new_experiment_process.transpose_save(template_filename, transposed_template_filename)
 
 
-# In[ ]:
-
-
-### Subset samples
-
-
-# In[ ]:
-
-
-### Filter out genes with with 0 counts
-
-
-# In[7]:
+# In[8]:
 
 
 # Check that the feature space matches between template experiment and VAE model.  
@@ -154,7 +144,7 @@ mapped_template_experiment = new_experiment_process.compare_match_features(
 mapped_template_filename = transposed_template_filename
 
 
-# In[8]:
+# In[9]:
 
 
 # Scale template experiment to be within the same range as the
@@ -170,7 +160,7 @@ new_experiment_process.normalize_template_experiment(
 # 
 # Embed template experiment into learned latent space and linearly shift template experiment to different locations of the latent space to create new experiments
 
-# In[9]:
+# In[10]:
 
 
 # Simulate experiments based on template experiment
@@ -190,101 +180,71 @@ for run_id in range(num_runs):
     )
 
 
-# In[ ]:
-
-
-### Subset simulated samples
-
-
-# In[ ]:
-
-
-### Filter out genes
-### Without re-simulating, check that the number of simulated experiments is the same
-
-
-# ## Differential expression analysis
+# ## Process template and simulated experiments
 # 
-# * If data is RNA-seq then use DESeq2 (using human_general_analysis model)
-# * If data is microarray then use Limma (using human_cancer_analysis, pseudomonas_analysis models)
-
-# In[10]:
-
-
-# Modify template and simulated experiments based on comparison
-if os.path.exists(sample_id_metadata_filename):
-    # Read in metadata
-    metadata = pd.read_csv(sample_id_metadata_filename, sep='\t', header=0, index_col=0)
-    
-    # Get samples to be dropped
-    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
-
-    # Modify simulated experiments
-    process.subset_samples(
-        sample_ids_to_drop,
-        num_runs,
-        local_dir,
-        project_id
-    )
-    
-    # Modify template experiment
-    process.subset_samples_template(
-        mapped_template_filename,
-        sample_ids_to_drop,
-    )
-
+# * Remove samples not required for comparison
+# * Make sure ordering of samples matches metadata for proper comparison
+# * Make sure values are cast as integers if using DESeq
+# * Filter lowly expressed genes if using DESeq
 
 # In[11]:
 
 
-# Round simulated and template read counts to int in order to run DESeq.
-# This step modifies the following files again:
-# "<local_dir>/pseudo_experiments/selected_simulated_data_<project_id>_<n>.txt"
-process.recast_int(num_runs, local_dir, project_id)
-process.recast_int_template(mapped_template_filename)
-
-
-# In[13]:
-
-
-# Check whether ordering of sample ids is consistent between gene expression data and metadata
-process.compare_and_reorder_samples(mapped_template_filename, metadata_filename)
-
-# Check whether ordering of sample ids is consistent between gene expression data and metadata
-for i in range(num_runs):
-    simulated_data_filename = os.path.join(
-        local_dir,
-        "pseudo_experiment",
-        f"selected_simulated_data_{project_id}_{i}.txt"
+if os.path.exists(sample_id_metadata_filename):
+    stats.process_samples_for_DESeq(
+        mapped_template_filename,
+        sample_id_metadata_filename,
+        metadata_filename,
+        None,
+        processed_template_filename
     )
-        
-    process.compare_and_reorder_samples(simulated_data_filename, metadata_filename)
+    
+    for i in range(num_runs):
+        simulated_filename = os.path.join(
+            local_dir,
+            "pseudo_experiment",
+            f"selected_simulated_data_{project_id}_{i}.txt"
+        )
+        stats.process_samples_for_DESeq(
+        simulated_filename,
+        sample_id_metadata_filename,
+        metadata_filename
+    )
 
 
-# In[14]:
+# ## Differential expression analysis
+# 
+# TO DO: Add conditonal for which method limma vs DESeq
+# 
+# * If data is RNA-seq then use DESeq2 (using human_general_analysis model)
+# * If data is microarray then use Limma (using human_cancer_analysis, pseudomonas_analysis models)
+
+# In[12]:
 
 
 # Create subdirectory: "<local_dir>/DE_stats/"
 os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 
 
-# In[15]:
+# In[13]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i mapped_template_filename -i local_dir -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# File created: "<local_dir>/DE_stats/DE_stats_template_data_SRP012656_real.txt"\nget_DE_stats_DESeq(metadata_filename,\n                   project_id, \n                   mapped_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# File created: "<local_dir>/DE_stats/DE_stats_template_data_<project_id>_real.txt"\nget_DE_stats_DESeq(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
-# In[17]:
+# In[14]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# Files created: "<local_dir>/DE_stats/DE_stats_simulated_data_SRP012656_<n>.txt"\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(local_dir, \n                                     "pseudo_experiment/selected_simulated_data_",\n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    get_DE_stats_DESeq(metadata_filename,\n                       project_id, \n                       simulated_data_filename,\n                       "simulated",\n                       local_dir,\n                       i)\n}')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# Files created: "<local_dir>/DE_stats/DE_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(local_dir, \n                                     "pseudo_experiment/selected_simulated_data_",\n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    get_DE_stats_DESeq(metadata_filename,\n                       project_id, \n                       simulated_data_filename,\n                       "simulated",\n                       local_dir,\n                       i)\n}')
 
 
 # ## Quick validation
 # 
 # Examine volcano plot of the template experiment and example simulated experiments.
+# 
+# TO DO: move this to new notebook
 
-# In[18]:
+# In[15]:
 
 
 # Quick validation
@@ -402,7 +362,7 @@ def make_volcano_plot_simulated(
     fig.suptitle(f"Example simulated experiments based on {project_id}", fontsize=16, fontname="Verdana")
 
 
-# In[19]:
+# In[16]:
 
 
 # Check number of DEGs
@@ -423,7 +383,7 @@ selected = template_DE_stats[(template_DE_stats['padj']<0.01) & (abs(template_DE
 print(selected.shape)
 
 
-# In[20]:
+# In[17]:
 
 
 make_volcano_plot_template(
@@ -432,7 +392,7 @@ make_volcano_plot_template(
 )
 
 
-# In[21]:
+# In[18]:
 
 
 simulated_DE_stats_dir = os.path.join(local_dir, "DE_stats")
@@ -448,106 +408,32 @@ make_volcano_plot_simulated(
 # 
 # Add description
 
-# In[22]:
+# In[19]:
 
 
-# Concatenate simulated experiments
-simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'DE')
-
-print(simulated_DE_stats_all.shape)
-
-
-# In[23]:
-
-
-# Take absolute value of logFC and t statistic
-simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
-
-
-# In[24]:
-
-
-# Aggregate statistics across all simulated experiments
-simulated_DE_summary_stats = calc.aggregate_stats(
+analysis_type = "DE"
+template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_pathways(
+    template_DE_stats_filename,
+    local_dir,
+    num_runs,
+    project_id,
+    analysis_type,
     col_to_rank_genes,
-    simulated_DE_stats_all,
-    'DE'
 )
-
-
-# In[25]:
-
-
-# Take absolute value of logFC and t statistic
-template_DE_stats = process.abs_value_stats(template_DE_stats)
-
-# Rank genes in template experiment
-template_DE_stats = calc.rank_genes_or_pathways(
-    col_to_rank_genes,      
-    template_DE_stats,
-    True
-)
-
-
-# In[26]:
-
-
-# Rank genes in simulated experiments
-simulated_DE_summary_stats = calc.rank_genes_or_pathways(
-    col_to_rank_genes,
-    simulated_DE_summary_stats,
-    False
-)
-
-
-# ## (if needed) Get raw test statistic values
-
-# In[ ]:
-
-
-abs_test_statistics = ["logFC", "log2FoldChange", "t", "NES"]
-if test_statistic in abs_test_statistics:
-    # Concatenate simulated experiments
-    simulated_DE_stats_all_raw = process.concat_simulated_data(local_dir, num_runs, project_id, 'DE')
-    
-    # Aggregate statistics across all simulated experiments
-    simulated_DE_summary_stats_raw = calc.aggregate_stats(
-        col_to_rank_genes,
-        simulated_DE_stats_all_raw,
-        'DE'
-    )
-    
-    # Rank genes in template experiment
-    template_DE_stats_raw = calc.rank_genes_or_pathways(
-        col_to_rank_genes,      
-        template_DE_stats,
-        True
-    )
-    # Rank genes in simulated experiments
-    simulated_DE_summary_stats_raw = calc.rank_genes_or_pathways(
-        col_to_rank_genes,
-        simulated_DE_summary_stats_raw,
-        False
-    )
-    summary_gene_ranks_raw = process.generate_summary_table(
-        template_DE_stats_raw,
-        simulated_DE_summary_stats_raw,
-        col_to_rank_genes,
-        local_dir,
-        'gene',
-        params
-    )
 
 
 # ## Summary table
 # 
-# Description of table columns
+# TO DO: Description of table columns
+# 
+# Note: If using DESeq, genes with NaN in `Adj P-value (Real)` column are those genes flagged because of the `cooksCutoff` parameter. The cook's distance as a diagnostic to tell if a single sample has a count which has a disproportionate impact on the log fold change and p-values. These genes are flagged with an NA in the pvalue and padj columns of the result table. For more information you can read [DESeq FAQs](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#pvaluesNA)
 
-# In[27]:
+# In[20]:
 
 
 # Get summary table
-summary_gene_ranks = process.generate_summary_table(
+summary_gene_ranks = ranking.generate_summary_table(
+    template_DE_stats_filename,
     template_DE_stats,
     simulated_DE_summary_stats,
     col_to_rank_genes,
@@ -556,16 +442,22 @@ summary_gene_ranks = process.generate_summary_table(
     params
 )
 
-summary_gene_ranks.sort_values(by="abs(Z score)", ascending=False).head(10)
+summary_gene_ranks.sort_values(by="Z score", ascending=False).head(10)
 
 
-# In[ ]:
+# In[21]:
 
 
-# Create 
+summary_gene_ranks.isna().any()
 
 
-# In[29]:
+# In[22]:
+
+
+summary_gene_ranks[summary_gene_ranks.isna().any(axis=1)]
+
+
+# In[23]:
 
 
 # Save
