@@ -57,7 +57,6 @@ shared_genes_filename = params['shared_genes_filename']
 # Output files of recount2 template experiment data
 raw_template_filename = params['raw_template_filename']
 mapped_template_filename = params['mapped_template_filename']
-processed_template_filename = params['processed_template_filename']
 
 # Output files of recount2 compendium data
 raw_compendium_filename = params['raw_compendium_filename']
@@ -107,7 +106,6 @@ get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename 
 # Output files generated in this step: 
 # - `shared_genes_filename`: pickled list of shared genes (created only if it doesn't exist yet)
 # - `mapped_template_filename`: template data with column names mapped to hgnc gene symbols
-# - `processed_template_filename`: template data with some sample rows dropped
 
 # In[8]:
 
@@ -119,47 +117,19 @@ manual_mapping = {
     "ENSG00000255374.3": "TAS2R45",                       
 }
 
-# metadata file with grouping assignments for samples
-sample_id_metadata_filename = os.path.join(
-    base_dir,
-    dataset_name,
-    "data",
-    "metadata",
-    f"{project_id}_process_samples.tsv"
-)
-
-process.process_raw_template_recount2(
+process.map_recount2_data(
     raw_template_filename,
     gene_id_filename,
     manual_mapping,
     DE_prior_filename,
     shared_genes_filename,
     mapped_template_filename,
-    sample_id_metadata_filename,
-    processed_template_filename
-)
-
-
-# In[9]:
-
-
-# Read data
-template_data = pd.read_csv(
-    processed_template_filename,
-    header=0,
-    sep='\t',
-    index_col=0
-)
-
-# Check samples dropped
-print(template_data.shape)
-assert(template_data.shape[0] == 24)
-template_data.head()
+    )
 
 
 # ## Test: Processing compendium
 
-# In[10]:
+# In[9]:
 
 
 process.process_raw_compendium_recount2(
@@ -174,17 +144,29 @@ process.process_raw_compendium_recount2(
 )
 
 
-# In[11]:
+# In[10]:
 
 
 # Check number of genes is equal between the compendium and the template
-compendium_data = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
+compendium_data = pd.read_csv(
+    normalized_compendium_filename,
+    sep="\t", 
+    index_col=0, 
+    header=0
+)
+
+template_data = pd.read_csv(
+    mapped_template_filename,
+    header=0,
+    sep='\t',
+    index_col=0
+)
 assert(compendium_data.shape[1] == template_data.shape[1])
 
 
 # ## Train: VAE training and reproducibility
 
-# In[12]:
+# In[11]:
 
 
 # Create VAE directories
@@ -199,7 +181,7 @@ for each_dir in output_dirs:
     os.makedirs(new_dir, exist_ok=True)
 
 
-# In[13]:
+# In[12]:
 
 
 # Train VAE on new compendium data
@@ -209,7 +191,7 @@ train_vae_modules.train_vae(
 )
 
 
-# In[14]:
+# In[13]:
 
 
 # Test reproducibility

@@ -176,28 +176,50 @@ def generate_summary_table(
             test_statistic_label = f"abs({test_statistic})"
 
     # Create summary table
-    summary = pd.DataFrame(
-        data={
-            index_header: template_simulated_summary_stats.index,
-            "Adj P-value (Real)": template_simulated_summary_stats[col_name],
-            "Rank (Real)": template_simulated_summary_stats["ranking"],
-            f"{test_statistic_label} (Real)": template_simulated_summary_stats[
-                col_to_rank
-            ],
-            f"{test_statistic} (Real)": template_stats.loc[
-                shared_genes, test_statistic
-            ],
-            "Median adj p-value (simulated)": median_pval_simulated,
-            "Rank (simulated)": rank_simulated,
-            f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
-            "Std deviation (simulated)": std_test_simulated,
-            "Number of experiments (simulated)": count_simulated,
-        }
-    )
-    summary["Z score"] = (
-        summary[f"{test_statistic_label} (Real)"]
-        - summary[f"Mean {test_statistic_label} (simulated)"]
-    ) / summary["Std deviation (simulated)"]
+
+    if test_statistic in abs_stats_terms:
+        summary = pd.DataFrame(
+            data={
+                index_header: template_simulated_summary_stats.index,
+                "Adj P-value (Real)": template_simulated_summary_stats[col_name],
+                "Rank (Real)": template_simulated_summary_stats["ranking"],
+                f"{test_statistic_label} (Real)": template_simulated_summary_stats[
+                    col_to_rank
+                ],
+                f"{test_statistic} (Real)": template_stats.loc[
+                    shared_genes, test_statistic
+                ],
+                "Median adj p-value (simulated)": median_pval_simulated,
+                "Rank (simulated)": rank_simulated,
+                f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
+                "Std deviation (simulated)": std_test_simulated,
+                "Number of experiments (simulated)": count_simulated,
+            }
+        )
+        summary["Z score"] = (
+            summary[f"{test_statistic_label} (Real)"]
+            - summary[f"Mean {test_statistic_label} (simulated)"]
+        ) / summary["Std deviation (simulated)"]
+    else:
+        summary = pd.DataFrame(
+            data={
+                index_header: template_simulated_summary_stats.index,
+                "Adj P-value (Real)": template_simulated_summary_stats[col_name],
+                "Rank (Real)": template_simulated_summary_stats["ranking"],
+                f"{test_statistic} (Real)": template_stats.loc[
+                    shared_genes, test_statistic
+                ],
+                "Median adj p-value (simulated)": median_pval_simulated,
+                "Rank (simulated)": rank_simulated,
+                f"Mean {test_statistic} (simulated)": mean_test_simulated,
+                "Std deviation (simulated)": std_test_simulated,
+                "Number of experiments (simulated)": count_simulated,
+            }
+        )
+        summary["Z score"] = (
+            summary[f"{test_statistic} (Real)"]
+            - summary[f"Mean {test_statistic} (simulated)"]
+        ) / summary["Std deviation (simulated)"]
 
     return summary
 
@@ -256,10 +278,6 @@ def merge_ranks_to_compare(
     your_rank_df = pd.DataFrame(
         your_summary_ranks_df.loc[shared_genes_or_pathways, "Rank (simulated)"]
     )
-
-    # Here is where you can re-rank after taking the intersection of genes
-    # TEST
-    # your_rank_df = your_rank_df[col_to_rank].rank(ascending=True)
 
     # Merge published ranking
     if reference_name_col == "index":

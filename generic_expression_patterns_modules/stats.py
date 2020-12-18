@@ -199,7 +199,7 @@ def process_samples_for_DESeq(
 
     # Remove genes with 0 counts
     all_zero_genes = list(expression.columns[(expression == 0).all()])
-    expression = expression.drop(all_zero_genes)
+    expression = expression.drop(columns=all_zero_genes)
 
     assert len(list(expression.columns[(expression == 0).all()])) == 0
 
