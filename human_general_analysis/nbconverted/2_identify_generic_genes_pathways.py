@@ -278,7 +278,7 @@ summary_gene_ranks.head()
 summary_gene_ranks.isna().any()
 
 
-# In[15]:
+# In[14]:
 
 
 # Create `gene_summary_filename`
@@ -290,7 +290,7 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[16]:
+# In[15]:
 
 
 # Get generic genes identified by Crow et. al.
@@ -319,34 +319,34 @@ ranking.compare_gene_ranking(
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES (i.e. scores based on permuted phenotype)
 
-# In[17]:
+# In[16]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
 os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
 
 
-# In[18]:
+# In[17]:
 
 
 # Load pathway data
 hallmark_DB_filename = params["pathway_DB_filename"]
 
 
-# In[21]:
+# In[18]:
 
 
 get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\nout_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_template_data_",\n                     project_id,\n                     "_real.txt", \n                     sep = "")\n\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)\n\nwrite.table(as.data.frame(template_enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")')
 
 
-# In[22]:
+# In[19]:
 
 
 print(template_enriched_pathways.shape)
 template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj')
 
 
-# In[23]:
+# In[20]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, hallmark_DB_filename, statistic) \n    \n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
@@ -354,7 +354,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_fil
 
 # ### Rank pathways 
 
-# In[25]:
+# In[21]:
 
 
 analysis_type = "GSEA"
@@ -375,7 +375,7 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
 
 # ### Pathway summary table
 
-# In[26]:
+# In[22]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
@@ -392,7 +392,7 @@ summary_pathway_ranks = ranking.generate_summary_table(
 summary_pathway_ranks.head()
 
 
-# In[27]:
+# In[23]:
 
 
 # Create `pathway_summary_filename`
@@ -408,7 +408,7 @@ summary_pathway_ranks.to_csv(pathway_summary_filename, sep='\t')
 # 
 # To get a `reference ranking`, we calculate the fraction of experiments that a given pathway was significant (q-value <0.05) and use this rank pathways. `Our ranking` is to rank pathways based on the median q-value across the simulated experiments. We can then compare `our ranking` versus the `reference ranking.`
 
-# In[28]:
+# In[24]:
 
 
 # Load Powers et. al. results file
@@ -421,7 +421,7 @@ powers_rank_filename = os.path.join(
 )
 
 
-# In[29]:
+# In[25]:
 
 
 # Read Powers et. al. data
@@ -432,7 +432,7 @@ print(powers_rank_df.shape)
 powers_rank_df.head()
 
 
-# In[30]:
+# In[26]:
 
 
 # Count the number of experiments where a given pathway was found to be enriched (qvalue < 0.05)
@@ -452,7 +452,7 @@ powers_rank_stats_df = pd.DataFrame(
 powers_rank_stats_df.head()
 
 
-# In[31]:
+# In[27]:
 
 
 # Save reference file for input into comparison
@@ -467,7 +467,7 @@ powers_rank_processed_filename = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_filename, sep="\t", )
 
 
-# In[32]:
+# In[28]:
 
 
 figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"
