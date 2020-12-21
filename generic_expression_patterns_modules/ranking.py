@@ -59,11 +59,7 @@ def concat_simulated_data(local_dir, num_runs, project_id, data_type):
             )
 
         # Read results
-        simulated_stats = pd.read_csv(
-            simulated_stats_file, header=0, sep="\t", index_col=0
-        )
-
-        simulated_stats.reset_index(inplace=True)
+        simulated_stats = pd.read_csv(simulated_stats_file, header=0, sep="\t")
 
         # Concatenate df
         simulated_stats_all = pd.concat([simulated_stats_all, simulated_stats])

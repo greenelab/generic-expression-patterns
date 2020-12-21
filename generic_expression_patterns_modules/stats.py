@@ -141,6 +141,8 @@ def process_samples_for_limma(
         print("sample ids don't match, going to re-order gene expression samples")
         expression = expression.reindex(metadata_sample_ids)
 
+        assert expression.index.equals(metadata_sample_ids)
+
     # Save
     if out_expression_filename is not None:
         expression.to_csv(out_expression_filename, sep="\t")
@@ -231,6 +233,8 @@ def process_samples_for_DESeq(
         # metadata sample ordering
         print("sample ids don't match, going to re-order gene expression samples")
         expression = expression.reindex(metadata_sample_ids)
+
+        assert expression.index.equals(metadata_sample_ids)
 
     # Save
     if out_expression_filename != None:

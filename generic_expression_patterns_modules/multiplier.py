@@ -11,22 +11,6 @@ from glob import glob
 import pandas as pd
 
 
-# Functions for multiplier analysis
-def get_gene_summary_file(data_dir):
-    """
-    This function returns a list of file paths for all files
-    of the form `generic_gene_summary_*` in data_dir.
-
-    Note: There should only be one file that has this form.
-
-    Arguments
-    ---------
-    data_dir: str
-        Directory path containing `generic_gene_summary_*` files
-    """
-    return glob(f"{data_dir}/generic_gene_summary_*")
-
-
 def get_generic_specific_genes(summary_data, generic_threshold):
     """
     This function returns a dictionary of generic genes and other

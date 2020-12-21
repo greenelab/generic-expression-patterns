@@ -53,6 +53,8 @@ params = utils.read_config(config_filename)
 
 local_dir = params["local_dir"]
 
+project_id = params["project_id"]
+
 
 # In[3]:
 
@@ -68,17 +70,17 @@ highweight_figure_filename = "highweight_LV_coverage.svg"
 
 
 # Get gene summary file
-ls_data_filename = multiplier.get_gene_summary_file(data_dir)
-
-# Check that there is only one file returned
-assert len(ls_data_filename) == 1
+summary_data_filename = os.path.join(
+    data_dir,
+    f"generic_gene_summary_{project_id}.tsv"
+)
 
 
 # In[5]:
 
 
 # Load gene summary data
-data = pd.read_csv(ls_data_filename[0], sep="\t", index_col=0, header=0)
+data = pd.read_csv(summary_data_filename, sep="\t", index_col=0, header=0)
 
 # Check that genes are unique since we will be using them as dictionary keys below
 assert(data.shape[0] == len(data["Gene ID"].unique()))
