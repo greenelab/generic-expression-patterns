@@ -142,7 +142,7 @@ def process_samples_for_limma(
         expression = expression.reindex(metadata_sample_ids)
 
     # Save
-    if out_expression_filename != None:
+    if out_expression_filename is not None:
         expression.to_csv(out_expression_filename, sep="\t")
     else:
         expression.to_csv(expression_filename, sep="\t")
@@ -216,7 +216,7 @@ def process_samples_for_DESeq(
     assert len(list(expression.columns[(expression == 0).all()])) == 0
 
     # Remove genes below a certain threshold (if provided)
-    if count_threshold != None:
+    if count_threshold is not None:
         genes_to_keep = expression.loc[:, expression.mean() >= count_threshold].columns
         expression = expression[genes_to_keep]
 

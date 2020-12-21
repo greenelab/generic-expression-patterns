@@ -97,11 +97,11 @@ conda activate generic_expression
 
 pip install -e .
 ```
-5. Navigate to `new_experiment_example/NAME` to see an example of how to run you analyze your own dataset using existing models
-6. Create a new analysis folder in the repository root directory. This is equivalent to the `human_general_analysis` directory
-7. Copy jupyter notebook (`new_experiment_example/NAME`) into your newly created analysis directory.
-8. Create a configuration and metadata files for your analysis following the instructions in the ____ notebook and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`).
-9. Run notebook
+6. Navigate to `new_experiment_example/NAME` to see an example of how to run you analyze your own dataset using existing models
+7. Create a new analysis folder in the repository root directory. This is equivalent to the `human_general_analysis` directory
+8. Copy jupyter notebook (`new_experiment_example/NAME`) into your newly created analysis directory.
+9. Create a configuration and metadata files for your analysis following the instructions in the ____ notebook and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`).
+10. Run notebook
 
 *Note*:
 * Your input dataset should be a matrix that is sample x gene
