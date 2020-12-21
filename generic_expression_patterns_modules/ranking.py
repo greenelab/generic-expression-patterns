@@ -378,7 +378,7 @@ def get_shared_rank_scaled(
         shared_rank_scaled_df = shared_rank_df
 
     # Note: This is in case lowly expressed genes were not pre-filtered before DESeq
-    # (Micheal Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of
+    # (Michael Love, author of DESeq2): In our DESeq2 paper we discuss a case where estimation of
     # dispersion is difficult for genes with very, very low average counts. See the methods.
     # However, it doesn't really effect the outcome because these genes have almost no power for
     # detecting differential expression. Effects runtime though.
@@ -815,4 +815,3 @@ def process_and_rank_genes_pathways(
     )
 
     return template_stats, simulated_summary_stats
-
