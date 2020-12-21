@@ -64,13 +64,13 @@ conda activate generic_expression
 
 pip install -e .
 ```
-6. Navigate to either the `pseudomonas_analysis` or `human_analysis` directories and run the notebooks in order.
+6. Navigate to either the `pseudomonas_analysis`, `human_general_analysis` or `human_cancer_analysis` directories and run the notebooks in order.
 
-*Note:* Running the `human_analysis/1_process_recount2_data.ipynb` notebook can take a couple of days since the dataset is very large. If you would like to run only the analysis notebook (`2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations: 
+*Note:* Running the `human_general_analysis/1_process_recount2_data.ipynb` notebook can take several days to run since the dataset is very large. If you would like to run only the analysis notebook (`human_general_analysis/2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations: 
 * The normalized compendium data used for the analysis in the publication can be found [here](https://recount2.s3.amazonaws.com/normalized_recount2_compendium_data.tsv). 
-* The Hallmark pathway database can be found [here](human_analysis/data/metadata/hallmark_DB.gmt)
-* The processed template file can be found [here](human_analysis/data/processed_recount2_template.tsv)
-* The scaler file can be found [here](human_analysis/data/scaler_transform_human.pickle)
+* The Hallmark pathway database can be found [here](human_general_analysis/data/metadata/hallmark_DB.gmt)
+* The processed template file can be found [here](human_general_analysis/data/processed_recount2_template.tsv)
+* The scaler file can be found [here](human_general_analysis/data/scaler_transform_human.pickle)
 
 **How to analyze your own data**
 
@@ -97,15 +97,17 @@ conda activate generic_expression
 
 pip install -e .
 ```
-5. Create a new analysis folder in the main directory. This is equivalent to the `human_general_analysis` directory
-6. Copy jupyter notebooks (1_process_data.ipynb, 2_identify_generic_genes_pathways.ipynb) into analysis directory.
-7. Customize `1_process_data.ipynb` to generate the following saved files: 1) compendium of gene expression data, 2) template experiment data, 3) normalized gene expression compendium. See examples of this processing in `human_general_analysis/` and `pseudomonas_analysis/`.
-8. Required data files:
-* Gene expression compendium to use as input data. Specify path of data file in config file.
-* Metadata matrix (sample x experimental metadata) with sample id as index. Add file to `analysis_dir/data/metadata/`. Specify path of metadata file in config file.
-* Sample grouping matrix (sample x group) with group = [1 if control; 2 if case]. Add file to `analysis_dir/data/metadata/<project_id>_groups.tsv`.
-9. `2_identify_generic_genes_pathways.ipynb` will need to include `Compare gene ranking` cells as seen in `human_general_analysis/` if you would like to compare genes/genes sets with some reference ranking. 
-10. Update config file (see below)
+6. Navigate to `new_experiment_example/NAME` to see an example of how to run you analyze your own dataset using existing models
+7. Create a new analysis folder in the repository root directory. This is equivalent to the `human_general_analysis` directory
+8. Copy jupyter notebook (`new_experiment_example/NAME`) into your newly created analysis directory.
+9. Create a configuration and metadata files for your analysis following the instructions in the ____ notebook and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`).
+10. Run notebook
+
+*Note*:
+* Your input dataset should be a matrix that is sample x gene
+* The gene ids should be HGNC symbols (if using human data) or PA numbers (if using *P. aeruginosa* data)
+* Your input dataset should be generated using the same platform as the model you plan to use (i.e. RNA-seq or array)
+* Models available to use are: recount2 (human RNA-seq model found in `human_general_analysis/models`), Powers et. al. (human array model found in `human_cancer_analysis/models`), *P. aeruginosa* (*P. aeruginosa* array model found in `pseudomonas_analysis/models`)
 
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking. The ** is only used if using `get_recount2_sra_subset` (in download_recount2_data.R).

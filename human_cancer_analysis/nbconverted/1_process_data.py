@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Process Powers et. al. data
@@ -28,7 +28,7 @@ from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process
 
 
-# In[ ]:
+# In[3]:
 
 
 # Set seeds to get reproducible VAE trained models
@@ -39,7 +39,7 @@ process.set_all_seeds()
 # 
 # Most parameters are read from `config_filename`. We manually selected bioproject [GSE11352](https://www.ncbi.nlm.nih.gov/gds/?term=GSE11352[Accession]) as the template experiment, which contains breast cell lines treated with estradiol at 12H, 24H and 48H.
 
-# In[3]:
+# In[4]:
 
 
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
@@ -81,7 +81,7 @@ scaler_filename = params['scaler_filename']
 
 # ### Load compendium data
 
-# In[4]:
+# In[5]:
 
 
 raw_compendium = pd.read_csv(raw_compendium_filename, header=0, index_col = 0)
@@ -96,7 +96,7 @@ raw_compendium.head()
 # 3. Get only shared genes from Crow et. al.
 # 4. Normalize
 
-# In[5]:
+# In[6]:
 
 
 # Drop probe column and transpose matrix to be sample x gene
@@ -124,14 +124,14 @@ print(mapped_compendium.shape)
 mapped_compendium.head()
 
 
-# In[6]:
+# In[7]:
 
 
 # Save
 mapped_compendium.to_csv(mapped_compendium_filename, sep="\t")
 
 
-# In[7]:
+# In[8]:
 
 
 # Normalize data
@@ -146,11 +146,9 @@ process.normalize_compendium(
 # 
 # 1. Get gene expression associated with `project_id`, which was manually selected by the user and specified in the config file.
 # 
-# 2. Drop selected samples from template experiments based on metadata, `data/metadata/all_experiments_sample_annotations.csv`, which contains sample comparisons
-# 
 # Note: The data is not normalized so that we can perform DE analysis in next notebook
 
-# In[8]:
+# In[9]:
 
 
 # Note: This is the only notebook using this function, so for now it is included here
@@ -186,35 +184,6 @@ print(template_mapped.shape)
 
 # Save
 template_mapped.to_csv(mapped_template_filename, sep="\t")
-
-
-# In[9]:
-
-
-# metadata file with grouping assignments for samples
-sample_id_metadata_filename = os.path.join(
-    base_dir,
-    dataset_name,
-    "data",
-    "metadata",
-    f"{project_id}_process_samples.tsv"
-)
-    
-# Drop sample ids based on metadata file above
-sample_ids_to_drop = set()
-if os.path.exists(sample_id_metadata_filename):
-    # Read in metadata and get samples to be dropped:
-    metadata = pd.read_csv(
-        sample_id_metadata_filename, sep='\t', header=0, index_col=0
-    )
-    sample_ids_to_drop = set(metadata[metadata["processing"] == "drop"].index)
-
-# Write the processed recount2 template output file on disk
-with open(mapped_template_filename) as ifh, open(processed_template_filename, "w") as ofh:
-    for idx, line in enumerate(ifh):
-        sample_id = line.split('\t')[0]
-        if idx == 0 or sample_id not in sample_ids_to_drop:
-            ofh.write(line)
 
 
 # ### Train VAE 

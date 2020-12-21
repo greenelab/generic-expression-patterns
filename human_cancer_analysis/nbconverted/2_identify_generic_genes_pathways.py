@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Identify generic genes and pathways
@@ -41,7 +41,7 @@ from rpy2.robjects import pandas2ri
 pandas2ri.activate()
 
 from ponyo import utils
-from generic_expression_patterns_modules import calc, process
+from generic_expression_patterns_modules import process, stats, ranking
 
 np.random.seed(123)
 
@@ -69,6 +69,7 @@ NN_architecture = params['NN_architecture']
 num_runs = params['num_simulated']
 project_id = params['project_id']
 metadata_col_id = params['metadata_colname']
+mapped_template_filename = params['mapped_template_filename']
 processed_template_filename = params['processed_template_filename']
 normalized_compendium_filename = params['normalized_compendium_filename']
 scaler_filename = params['scaler_filename']
@@ -83,6 +84,15 @@ sample_id_metadata_filename = os.path.join(
     "data",
     "metadata",
     f"{project_id}_process_samples.tsv"
+)
+
+# Load metadata file with grouping assignments for samples
+grp_metadata_filename = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    f"{project_id}_groups.tsv"
 )
 
 # Load pickled file
@@ -368,25 +378,32 @@ for run_id in range(num_runs):
     )
 
 
-# Since this experiment contains multiple conditions (i.e. estradiol vs EtOH at 12, 24, and 48 hrs are each considered a different comparison) being tested, we will only include those samples within the same condition. 
+# ### Process template and simulated experiments
+# 
+# * Remove samples not required for comparison. Since this experiment contains multiple conditions (i.e. estradiol vs EtOH at 12, 24, and 48 hrs are each considered a different comparison) being tested, we will only include those samples within the same condition.
+# * Make sure ordering of samples matches metadata for proper comparison
 
 # In[9]:
 
 
-# This step modifies the following files:
-# "<local_dir>/pseudo_experiments/selected_simulated_data_SRP012656_<n>.txt"
 if os.path.exists(sample_id_metadata_filename):
-    # Read in metadata
-    metadata = pd.read_csv(sample_id_metadata_filename, sep='\t', header=0, index_col=0)
+    stats.process_samples_for_limma(
+        mapped_template_filename,
+        sample_id_metadata_filename,
+        grp_metadata_filename,
+        processed_template_filename
+    )
     
-    # Get samples to be dropped
-    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
-
-    process.subset_samples(
-        sample_ids_to_drop,
-        num_runs,
-        local_dir,
-        project_id
+    for i in range(num_runs):
+        simulated_filename = os.path.join(
+            local_dir,
+            "pseudo_experiment",
+            f"selected_simulated_data_{project_id}_{i}.txt"
+        )
+        stats.process_samples_for_limma(
+        simulated_filename,
+        sample_id_metadata_filename,
+        grp_metadata_filename
     )
 
 
@@ -397,37 +414,17 @@ if os.path.exists(sample_id_metadata_filename):
 # In[10]:
 
 
-# Load metadata file with grouping assignments for samples
-metadata_filename = os.path.join(
-    base_dir,
-    dataset_name,
-    "data",
-    "metadata",
-    f"{project_id}_groups.tsv"
-)
+# Create subdirectory: "<local_dir>/DE_stats/"
+os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 
 
 # In[11]:
 
 
-# Check whether ordering of sample ids is consistent between gene expression data and metadata
-process.compare_and_reorder_samples(processed_template_filename, metadata_filename)
-
-
-# In[12]:
-
-
-# Create subdirectory: "<local_dir>/DE_stats/"
-os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
-
-
-# In[13]:
-
-
 get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# File created: "<local_dir>/DE_stats/DE_stats_template_data_SRP012656_real.txt"\nget_DE_stats_limma(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
-# In[14]:
+# In[12]:
 
 
 # Check number of DEGs
@@ -448,21 +445,7 @@ selected = template_DE_stats[(template_DE_stats['adj.P.Val']<0.05) & (abs(templa
 print(selected.shape)
 
 
-# In[15]:
-
-
-# Check whether ordering of sample ids is consistent between gene expression data and metadata
-for i in range(num_runs):
-    simulated_data_filename = os.path.join(
-        local_dir,
-        "pseudo_experiment",
-        f"selected_simulated_data_{project_id}_{i}.txt"
-    )
-        
-    process.compare_and_reorder_samples(simulated_data_filename, metadata_filename)
-
-
-# In[16]:
+# In[13]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# Files created: "<local_dir>/DE_stats/DE_stats_simulated_data_SRP012656_<n>.txt"\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(local_dir, \n                                     "pseudo_experiment/selected_simulated_data_",\n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    get_DE_stats_limma(metadata_filename,\n                       project_id, \n                       simulated_data_filename,\n                       "simulated",\n                       local_dir,\n                       i)\n}')
@@ -470,64 +453,27 @@ get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_di
 
 # ### Rank genes
 
-# In[17]:
+# In[14]:
 
 
-# Concatenate simulated experiments
-simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'DE')
-
-print(simulated_DE_stats_all.shape)
-
-
-# In[18]:
-
-
-# Take absolute value of logFC and t statistic
-simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
-
-
-# In[19]:
-
-
-# Aggregate statistics across all simulated experiments
-simulated_DE_summary_stats = calc.aggregate_stats(
+analysis_type = "DE"
+template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_pathways(
+    template_DE_stats_filename,
+    local_dir,
+    num_runs,
+    project_id,
+    analysis_type,
     col_to_rank_genes,
-    simulated_DE_stats_all,
-    'DE'
-)
-
-
-# In[20]:
-
-
-# Take absolute value of logFC and t statistic
-template_DE_stats = process.abs_value_stats(template_DE_stats)
-
-# Rank genes in template experiment
-template_DE_stats = calc.rank_genes_or_pathways(
-    col_to_rank_genes,      
-    template_DE_stats,
-    True
-)
-
-
-# In[21]:
-
-
-# Rank genes in simulated experiments
-simulated_DE_summary_stats = calc.rank_genes_or_pathways(
-    col_to_rank_genes,
-    simulated_DE_summary_stats,
-    False
 )
 
 
 # ### Gene summary table
 
-# In[22]:
+# In[15]:
 
 
-summary_gene_ranks = process.generate_summary_table(
+summary_gene_ranks = ranking.generate_summary_table(
+    template_DE_stats_filename,
     template_DE_stats,
     simulated_DE_summary_stats,
     col_to_rank_genes,
@@ -539,7 +485,14 @@ summary_gene_ranks = process.generate_summary_table(
 summary_gene_ranks.head()
 
 
-# In[23]:
+# In[16]:
+
+
+# Check if there is an NaN values, there should not be
+summary_gene_ranks.isna().any()
+
+
+# In[17]:
 
 
 # Create `gene_summary_fielname`
@@ -551,7 +504,7 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes were ranked by the number differentially expressed gene sets a gene appeared in across 600 experiments.
 
-# In[24]:
+# In[18]:
 
 
 # Get generic genes identified by Crow et. al.
@@ -561,7 +514,7 @@ ref_rank_col = params['reference_rank_col']
 
 figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
 
-process.compare_gene_ranking(
+ranking.compare_gene_ranking(
     summary_gene_ranks,
     DE_prior_filename,
     ref_gene_col,
@@ -582,20 +535,27 @@ process.compare_gene_ranking(
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES (i.e. scores based on permuted phenotype)
 
-# In[25]:
+# In[19]:
+
+
+# Create "<local_dir>/GSEA_stats/" subdirectory
+os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
+
+
+# In[20]:
 
 
 # Load pathway data
 hallmark_DB_filename = params["pathway_DB_filename"]
 
 
-# In[26]:
+# In[23]:
 
 
-get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -i local_dir -o template_enriched_pathways', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/GSEA_analysis.R'))\n\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)")
+get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -i local_dir -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\nout_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_template_data_",\n                     project_id,\n                     "_real.txt", \n                     sep = "")\n\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)\n\nwrite.table(as.data.frame(template_enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")')
 
 
-# In[27]:
+# In[24]:
 
 
 print(template_enriched_pathways.shape)
@@ -604,78 +564,41 @@ template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_value
 
 # **Quick check:** Looks like enriched pathways are consistent with estradiol being estrogen hormone treatment.
 
-# In[28]:
+# In[25]:
 
 
-# Create "<local_dir>/GSEA_stats/" subdirectory
-os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
-
-
-# In[29]:
-
-
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, hallmark_DB_filename, statistic) \n    \n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
 
 
 # ### Rank pathways 
 
-# In[30]:
+# In[26]:
 
 
-# Concatenate simulated experiments
-simulated_GSEA_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'GSEA')
-simulated_GSEA_stats_all.set_index('pathway', inplace=True)
-print(simulated_GSEA_stats_all.shape)
-
-
-# In[31]:
-
-
-# Aggregate statistics across all simulated experiments
-simulated_GSEA_summary_stats = calc.aggregate_stats(
-    col_to_rank_pathways,
-    simulated_GSEA_stats_all,
-    'GSEA'
+analysis_type = "GSEA"
+template_GSEA_stats_filename = os.path.join(
+    local_dir,
+    "GSEA_stats",
+    f"GSEA_stats_template_data_{project_id}_real.txt"    
 )
-
-simulated_GSEA_summary_stats.head()
-
-
-# In[32]:
-
-
-# Load association statistics for template experiment
-template_GSEA_stats = template_enriched_pathways.iloc[:, :-1]
-template_GSEA_stats.set_index('pathway', inplace=True)
-
-template_GSEA_stats.head()
-
-# Rank genes in template experiment
-template_GSEA_stats = calc.rank_genes_or_pathways(
+template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_genes_pathways(
+    template_GSEA_stats_filename,
+    local_dir,
+    num_runs,
+    project_id,
+    analysis_type,
     col_to_rank_pathways,
-    template_GSEA_stats,
-    True
-)
-
-
-# In[33]:
-
-
-# Rank genes in simulated experiments
-simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(
-    col_to_rank_pathways,
-    simulated_GSEA_summary_stats,
-    False
 )
 
 
 # ### Pathway summary table
 
-# In[34]:
+# In[27]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
-summary_pathway_ranks = process.generate_summary_table(
+summary_pathway_ranks = ranking.generate_summary_table(
+    template_GSEA_stats_filename,
     template_GSEA_stats,
     simulated_GSEA_summary_stats,
     col_to_rank_pathways,
@@ -687,7 +610,7 @@ summary_pathway_ranks = process.generate_summary_table(
 summary_pathway_ranks.sort_values(by="Rank (simulated)", ascending=False).head(10)
 
 
-# In[35]:
+# In[28]:
 
 
 # Create `pathway_summary_filename`
@@ -703,7 +626,7 @@ summary_pathway_ranks.to_csv(pathway_summary_filename, sep='\t')
 # 
 # To get a `reference ranking`, we calculate the fraction of experiments that a given pathway was significant (q-value <0.05) and use this rank pathways. `Our ranking` is to rank pathways based on the median q-value across the simulated experiments. We can then compare `our ranking` versus the `reference ranking.`
 
-# In[36]:
+# In[29]:
 
 
 # Load Powers et. al. results file
@@ -716,7 +639,7 @@ powers_rank_filename = os.path.join(
 )
 
 
-# In[37]:
+# In[30]:
 
 
 # Read Powers et. al. data
@@ -727,7 +650,7 @@ print(powers_rank_df.shape)
 powers_rank_df.head()
 
 
-# In[38]:
+# In[31]:
 
 
 # Count the number of experiments where a given pathway was found to be enriched (qvalue < 0.05)
@@ -747,7 +670,7 @@ powers_rank_stats_df = pd.DataFrame(
 powers_rank_stats_df.sort_values(by="Powers Rank", ascending=False).head()
 
 
-# In[39]:
+# In[32]:
 
 
 # Save reference file for input into comparison
@@ -762,12 +685,12 @@ powers_rank_processed_filename = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_filename, sep="\t", )
 
 
-# In[40]:
+# In[33]:
 
 
 figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"
 
-process.compare_pathway_ranking(
+ranking.compare_pathway_ranking(
     summary_pathway_ranks,
     powers_rank_processed_filename,
     figure_filename
@@ -788,4 +711,4 @@ process.compare_pathway_ranking(
 # 
 # * We found very different generic pathways training using our simulation approach trained on a general dataset (recount2) compared to generic pathways found from real cancer-specific experiments from Powers et. al. See [analysis](../human_general_analysis/2_identify_generic_genes_pathways.ipynb). But we get very similar generic pathways using our simulation approach trained on a cancer-specific dataset (Powers et. al.) compared with generic pathways found from cancer-specific dataset (Powers et. al.). This indicates that generic pathways are more context specific.
 # 
-# * I need to think about about why there is a difference in genes vs pathways.
+# * Why would the context matter more for pathways as opposed to genes? One way to think about this is using this figure from a recent [preprint](https://www.biorxiv.org/content/10.1101/2020.07.30.228296v1).Information flows from a stimulation that activates proteins within pathways and these proteins regulate gene expression. Say we have a context specific signal, that changes the TF within some pathways, this eventually trickles down to changes in gene expression. So if we think about flow of information, measuring pathway activity (or pathway enrichment, etc) will be more sensitive to our context compared to measuring DE in individual genes. Since the genes are regulated as a group, you'd see coordinated changes in expression that are correlated with your condition but looking at the expression of individual genes you wouldn’t necessarily see this correlation with condition.

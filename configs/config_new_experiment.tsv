@@ -1,0 +1,11 @@
+local_dir	"/home/alexandra/Documents/Data/Generic_expression_patterns/"
+raw_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/Costello_BladderCancer_ResistantCells_Counts_12-8-20.txt"
+processed_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/Costello_BladderCancer_ResistantCells_Counts_12-8-20_processed.txt"
+mapped_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/mapped_recount2_compendium.tsv"
+normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/normalized_recount2_compendium.tsv"
+scaler_filename	"../human_general_analysis/data/scaler_transform_human.pickle"
+vae_model_dir	"../human_general_analysis/models/NN_2500_30"
+project_id	"cis-par-KU1919"
+num_simulated	25
+latent_dim	30
+rank_genes_by	"log2FoldChange"

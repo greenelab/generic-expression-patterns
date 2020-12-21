@@ -30,7 +30,7 @@ from rpy2.robjects import pandas2ri
 pandas2ri.activate()
 
 from ponyo import utils, simulate_expression_data
-from generic_expression_patterns_modules import calc, process
+from generic_expression_patterns_modules import process, stats, ranking
 
 np.random.seed(123)
 
@@ -60,6 +60,7 @@ NN_architecture = params['NN_architecture']
 num_runs = params['num_simulated']
 project_id = params['project_id']
 metadata_col_id = params['metadata_colname']
+mapped_template_filename = params['mapped_template_filename']
 processed_template_filename = params['processed_template_filename']
 normalized_compendium_filename = params['normalized_compendium_filename']
 scaler_filename = params['scaler_filename']
@@ -74,6 +75,15 @@ sample_id_metadata_filename = os.path.join(
     "data",
     "metadata",
     f"{project_id}_process_samples.tsv"
+)
+
+# Load metadata file with grouping assignments for samples
+metadata_filename = os.path.join(
+    base_dir,
+    dataset_name,
+    "data",
+    "metadata",
+    f"{project_id}_groups.tsv"
 )
 
 # Load pickled file
@@ -107,38 +117,62 @@ for run_id in range(num_runs):
     )
 
 
-# ## Test: Processing simulation experiments
+# ## Test: Processing template experiment
+# 
+# `processed_template_filename`: template data with some sample rows dropped
 
 # In[5]:
 
 
-# This step modifies the following files:
-# "<local_dir>/pseudo_experiments/selected_simulated_data_SRP012656_<n>.txt"
 if os.path.exists(sample_id_metadata_filename):
-    # Read in metadata
-    metadata = pd.read_csv(sample_id_metadata_filename, sep='\t', header=0, index_col=0)
-    
-    # Get samples to be dropped
-    sample_ids_to_drop = list(metadata[metadata["processing"] == "drop"].index)
-
-    process.subset_samples(
-        sample_ids_to_drop,
-        num_runs,
-        local_dir,
-        project_id
+    stats.process_samples_for_DESeq(
+        mapped_template_filename,
+        sample_id_metadata_filename,
+        metadata_filename,
+        None,
+        processed_template_filename
     )
 
 
 # In[6]:
 
 
-# Round simulated read counts to int in order to run DESeq.
-# This step modifies the following files again:
-# "<local_dir>/pseudo_experiments/selected_simulated_data_SRP012656_<n>.txt"
-process.recast_int(num_runs, local_dir, project_id)
+# Read data
+template_data = pd.read_csv(
+    processed_template_filename,
+    header=0,
+    sep='\t',
+    index_col=0
+)
 
+# Check samples dropped
+print(template_data.shape)
+assert(template_data.shape[0] == 24)
+template_data.head()
+
+
+# ## Test: Processing simulation experiments
 
 # In[7]:
+
+
+# This step modifies the following files:
+# "<local_dir>/pseudo_experiments/selected_simulated_data_SRP012656_<n>.txt"
+if os.path.exists(sample_id_metadata_filename):
+    for i in range(num_runs):
+        simulated_filename = os.path.join(
+            local_dir,
+            "pseudo_experiment",
+            f"selected_simulated_data_{project_id}_{i}.txt"
+        )
+        stats.process_samples_for_DESeq(
+        simulated_filename,
+        sample_id_metadata_filename,
+        metadata_filename
+    )
+
+
+# In[8]:
 
 
 # Check simulated files were created
@@ -147,7 +181,7 @@ sim_output2 = os.path.join(local_dir, "pseudo_experiment", "selected_simulated_d
 assert (os.path.exists(sim_output1) and os.path.exists(sim_output2))
 
 
-# In[8]:
+# In[9]:
 
 
 # Check that simulated files are non-empty
@@ -156,7 +190,7 @@ assert (os.path.getsize(sim_output1)>0 and os.path.getsize(sim_output2)>0)
 
 # **Note:** These cells testing for reproducibility of the simulation pass when run locally. But fail when run on github actions, so for now I am commenting them out but will use them to test locally any future updates to the code
 
-# In[9]:
+# In[10]:
 
 
 """# Check reproducibility of simulated experiments using random seed
@@ -173,7 +207,7 @@ assert np.all(np.isclose(output_df.values, template_df.values)), (
 )"""
 
 
-# In[10]:
+# In[11]:
 
 
 # Check reproducibility of simulated experiments
@@ -192,60 +226,26 @@ assert np.all(np.isclose(output_df.values, template_df.values)), (
 
 # ## Test: Differential expression analysis
 
-# In[11]:
-
-
-# Load metadata file with grouping assignments for samples
-metadata_filename = os.path.join(
-    base_dir,
-    dataset_name,
-    "data",
-    "metadata",
-    f"{project_id}_groups.tsv"
-)
-
-
 # In[12]:
-
-
-# Check whether ordering of sample ids is consistent between gene expression data and metadata
-process.compare_and_reorder_samples(processed_template_filename, metadata_filename)
-
-
-# In[13]:
 
 
 # Create subdirectory: "<local_dir>/DE_stats/"
 os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 
 
-# In[14]:
+# In[13]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# File created: "<local_dir>/DE_stats/DE_stats_template_data_SRP012656_real.txt"\nget_DE_stats_DESeq(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
-# In[15]:
-
-
-# Check whether ordering of sample ids is consistent between gene expression data and metadata
-for i in range(num_runs):
-    simulated_data_filename = os.path.join(
-        local_dir,
-        "pseudo_experiment",
-        f"selected_simulated_data_{project_id}_{i}.txt"
-    )
-        
-    process.compare_and_reorder_samples(simulated_data_filename, metadata_filename)
-
-
-# In[16]:
+# In[14]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# Files created: "<local_dir>/DE_stats/DE_stats_simulated_data_SRP012656_<n>.txt"\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(local_dir, \n                                     "pseudo_experiment/selected_simulated_data_",\n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    get_DE_stats_DESeq(metadata_filename,\n                       project_id, \n                       simulated_data_filename,\n                       "simulated",\n                       local_dir,\n                       i)\n}')
 
 
-# In[17]:
+# In[15]:
 
 
 # Check DE stats files were created
@@ -254,7 +254,7 @@ DE_output2 = os.path.join(local_dir, "DE_stats", "DE_stats_simulated_data_SRP012
 assert (os.path.exists(DE_output1) and os.path.exists(DE_output2))
 
 
-# In[18]:
+# In[16]:
 
 
 # Check that DE stats files are non-empty
@@ -263,77 +263,33 @@ assert (os.path.getsize(DE_output1)>0 and os.path.getsize(DE_output2)>0)
 
 # ### Rank genes
 
-# In[19]:
+# In[17]:
 
 
-# Concatenate simulated experiments
-simulated_DE_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'DE')
-
-print(simulated_DE_stats_all.shape)
-
-
-# In[20]:
-
-
-# Take absolute value of logFC and t statistic
-simulated_DE_stats_all = process.abs_value_stats(simulated_DE_stats_all)
-
-
-# In[21]:
-
-
-# Aggregate statistics across all simulated experiments
-simulated_DE_summary_stats = calc.aggregate_stats(
-    col_to_rank_genes,
-    simulated_DE_stats_all,
-    'DE'
-)
-
-
-# In[22]:
-
-
-# Take absolute value of logFC and t statistic
+analysis_type = "DE"
 template_DE_stats_filename = os.path.join(
     local_dir,
     "DE_stats",
     f"DE_stats_template_data_{project_id}_real.txt"
 )
 
-template_DE_stats = pd.read_csv(
-    template_DE_stats_filename, 
-    sep="\t", 
-    header=0, 
-    index_col=0
-)
-
-template_DE_stats = process.abs_value_stats(template_DE_stats)
-
-# Rank genes in template experiment
-template_DE_stats = calc.rank_genes_or_pathways(
-    col_to_rank_genes,      
-    template_DE_stats,
-    True
-)
-
-
-# In[23]:
-
-
-# Rank genes in simulated experiments
-simulated_DE_summary_stats = calc.rank_genes_or_pathways(
+template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_pathways(
+    template_DE_stats_filename,
+    local_dir,
+    num_runs,
+    project_id,
+    analysis_type,
     col_to_rank_genes,
-    simulated_DE_summary_stats,
-    False
 )
 
 
 # ### Gene summary table
 
-# In[24]:
+# In[18]:
 
 
-summary_gene_ranks = process.generate_summary_table(
+summary_gene_ranks = ranking.generate_summary_table(
+    template_DE_stats_filename,
     template_DE_stats,
     simulated_DE_summary_stats,
     col_to_rank_genes,
@@ -343,7 +299,27 @@ summary_gene_ranks = process.generate_summary_table(
 )
 
 
-# In[25]:
+# In[39]:
+
+
+summary_gene_ranks.head()
+
+
+# In[41]:
+
+
+# Some genes will have NaN's in the simulated statistics columns. These are genes that were filtered 
+# due to low expression and therefore the corresponding Z-score for this gene is NaN
+summary_gene_ranks.isna().any()
+
+
+# In[45]:
+
+
+summary_gene_ranks[summary_gene_ranks.isna().any(axis=1)]
+
+
+# In[19]:
 
 
 # Create `gene_summary_filename`
@@ -351,7 +327,7 @@ gene_summary_filename = os.path.join(local_dir, "gene_summary_table.tsv")
 summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 
 
-# In[26]:
+# In[20]:
 
 
 """# Passed assertion locally but not on github actions but not clear why
@@ -376,7 +352,7 @@ assert np.all(np.isclose(
 # 
 # We want to compare the ability to detect these generic genes using our method vs those found by [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf). Their genes are ranked 0 = not commonly DE; 1 = commonly DE. Genes by the number differentially expressed gene sets they appear in and then ranking genes by this score.
 
-# In[28]:
+# In[21]:
 
 
 # Get generic genes identified by Crow et. al.
@@ -386,7 +362,7 @@ ref_rank_col = params['reference_rank_col']
 
 figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
 
-corr_stats = process.compare_gene_ranking(
+corr_stats = ranking.compare_gene_ranking(
     summary_gene_ranks,
     DE_prior_file,
     ref_gene_col,
@@ -411,33 +387,33 @@ assert(
 
 # ## Test: GSEA
 
-# In[29]:
-
-
-# Load pathway data
-hallmark_DB_filename = os.path.join(base_dir, dataset_name, "data", "metadata", "hallmark_DB.gmt")
-
-
-# In[30]:
-
-
-get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/GSEA_analysis.R'))\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)")
-
-
-# In[31]:
+# In[22]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
 os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
 
 
-# In[32]:
+# In[23]:
+
+
+# Load pathway data
+hallmark_DB_filename = os.path.join(base_dir, dataset_name, "data", "metadata", "hallmark_DB.gmt")
+
+
+# In[24]:
+
+
+get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\nout_file <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_template_data_",\n                     project_id,\n                     "_real.txt", \n                     sep = "")\n\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)  \n    \nwrite.table(as.data.frame(template_enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")')
+
+
+# In[25]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir', '\nsource(paste0(base_dir,\'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_file <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_file <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n        \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")\n}')
 
 
-# In[33]:
+# In[26]:
 
 
 # Check GSEA stats files were created
@@ -446,7 +422,7 @@ GSEA_output2 = os.path.join(local_dir, "GSEA_stats", "GSEA_stats_simulated_data_
 assert (os.path.exists(DE_output1) and os.path.exists(DE_output2))
 
 
-# In[34]:
+# In[27]:
 
 
 # Check that GSEA stats files are non-empty
@@ -455,30 +431,50 @@ assert (os.path.getsize(GSEA_output1)>0 and os.path.getsize(GSEA_output2)>0)
 
 # ### Rank pathways
 
-# In[35]:
+# In[28]:
 
 
-# Concatenate simulated experiments
+analysis_type = "GSEA"
+template_GSEA_stats_filename = os.path.join(
+    local_dir,
+    "GSEA_stats",
+    f"GSEA_stats_template_data_{project_id}_real.txt"
+)
+
+template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_genes_pathways(
+    template_GSEA_stats_filename,
+    local_dir,
+    num_runs,
+    project_id,
+    analysis_type,
+    col_to_rank_pathways,
+)
+
+
+# In[29]:
+
+
+"""# Concatenate simulated experiments
 simulated_GSEA_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'GSEA')
 simulated_GSEA_stats_all.set_index('pathway', inplace=True)
-print(simulated_GSEA_stats_all.shape)
+print(simulated_GSEA_stats_all.shape)"""
 
 
-# In[36]:
+# In[30]:
 
 
-# Aggregate statistics across all simulated experiments
+"""# Aggregate statistics across all simulated experiments
 simulated_GSEA_summary_stats = calc.aggregate_stats(
     col_to_rank_pathways,
     simulated_GSEA_stats_all,
     'GSEA'
-)
+)"""
 
 
-# In[37]:
+# In[31]:
 
 
-# Load association statistics for template experiment
+"""# Load association statistics for template experiment
 template_GSEA_stats = template_enriched_pathways.iloc[:, :-1]
 template_GSEA_stats.set_index('pathway', inplace=True)
 
@@ -489,27 +485,28 @@ template_GSEA_stats = calc.rank_genes_or_pathways(
     col_to_rank_pathways,
     template_GSEA_stats,
     True
-)
+)"""
 
 
-# In[38]:
+# In[32]:
 
 
-# Rank genes in simulated experiments
+"""# Rank genes in simulated experiments
 simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(
     col_to_rank_pathways,
     simulated_GSEA_summary_stats,
     False
-)
+)"""
 
 
 # ### Pathway summary table
 
-# In[39]:
+# In[33]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
-summary_pathway_ranks = process.generate_summary_table(
+summary_pathway_ranks = ranking.generate_summary_table(
+    template_GSEA_stats_filename,
     template_GSEA_stats,
     simulated_GSEA_summary_stats,
     col_to_rank_pathways,
@@ -521,7 +518,7 @@ summary_pathway_ranks = process.generate_summary_table(
 
 # ## Test: Compare pathway ranking
 
-# In[40]:
+# In[34]:
 
 
 # Load Powers et. al. results file
@@ -534,7 +531,7 @@ powers_rank_filename = os.path.join(
 )
 
 
-# In[41]:
+# In[35]:
 
 
 # Read Powers et. al. data
@@ -543,7 +540,7 @@ powers_rank_df = pd.read_csv(powers_rank_filename, header=0, index_col=0)
 powers_rank_df.drop(['Category'], axis=1, inplace=True)
 
 
-# In[42]:
+# In[36]:
 
 
 # Count the number of experiments where a given pathway was found to be enriched (qvalue < 0.05)
@@ -562,7 +559,7 @@ powers_rank_stats_df = pd.DataFrame(
 )
 
 
-# In[43]:
+# In[37]:
 
 
 # Save reference file for input into comparison
@@ -577,12 +574,12 @@ powers_rank_processed_filename = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_filename, sep="\t", )
 
 
-# In[44]:
+# In[38]:
 
 
 figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"
 
-corr_stats = process.compare_pathway_ranking(
+corr_stats = ranking.compare_pathway_ranking(
     summary_pathway_ranks,
     powers_rank_processed_filename,
     figure_filename
