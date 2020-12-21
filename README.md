@@ -107,7 +107,7 @@ pip install -e .
 * Your input dataset should be a matrix that is sample x gene
 * The gene ids should be HGNC symbols (if using human data) or PA numbers (if using *P. aeruginosa* data)
 * Your input dataset should be generated using the same platform as the model you plan to use (i.e. RNA-seq or array)
-* Models available to use are: recount2 (human RNA-seq model found in `human_general_analysis/models`), Powers et. al. (human array model found in `human_cancer_anallysis/models`), *P. aeruginosa* (*P. aeruginosa* array model found in `pseudomonas_analysis/models`)
+* Models available to use are: recount2 (human RNA-seq model found in `human_general_analysis/models`), Powers et. al. (human array model found in `human_cancer_analysis/models`), *P. aeruginosa* (*P. aeruginosa* array model found in `pseudomonas_analysis/models`)
 
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking. The ** is only used if using `get_recount2_sra_subset` (in download_recount2_data.R).
