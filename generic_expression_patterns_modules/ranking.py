@@ -405,19 +405,19 @@ def compare_gene_ranking(
     Compare gene ranking and generate a SVG figure.
     Returns correlations to make debugging easier.
 
-        Arguments
-        ------------
-        summary_df: dataframe
-            Dataframe containing our ranking per gene along with other statistics
-            associated with that gene.
-        reference_filename: str
-            File containing gene ranks from reference publication (Crow et. al.)
-        ref_gene_col: str
-            Name of column header containing reference gene symbols
-        ref_rank_col: str
-            Name of column header containing reference ranks of genes
-        output_figure_filename: str
-            Filename of output figure
+    Arguments
+    ------------
+    summary_df: dataframe
+        Dataframe containing our ranking per gene along with other statistics
+        associated with that gene.
+    reference_filename: str
+        File containing gene ranks from reference publication (Crow et. al.)
+    ref_gene_col: str
+        Name of column header containing reference gene symbols
+    ref_rank_col: str
+        Name of column header containing reference ranks of genes
+    output_figure_filename: str
+        Filename of output figure
     """
 
     shared_gene_rank_scaled_df, correlations = get_shared_rank_scaled(
