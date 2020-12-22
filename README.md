@@ -16,10 +16,10 @@ If you want to perform a new DE analysis in a different biological **context** (
 
 
 **Goal:**
-To develop a method that can automatically identify generic genes and pathways
+To develop a method that can automatically distinguish between specific versus generic genes and pathways
 
 **Results:**
-Our method ranking was consistent with previously published ranking. These generic genes appear to act as gene hubs, which are associated with many biological processes. 
+We introduce a method based on latent space transformation in multi-layer neural networks that makes it possible to automate the analysis of generic genes, termed Specific cOntext Pattern Highlighting In Expression (SOPHIE). We validated that SOPHIE could recapitulate previously identified generic genes and pathways found using manual curation. These generic genes appear to act as gene hubs, which are associated with many biological processes. We applied SOPHIE to identify specific genes using a new experiment ---<TBD>
 
 **Conclusions:**
 We developed a method to automatically identify generic genes and pathways using public data without the need for curation. The generic signals identified from this method can be used to interpret study results and direct follow-up experiments.
@@ -29,10 +29,11 @@ We developed a method to automatically identify generic genes and pathways using
 | --- | --- | 
 | [configs](configs) | This folder contains configuration files used to set hyperparameters for the different experiments |
 | [generic_expression_patterns_modules](generic_expression_patterns_modules) | This folder contains supporting functions that other notebooks in this repository will use |
-| [human_cancer_analysis](human_cancer_analysis) | This folder contains analysis notebooks to identify generic signals using Powers et. al. dataset to train VAE |
-| [human_general_analysis](human_general_analysis) | This folder contains analysis notebooks to identify generic signalsusing [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset to train VAE |
+| [human_cancer_analysis](human_cancer_analysis) | This folder contains analysis notebooks to validate generic signals using Powers et. al. dataset, which is composed of experiments testing the response of small molecule treatments in cancer cell lines, to train VAE |
+| [human_general_analysis](human_general_analysis) | This folder contains analysis notebooks to validate generic signals using [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset, which contains a heterogeneous set of experiments, to train VAE |
 | [multiplier_analysis](multiplier_analysis) | This folder contains analysis notebooks to coverage of generic genes across [MultiPLIER latent variables](https://www.cell.com/cell-systems/pdfExtended/S2405-4712\(19\)30119-X)) |
-| [pseudomonas_analysis](pseudomonas_analysis) |  This folder contains analysis notebooks to identify generic signalsusing *P. aeruginosa* dataset to train VAE |
+| [pseudomonas_analysis](pseudomonas_analysis) |  This folder contains analysis notebooks to identify specific and generic signals using *P. aeruginosa* dataset to train VAE |
+| [new_experiment](new_experiment) |  This folder contains analysis notebooks to identify specific and generic signals using a new experiment and an existing VAE model|
 
 
 ## Usage
@@ -97,11 +98,11 @@ conda activate generic_expression
 
 pip install -e .
 ```
-6. Navigate to `new_experiment_example/NAME` to see an example of how to run you analyze your own dataset using existing models
-7. Create a new analysis folder in the repository root directory. This is equivalent to the `human_general_analysis` directory
-8. Copy jupyter notebook (`new_experiment_example/NAME`) into your newly created analysis directory.
-9. Create a configuration and metadata files for your analysis following the instructions in the ____ notebook and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`).
-10. Run notebook
+6.  Navigate to `new_experiment_example/find_specific_genes_in_new_experiment.ipynb` to see an example of how to run you analyze your own dataset using existing models
+6. Create a configuration and metadata files for your analysis following the instructions in the `find_specific_genes_in_new_experiment.ipynb` notebook and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`). Here are the links to the compendium data needed:
+
+<TO DO: Link to normalized and mapped compendium data on AWS>
+7. Run notebook
 
 *Note*:
 * Your input dataset should be a matrix that is sample x gene
@@ -142,6 +143,7 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | latent_dim | int: Size of the bottleneck layer|
 | epsilon_std | float: Standard deviation of Normal distribution to sample latent space|
 | project_id | str:  Experiment id to use as a template experiment|
+| count_threshold | int: Minimum count threshold to use to filter RNA-seq data|
 | metadata_colname | str:  Header of experiment metadata file to indicate column containing sample ids. This is used to extract gene expression data associated with project_id|
 | num_simulated| int: Simulate a compendia with these many experiments, created by shifting the template experiment these many times|
 | num_recount2_experiments_to_download** | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
