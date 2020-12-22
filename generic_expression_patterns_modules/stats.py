@@ -80,9 +80,9 @@ def format_pseudomonas_pathway_DB(pathway_DB_filename, local_dir, out_filename):
 
 def process_samples_for_limma(
     expression_filename,
-    process_metadata_filename,
     grp_metadata_filename,
     out_expression_filename=None,
+    process_metadata_filename=None,
 ):
     """
     This function processes samples in the template and simulated
@@ -116,18 +116,20 @@ def process_samples_for_limma(
 
     # Read data
     expression = pd.read_csv(expression_filename, sep="\t", index_col=0, header=0)
-    process_metadata = pd.read_csv(
-        process_metadata_filename, sep="\t", index_col=0, header=0
-    )
+    if process_metadata_filename is not None:
+        process_metadata = pd.read_csv(
+            process_metadata_filename, sep="\t", index_col=0, header=0
+        )
     grp_metadata = pd.read_csv(grp_metadata_filename, sep="\t", header=0, index_col=0)
 
-    # Get samples ids to remove
-    samples_to_remove = list(
-        process_metadata[process_metadata["processing"] == "drop"].index
-    )
+    if process_metadata_filename is not None:
+        # Get samples ids to remove
+        samples_to_remove = list(
+            process_metadata[process_metadata["processing"] == "drop"].index
+        )
 
-    # Remove samples
-    expression = expression.drop(samples_to_remove)
+        # Remove samples
+        expression = expression.drop(samples_to_remove)
 
     # Check ordering of sample ids is consistent between gene expression data and metadata
     metadata_sample_ids = grp_metadata.index
@@ -152,10 +154,10 @@ def process_samples_for_limma(
 
 def process_samples_for_DESeq(
     expression_filename,
-    process_metadata_filename,
     grp_metadata_filename,
-    count_threshold=None,
     out_expression_filename=None,
+    count_threshold=None,
+    process_metadata_filename=None,
 ):
     """
     This function processes samples in the template and simulated
@@ -195,18 +197,20 @@ def process_samples_for_DESeq(
 
     # Read data
     expression = pd.read_csv(expression_filename, sep="\t", index_col=0, header=0)
-    process_metadata = pd.read_csv(
-        process_metadata_filename, sep="\t", index_col=0, header=0
-    )
+    if process_metadata_filename is not None:
+        process_metadata = pd.read_csv(
+            process_metadata_filename, sep="\t", index_col=0, header=0
+        )
     grp_metadata = pd.read_csv(grp_metadata_filename, sep="\t", header=0, index_col=0)
 
-    # Get samples ids to remove
-    samples_to_remove = list(
-        process_metadata[process_metadata["processing"] == "drop"].index
-    )
+    if process_metadata_filename is not None:
+        # Get samples ids to remove
+        samples_to_remove = list(
+            process_metadata[process_metadata["processing"] == "drop"].index
+        )
 
-    # Remove samples
-    expression = expression.drop(samples_to_remove)
+        # Remove samples
+        expression = expression.drop(samples_to_remove)
 
     # Cast as int
     expression = expression.astype(int)
