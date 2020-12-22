@@ -386,25 +386,28 @@ for run_id in range(num_runs):
 # In[9]:
 
 
-if os.path.exists(sample_id_metadata_filename):
+if not os.path.exists(sample_id_metadata_filename):
+    sample_id_metadata_filename = None
+
+stats.process_samples_for_limma(
+    mapped_template_filename,
+    metadata_filename,
+    processed_template_filename,
+    sample_id_metadata_filename,
+)
+
+for i in range(num_runs):
+    simulated_filename = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        f"selected_simulated_data_{project_id}_{i}.txt"
+    )
     stats.process_samples_for_limma(
-        mapped_template_filename,
-        sample_id_metadata_filename,
-        grp_metadata_filename,
-        processed_template_filename
-    )
-    
-    for i in range(num_runs):
-        simulated_filename = os.path.join(
-            local_dir,
-            "pseudo_experiment",
-            f"selected_simulated_data_{project_id}_{i}.txt"
-        )
-        stats.process_samples_for_limma(
         simulated_filename,
+        metadata_filename,
+        None,
         sample_id_metadata_filename,
-        grp_metadata_filename
-    )
+)
 
 
 # ### Differential expression analysis
