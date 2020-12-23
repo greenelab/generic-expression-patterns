@@ -134,7 +134,7 @@ plot.make_volcano_plot_simulated(
 
 # ## Plot gene expression in gene space
 
-# In[ ]:
+# In[8]:
 
 
 """run=2
@@ -146,7 +146,7 @@ simulated_filename = os.path.join(
 )"""
 
 
-# In[8]:
+# In[9]:
 
 
 """normalized_compendium_data = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
@@ -157,7 +157,7 @@ print(normalized_template_data.shape)
 normalized_template_data.head()"""
 
 
-# In[9]:
+# In[10]:
 
 
 """# Normalize simulated_data
@@ -177,16 +177,16 @@ print(normalized_simulated_data.shape)
 normalized_simulated_data.head()"""
 
 
-# In[10]:
+# In[11]:
 
 
 """# Label samples 
 normalized_compendium_data['sample group'] = "compendium"
 normalized_template_data['sample group'] = "template"
-normalized_simulated_data['sample group'] = "simulated""""
+normalized_simulated_data['sample group'] = "simulated"""
 
 
-# In[ ]:
+# In[12]:
 
 
 """normalized_all_data = pd.concat([normalized_template_data,
@@ -195,7 +195,7 @@ normalized_simulated_data['sample group'] = "simulated""""
 ])"""
 
 
-# In[ ]:
+# In[13]:
 
 
 """# Plot
@@ -238,7 +238,7 @@ print(fig)"""
 
 # ## Plot gene expression data in latent space
 
-# In[ ]:
+# In[14]:
 
 
 """# Model files
@@ -251,7 +251,7 @@ model_decoder_filename = glob.glob(os.path.join(vae_model_dir, "*_decoder_model.
 weights_decoder_filename = glob.glob(os.path.join(vae_model_dir, "*_decoder_weights.h5"))[0]"""
 
 
-# In[ ]:
+# In[15]:
 
 
 """# Load saved models
@@ -262,7 +262,7 @@ loaded_model.load_weights(weights_encoder_filename)
 loaded_decode_model.load_weights(weights_decoder_filename)"""
 
 
-# In[ ]:
+# In[16]:
 
 
 """# Encode concatenated normalized data
@@ -270,7 +270,7 @@ normalized_data_encoded = loaded_model.predict_on_batch(normalized_all_data_nume
 normalized_data_encoded_df = pd.DataFrame(normalized_data_encoded, index=normalized_all_data_numeric.index)"""
 
 
-# In[ ]:
+# In[17]:
 
 
 """model2 = umap.UMAP(random_state=1).fit(normalized_data_encoded_df)
