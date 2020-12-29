@@ -141,7 +141,7 @@ def process_template_experiment(
         Filename containing picked scaler transform used to normalize compendium data
     mapped_filename: str
         Filename containing the template data where genes are mapped to compendium data.
-    normalized_filename: str
+    processed_filename: str
         Filename containing the template normalized data. This data can now be
         encoded into the learned latent space.
     """
