@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Visualize gene expression
@@ -23,6 +23,8 @@ import pandas as pd
 import umap
 import pickle
 import glob
+import seaborn as sns
+from sklearn.decomposition import PCA
 from keras.models import load_model
 from plotnine import (ggplot,
                       labs,  
@@ -57,7 +59,7 @@ from generic_expression_patterns_modules import plot
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 config_filename = os.path.abspath(
-    os.path.join(base_dir, "configs", "config_new_experiment.tsv")
+    os.path.join(base_dir, "configs", "config_pseudomonas_33245.tsv")
 )
 
 params = utils.read_config(config_filename)
@@ -72,12 +74,39 @@ local_dir = params['local_dir']
 project_id = params['project_id']
 num_simulated = params['num_simulated']
 
-pval_name = "padj"
-logFC_name = "log2FoldChange"
-#vae_model_dir = params['vae_model_dir']
-#normalized_template_filename = params['normalized_template_filename']
-#normalized_compendium_filename = params['normalized_compendium_filename']
-#scaler_filename = params['scaler_filename']
+pval_name = "adj.P.Val"
+logFC_name = "logFC"
+run=0
+
+# Manual settings to visualize/troubleshoot volcano plots for other datasets
+# Will pull these out to archive later
+"""
+vae_model_dir = params['vae_model_dir']
+template_filename = params['mapped_template_filename']
+normalized_compendium_filename = params['normalized_compendium_filename']
+scaler_filename = params['scaler_filename']
+"""
+
+# Settings for running visualization using pseudomonas config file
+vae_model_dir = os.path.join(base_dir,"pseudomonas_analysis", "models", "NN_2500_30")
+template_filename = params['processed_template_filename']
+normalized_compendium_filename = params['normalized_compendium_filename']
+scaler_filename = params['scaler_filename']
+
+"""
+# Settings for running visualization using human cancer config file
+vae_model_dir = os.path.join(base_dir,"human_cancer_analysis", "models", "NN_2500_30")
+template_filename = params['processed_template_filename']
+normalized_compendium_filename = params['normalized_compendium_filename']
+scaler_filename = params['scaler_filename']
+"""
+"""
+# Settings for running visualization using human_general config file
+vae_model_dir = os.path.join(base_dir,"human_general_analysis", "models", "NN_2500_30")
+template_filename = os.path.join(base_dir,"human_general_analysis", params['processed_template_filename'])
+normalized_compendium_filename = params['normalized_compendium_filename']
+scaler_filename = os.path.join(base_dir, "human_general_analysis", params['scaler_filename'])
+"""
 
 
 # ## Volcano plots
@@ -99,7 +128,7 @@ template_DE_stats = pd.read_csv(
     index_col=0
 )
 
-selected = template_DE_stats[(template_DE_stats['padj']<0.01) & (abs(template_DE_stats['log2FoldChange'])>1)]
+selected = template_DE_stats[(template_DE_stats[pval_name]<0.01) & (abs(template_DE_stats[logFC_name])>1)]
 print(selected.shape)
 
 
@@ -132,35 +161,85 @@ plot.make_volcano_plot_simulated(
 )
 
 
-# ## Plot gene expression in gene space
+# ## Plot distribution of DE stats
 
 # In[8]:
 
 
-"""run=2
-
-simulated_filename = os.path.join(
-    local_dir,
-    "pseudo_experiment",
-    f"selected_simulated_data_{project_id}_{run}.txt"
-)"""
+sns.distplot(template_DE_stats[logFC_name], kde=False)
 
 
 # In[9]:
 
 
-"""normalized_compendium_data = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
-normalized_template_data = pd.read_csv(normalized_template_filename, sep="\t", index_col=0, header=0)
-simulated_data = pd.read_csv(simulated_filename, sep="\t", index_col=0, header=0)
+simulated_DE_stats_filename = os.path.join(
+    simulated_DE_stats_dir,
+    f"DE_stats_simulated_data_{project_id}_{run}.txt"
+)
 
-print(normalized_template_data.shape)
-normalized_template_data.head()"""
+simulated_DE_stats = pd.read_csv(
+    simulated_DE_stats_filename, 
+    sep="\t", 
+    header=0, 
+    index_col=0
+)
 
+sns.distplot(simulated_DE_stats[logFC_name], kde=False)
+
+
+# ## Plot gene expression in gene space
 
 # In[10]:
 
 
-"""# Normalize simulated_data
+# Get decoded simulated experiment
+simulated_filename = os.path.join(
+    local_dir,
+    "pseudo_experiment",
+    f"selected_simulated_data_{project_id}_{run}.txt"
+)
+
+
+# In[11]:
+
+
+normalized_compendium_data = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
+template_data = pd.read_csv(template_filename, sep="\t", index_col=0, header=0)
+simulated_data = pd.read_csv(simulated_filename, sep="\t", index_col=0, header=0)
+
+
+# In[12]:
+
+
+print(template_data.shape)
+template_data
+
+
+# In[13]:
+
+
+sns.distplot(template_data.iloc[0:2].mean(), kde=False)
+sns.distplot(template_data.iloc[2:].mean(), kde=False)
+
+
+# In[14]:
+
+
+print(simulated_data.shape)
+simulated_data
+
+
+# In[15]:
+
+
+sns.distplot(simulated_data.iloc[0:2].mean(), kde=False)
+sns.distplot(simulated_data.iloc[2:].mean(), kde=False)
+
+
+# In[16]:
+
+
+# Normalize simulated_data
 # Load pickled file
 with open(scaler_filename, "rb") as scaler_fh:
     scaler = pickle.load(scaler_fh)
@@ -174,31 +253,59 @@ normalized_simulated_data = pd.DataFrame(
 )
 
 print(normalized_simulated_data.shape)
-normalized_simulated_data.head()"""
+normalized_simulated_data.head()
 
 
-# In[11]:
+# In[17]:
 
 
-"""# Label samples 
+"""# If template experiment included in training compendium
+# Get normalized template data
+sample_ids = list(template_data.index)
+normalized_template_data = normalized_compendium_data.loc[sample_ids]
+
+print(normalized_template_data.shape)
+normalized_template_data.head()"""
+
+
+# In[18]:
+
+
+# If template experiment NOT included in training compendium
+with open(scaler_filename, "rb") as scaler_fh:
+    scaler = pickle.load(scaler_fh)
+
+normalized_template_data = scaler.transform(template_data)
+
+normalized_template_data = pd.DataFrame(
+    normalized_template_data,
+    columns=template_data.columns,
+    index=template_data.index,
+)
+
+
+# In[19]:
+
+
+# Label samples 
 normalized_compendium_data['sample group'] = "compendium"
 normalized_template_data['sample group'] = "template"
-normalized_simulated_data['sample group'] = "simulated"""
+normalized_simulated_data['sample group'] = "simulated"
 
 
-# In[12]:
+# In[20]:
 
 
-"""normalized_all_data = pd.concat([normalized_template_data,
+normalized_all_data = pd.concat([normalized_template_data,
                              normalized_simulated_data,
                              normalized_compendium_data
-])"""
+])
 
 
-# In[13]:
+# In[21]:
 
 
-"""# Plot
+# Plot
 
 # Drop label column
 normalized_all_data_numeric = normalized_all_data.drop(['sample group'], axis=1)
@@ -233,61 +340,129 @@ fig += theme(
 fig += scale_color_manual(['#bdbdbd', 'red', 'blue'])
 fig += guides(colour=guide_legend(override_aes={'alpha': 1}))
 
-print(fig)"""
+print(fig)
 
 
 # ## Plot gene expression data in latent space
 
-# In[14]:
+# In[22]:
 
 
-"""# Model files
+# Model files
 model_encoder_filename = glob.glob(os.path.join(vae_model_dir, "*_encoder_model.h5"))[0]
-
 weights_encoder_filename = glob.glob(os.path.join(vae_model_dir, "*_encoder_weights.h5"))[0]
-
 model_decoder_filename = glob.glob(os.path.join(vae_model_dir, "*_decoder_model.h5"))[0]
-
-weights_decoder_filename = glob.glob(os.path.join(vae_model_dir, "*_decoder_weights.h5"))[0]"""
-
-
-# In[15]:
+weights_decoder_filename = glob.glob(os.path.join(vae_model_dir, "*_decoder_weights.h5"))[0]
 
 
-"""# Load saved models
+# In[23]:
+
+
+# Load saved models
 loaded_model = load_model(model_encoder_filename, compile=False)
 loaded_decode_model = load_model(model_decoder_filename, compile=False)
 
 loaded_model.load_weights(weights_encoder_filename)
-loaded_decode_model.load_weights(weights_decoder_filename)"""
+loaded_decode_model.load_weights(weights_decoder_filename)
 
 
-# In[16]:
+# In[24]:
 
 
-"""# Encode concatenated normalized data
-normalized_data_encoded = loaded_model.predict_on_batch(normalized_all_data_numeric)
-normalized_data_encoded_df = pd.DataFrame(normalized_data_encoded, index=normalized_all_data_numeric.index)"""
+# PCA model
+pca = PCA(n_components=2)
 
 
-# In[17]:
+# In[25]:
 
 
-"""model2 = umap.UMAP(random_state=1).fit(normalized_data_encoded_df)
+# Encode compendium
+normalized_compendium = normalized_compendium_data.drop(['sample group'], axis=1)
+compendium_encoded = loaded_model.predict_on_batch(normalized_compendium)
 
-normalized_encoded_data_UMAPencoded = model2.transform(normalized_data_encoded_df)
-normalized_encoded_data_UMAPencoded_df = pd.DataFrame(data=normalized_encoded_data_UMAPencoded,
-                                         index=normalized_data_encoded_df.index,
+compendium_encoded_df = pd.DataFrame(data=compendium_encoded, 
+                                     index=normalized_compendium.index)
+
+# Get and save PCA model
+model2 = pca.fit(compendium_encoded_df)
+
+compendium_PCAencoded = model2.transform(compendium_encoded_df)
+
+compendium_PCAencoded_df = pd.DataFrame(data=compendium_PCAencoded,
+                                         index=compendium_encoded_df.index,
+                                         columns=['1','2'])
+
+# Add label
+compendium_PCAencoded_df['sample group'] = 'compendium'
+
+
+# In[26]:
+
+
+# Encode template experiment
+normalized_template_data = normalized_template_data.drop(['sample group'], axis=1)
+
+template_encoded = loaded_model.predict_on_batch(normalized_template_data)
+template_encoded_df = pd.DataFrame(data=template_encoded,
+                                   index=normalized_template_data.index)
+
+template_PCAencoded = model2.transform(template_encoded_df)
+
+template_PCAencoded_df = pd.DataFrame(data=template_PCAencoded,
+                                         index=template_encoded_df.index,
                                          columns=['1','2'])
 
 # Add back label column
-normalized_encoded_data_UMAPencoded_df['sample group'] = normalized_all_data['sample group']
+template_PCAencoded_df['sample group'] = 'template'
+
+
+# In[27]:
+
+
+# Use stored encoded simulated data
+# Note: We cannot encode the decoded simulated experiment since we are not using tied weights
+# Re-encoded the decoded simulated experiment will not yield a linear latent space shift
+encoded_simulated_filename = os.path.join(
+    local_dir,
+    "pseudo_experiment",
+    f"selected_simulated_encoded_data_{project_id}_{run}.txt"
+)
+
+simulated_encoded_df = pd.read_csv(encoded_simulated_filename,header=0, sep='\t', index_col=0)
+
+sample_ids = list(template_data.index)
+simulated_encoded_df = simulated_encoded_df.loc[sample_ids]
+
+simulated_PCAencoded = model2.transform(simulated_encoded_df)
+
+simulated_PCAencoded_df = pd.DataFrame(data=simulated_PCAencoded,
+                                         index=simulated_encoded_df.index,
+                                         columns=['1','2'])
+
+# Add back label column
+simulated_PCAencoded_df['sample group'] = 'simulated'
+
+
+# In[28]:
+
+
+# Concatenate dataframes
+combined_PCAencoded_df = pd.concat([compendium_PCAencoded_df, 
+                                    template_PCAencoded_df,
+                                    simulated_PCAencoded_df])
+
+print(combined_PCAencoded_df.shape)
+combined_PCAencoded_df.head()
+
+
+# In[29]:
+
 
 # Plot
-fig = ggplot(normalized_encoded_data_UMAPencoded_df, aes(x='1', y='2'))
-fig += geom_point(aes(color='sample group'), alpha=0.1)
-fig += labs(x ='UMAP 1',
-            y = 'UMAP 2',
+fig = ggplot(combined_PCAencoded_df, aes(x='1', y='2'))
+fig += geom_point(aes(color='sample group'), alpha=0.2)
+fig += labs(x ='PC 1',
+            y = 'PC 2',
             title = 'Gene expression data in latent space')
 fig += theme_bw()
 fig += theme(
@@ -303,5 +478,5 @@ fig += theme(
 fig += scale_color_manual(['#bdbdbd', 'red', 'blue'])
 fig += guides(colour=guide_legend(override_aes={'alpha': 1}))
 
-print(fig)"""
+print(fig)
 
