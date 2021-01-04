@@ -102,15 +102,16 @@ def process_samples_for_limma(
     expression_filename: str
         File containing unnormalized gene expression data for
         either template or simulated experiments
-    process_metadata_filename: str
-        File containing assignment for which samples to drop
     grp_metadata_filename: str
         File containing group assigments for samples to use
         for DESeq analysis
     out_expression_filename (optional): str
         File to save processed gene expression data to.
-        If not provided processed gene expression data will
-        be output to the same input filename   
+        If None then processed gene expression data will
+        be output to the same input filename
+    process_metadata_filename (optional): str
+        File containing assignment for which samples to drop.
+        If None then all samples will be used.   
 
     """
 
@@ -181,17 +182,19 @@ def process_samples_for_DESeq(
     expression_filename: str
         File containing unnormalized gene expression data for
         either template or simulated experiments
-    process_metadata_filename: str
-        File containing assignment for which samples to drop
     grp_metadata_filename: str
         File containing group assigments for samples to use
         for DESeq analysis
-    count_threshold: int
-        Remove genes that have mean count <= count_threshold
     out_expression_filename (optional): str
         File to save processed gene expression data to.
-        If not provided processed gene expression data will
-        be output to the same input filename  
+        If None then processed gene expression data will
+        be output to the same input filename
+    count_threshold (optinal): int
+        Remove genes that have mean count <= count_threshold
+        If None then no genes will be removed.
+    process_metadata_filename (optional): str
+        File containing assignment for which samples to drop.
+        If None then all samples will be used. 
     
     """
 
@@ -216,10 +219,10 @@ def process_samples_for_DESeq(
     expression = expression.astype(int)
 
     # Remove genes with 0 counts
-    all_zero_genes = list(expression.columns[(expression == 0).all()])
-    expression = expression.drop(columns=all_zero_genes)
+    # all_zero_genes = list(expression.columns[(expression == 0).all()])
+    # expression = expression.drop(columns=all_zero_genes)
 
-    assert len(list(expression.columns[(expression == 0).all()])) == 0
+    # assert len(list(expression.columns[(expression == 0).all()])) == 0
 
     # Remove genes below a certain threshold (if provided)
     if count_threshold is not None:
