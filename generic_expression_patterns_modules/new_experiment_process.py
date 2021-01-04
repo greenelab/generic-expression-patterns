@@ -138,7 +138,7 @@ def process_template_experiment(
         Gene ids are either using PA#### (P. aeruginosa)
         or using HGNC symbols (Human)
     scaler_filename: str
-        Filename containing picked scaler transform used to normalize compendium data
+        Filename containing pickled scaler transform used to normalize compendium data
     mapped_filename: str
         Filename containing the template data where genes are mapped to compendium data.
     processed_filename: str
@@ -449,4 +449,3 @@ def plot_venn(degs_traditional, degs_specific, degs_generic):
         set_labels=("Traditional", "Generic"),
         ax=axes[1],
     )
-
