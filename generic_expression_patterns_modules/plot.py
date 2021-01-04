@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 def make_volcano_plot_template(
     template_DE_stats_filename, project_id, pval_name, logFC_name,
 ):
-    """"
-	This function creates volcano plot of template experiment
+    """
+    This function creates volcano plot of template experiment
 
     Arguments
     ----------
@@ -27,7 +27,7 @@ def make_volcano_plot_template(
         Experiment identifier
     pval_name: "padj" or "adj.P.Val"
     logFC_name: "logFC" or "log2FoldChange"
-	"""
+    """
 
     # Read template DE stats
     template_DE_stats_df = pd.read_csv(
@@ -170,4 +170,3 @@ def make_volcano_plot_simulated(
         fontsize=16,
         fontname="Verdana",
     )
-
