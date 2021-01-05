@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Application: new experiment
@@ -304,9 +304,16 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
 # * Z-score: High z-score indicates that gene is more changed in template compared to the null set of simulated experiments (high z-score = highly specific to template experiment)
 # 
 # 
-# Note: If using DESeq, genes with NaN in `Adj P-value (Real)` column are those genes flagged because of the `cooksCutoff` parameter. The cook's distance as a diagnostic to tell if a single sample has a count which has a disproportionate impact on the log fold change and p-values. These genes are flagged with an NA in the pvalue and padj columns of the result table. For more information you can read [DESeq FAQs](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#pvaluesNA)
+# **Note:** 
+# * If using DESeq, genes with NaN in `Adj P-value (Real)` column are those genes flagged because of the `cooksCutoff` parameter. The cook's distance as a diagnostic to tell if a single sample has a count which has a disproportionate impact on the log fold change and p-values. These genes are flagged with an NA in the pvalue and padj columns of the result table. 
+# 
+# * If using DESeq with count threshold, some genes may not be present in all simulated experiments (i.e. the `Number of experiments (simulated)` will not equal the number of simulated experiments you specified in the beginning. This pre-filtering will lead to some genes found in few simulated experiments and so the background/null set for that gene is not robust. Thus, the user should sort by both z-score and number of experiments to identify specific expressed genes.
+# 
+# * If using DESeq without count threshold, some genes may still not be present in all simulated experiments (i.e. the `Number of experiments (simulated)`  will not equal the number of simulated experiments you specified in the beginning. If the gene is 0 expressed across all samples and thus automatically given an NA in log fold change, adjusted p-value columns. Thus, the user should sort by both z-score and number of experiments to identify specific expressed genes.
+# 
+# For more information you can read [DESeq FAQs](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#pvaluesNA)
 
-# In[16]:
+# In[21]:
 
 
 # Get summary table
@@ -323,27 +330,21 @@ summary_gene_ranks = ranking.generate_summary_table(
 summary_gene_ranks.sort_values(by="Z score", ascending=False).head(10)
 
 
-# In[17]:
+# In[22]:
 
 
 summary_gene_ranks.isna().any()
 
 
-# In[18]:
+# In[23]:
 
 
 summary_gene_ranks[summary_gene_ranks.isna().any(axis=1)]
 
 
-# In[19]:
+# In[ ]:
 
 
 # Save
 summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
-
-
-# In[ ]:
-
-
-
 
