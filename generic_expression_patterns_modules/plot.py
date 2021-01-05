@@ -136,25 +136,47 @@ def make_volcano_plot_simulated(
         # Plot
         colors = ["lightgrey", "#2c7fb8"]
 
-        f = sns.scatterplot(
-            data=simulated_DE_stats_df,
-            x=logFC_name,
-            y="padj_log10",
-            hue="gene group",
-            hue_order=["none", "DEG"],
-            style="gene group",
-            markers={"none": ".", "DEG": "o",},
-            palette=colors,
-            linewidth=0,
-            alpha=0.5,
-            legend=False,
-            ax=axes[i],
-        )
+        if i == 0:
+            f = sns.scatterplot(
+                data=simulated_DE_stats_df,
+                x=logFC_name,
+                y="padj_log10",
+                hue="gene group",
+                hue_order=["none", "DEG"],
+                style="gene group",
+                markers={"none": ".", "DEG": "o",},
+                palette=colors,
+                linewidth=0,
+                alpha=0.5,
+                legend="full",
+                ax=axes[i],
+            )
 
-        axes[i].set_ylabel("")
-        axes[i].set_xlabel("")
+            axes[i].set_ylabel("")
+            axes[i].set_xlabel("")
+            handles, labels = f.get_legend_handles_labels()
+            fig.legend(handles, labels, loc="center right")
+            f.legend_.remove()
 
-    fig.legend(labels=["DEGs", "other genes"], loc="center right")
+        else:
+            f = sns.scatterplot(
+                data=simulated_DE_stats_df,
+                x=logFC_name,
+                y="padj_log10",
+                hue="gene group",
+                hue_order=["none", "DEG"],
+                style="gene group",
+                markers={"none": ".", "DEG": "o",},
+                palette=colors,
+                linewidth=0,
+                alpha=0.5,
+                legend=False,
+                ax=axes[i],
+            )
+
+            axes[i].set_ylabel("")
+            axes[i].set_xlabel("")
+
     fig.text(0.5, 0.0, "log2 Fold Change", ha="center", fontsize=14, fontname="Verdana")
     fig.text(
         0.08,
