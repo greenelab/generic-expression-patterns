@@ -59,7 +59,13 @@ def concat_simulated_data(local_dir, num_runs, project_id, data_type):
             )
 
         # Read results
-        simulated_stats = pd.read_csv(simulated_stats_file, header=0, sep="\t")
+        simulated_stats = pd.read_csv(
+            simulated_stats_file, header=0, index_col=0, sep="\t"
+        )
+        # Reindexing required here because we need column to contain
+        # gene ids. Without reindexing, index column contains gene ids
+        # which causes an error in the aggregate_stats function
+        simulated_stats.reset_index(inplace=True)
 
         # Concatenate df
         simulated_stats_all = pd.concat([simulated_stats_all, simulated_stats])

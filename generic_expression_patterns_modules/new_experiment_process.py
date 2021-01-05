@@ -2,7 +2,7 @@
 Author: Alexandra Lee
 Date Created: 9 December 2020
 
-This script provide supporting functions to run analysis to run analysis to identify
+This script provides supporting functions to run analysis to identify
 generic and specific genes for a new experiment of interest using an already trained VAE model.
 """
 
@@ -17,6 +17,10 @@ from matplotlib_venn import venn2
 
 
 def transpose_save(input_gene_expression_filename, output_gene_expression_filename):
+    """
+    This function transposes the gene expression matrix in `input_gene_expression_filename`
+    and saves the newly transposed matrix to `output_gene_expression_filename`
+    """
     experiment = pd.read_csv(
         input_gene_expression_filename, sep="\t", index_col=0, header=0
     ).T
@@ -70,16 +74,6 @@ def compare_match_features(template_filename, compendium_filename):
 
     # Get median gene expression for only_compendium_genes
     # Use mapped_compendium for this to get counts
-    ## TEMP HACK SOLUTION until I retrain VAE to get consistent columns
-    # between mapped_compendium and normalized_compendium
-    # Training dataset used for existing VAE model
-    # local_dir = "/home/alexandra/Documents/Data/Generic_expression_patterns/"
-    # mapped_compendium_filename = os.path.join(
-    #    local_dir, "mapped_recount2_compendium.tsv"
-    # )
-    # mapped_compendium = pd.read_csv(
-    #    mapped_compendium_filename, sep="\t", index_col=0, header=0
-    # )
     median_gene_expression = compendium[only_compendium_genes].median().to_dict()
     tmp2_template_experiment = tmp_template_experiment.assign(**median_gene_expression)
 
@@ -93,13 +87,14 @@ def compare_match_features(template_filename, compendium_filename):
     return mapped_template_experiment
 
 
-def normalize_template_experiment(
-    mapped_template_experiment, scaler_filename, output_filename
-):
+def normalize_template_experiment(mapped_template_experiment, scaler_filename):
     """
+    This function normalizes the template experiment to be within
+    0-1 range, using the same scaler transform that was used to
+    0-1 scale the training compendium.
+
     mapped_template_experiment: df
-        Dataframe of template experiment after mapping gene ids
-        
+        Dataframe of template experiment after mapping gene ids        
     scaler_filename: str
         Filename containing picked scaler transform used to normalize compendium data
     """
@@ -115,7 +110,55 @@ def normalize_template_experiment(
         index=mapped_template_experiment.index,
     )
 
-    processed_template_experiment_df.to_csv(output_filename, sep="\t")
+    return processed_template_experiment_df
+
+
+def process_template_experiment(
+    template_filename,
+    compendium_filename,
+    scaler_filename,
+    mapped_template_filename,
+    processed_template_filename,
+):
+    """
+    This function processes the template experiment to prepare for
+    simulating new data. Specifically this function does the following:
+    
+    1. Compares and maps the template feature space to the compendium 
+    feature space using `compare_match_features()`
+    2. Normalizes the template experiment to be in the same scale
+    as the compendium dataset using `normalize_template_experiment()`
+
+    Arguments
+    ----------
+    template_filename: str
+        File containing template gene expression data. Expect matrix of dimension: sample x gene        
+    compendium_filename: str
+        File containing un-normalized compendium gene expression data. 
+        Gene ids are either using PA#### (P. aeruginosa)
+        or using HGNC symbols (Human)
+    scaler_filename: str
+        Filename containing pickled scaler transform used to normalize compendium data
+    mapped_filename: str
+        Filename containing the template data where genes are mapped to compendium data.
+    processed_filename: str
+        Filename containing the template normalized data. This data can now be
+        encoded into the learned latent space.
+    """
+
+    # Compare and map genes from template experiment to
+    # compendium dataset
+    mapped_template_experiment = compare_match_features(
+        template_filename, compendium_filename
+    )
+
+    normalized_template_experiment = normalize_template_experiment(
+        mapped_template_experiment, scaler_filename
+    )
+
+    # Save
+    mapped_template_experiment.to_csv(mapped_template_filename, sep="\t")
+    normalized_template_experiment.to_csv(processed_template_filename, sep="\t")
 
 
 def embed_shift_template_experiment(
@@ -129,9 +172,9 @@ def embed_shift_template_experiment(
     run,
 ):
     """
-    TO DO: Update description
     Generate new simulated experiment using the selected_experiment_id as a template
-    experiment using the same workflow as `simulate_by_latent_transform`
+    experiment and linearly shift template experiment to different locations of the
+    latent space to create new experiment. This workflow is similar to `simulate_by_latent_transform`
 
     This will return a file with a single simulated experiment following the workflow mentioned.
     This function can be run multiple times to generate multiple simulated experiments from a
@@ -406,4 +449,3 @@ def plot_venn(degs_traditional, degs_specific, degs_generic):
         set_labels=("Traditional", "Generic"),
         ax=axes[1],
     )
-

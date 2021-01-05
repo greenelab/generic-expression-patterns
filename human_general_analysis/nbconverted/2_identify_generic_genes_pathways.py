@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Identify generic genes and pathways
@@ -80,6 +80,7 @@ scaler_filename = params['scaler_filename']
 col_to_rank_genes = params['rank_genes_by']
 col_to_rank_pathways = params['rank_pathways_by']
 statistic = params['gsea_statistic']
+count_threshold = params['count_threshold']
 
 # Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(
@@ -165,26 +166,35 @@ for run_id in range(num_runs):
 # In[6]:
 
 
-if os.path.exists(sample_id_metadata_filename):
-    stats.process_samples_for_DESeq(
-        mapped_template_filename,
-        sample_id_metadata_filename,
-        metadata_filename,
-        None,
-        processed_template_filename
-    )
+if not os.path.exists(sample_id_metadata_filename):
+    sample_id_metadata_filename = None
     
-    for i in range(num_runs):
-        simulated_filename = os.path.join(
-            local_dir,
-            "pseudo_experiment",
-            f"selected_simulated_data_{project_id}_{i}.txt"
-        )
-        stats.process_samples_for_DESeq(
-        simulated_filename,
+stats.process_samples_for_DESeq(
+        mapped_template_filename,
+        metadata_filename,
+        processed_template_filename,
+        count_threshold,
         sample_id_metadata_filename,
-        metadata_filename
     )
+
+for i in range(num_runs):
+    simulated_filename = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        f"selected_simulated_data_{project_id}_{i}.txt"
+    )
+    out_simulated_filename = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        f"selected_simulated_data_{project_id}_{i}_processed.txt"
+    )
+    stats.process_samples_for_DESeq(
+        simulated_filename,
+        metadata_filename,
+        out_simulated_filename,
+        count_threshold,
+        sample_id_metadata_filename,
+)
 
 
 # ### Differential expression analysis
@@ -228,7 +238,7 @@ print(selected.shape)
 # In[10]:
 
 
-get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# Files created: "<local_dir>/DE_stats/DE_stats_simulated_data_SRP012656_<n>.txt"\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(local_dir, \n                                     "pseudo_experiment/selected_simulated_data_",\n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    get_DE_stats_DESeq(metadata_filename,\n                       project_id, \n                       simulated_data_filename,\n                       "simulated",\n                       local_dir,\n                       i)\n}')
+get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\n# Files created: "<local_dir>/DE_stats/DE_stats_simulated_data_SRP012656_<n>.txt"\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(local_dir, \n                                     "pseudo_experiment/selected_simulated_data_",\n                                     project_id,\n                                     "_", \n                                     i,\n                                     "_processed.txt",\n                                     sep = "")\n    \n    get_DE_stats_DESeq(metadata_filename,\n                       project_id, \n                       simulated_data_filename,\n                       "simulated",\n                       local_dir,\n                       i)\n}')
 
 
 # **Validation:**

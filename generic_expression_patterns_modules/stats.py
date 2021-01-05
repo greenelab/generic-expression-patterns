@@ -80,9 +80,9 @@ def format_pseudomonas_pathway_DB(pathway_DB_filename, local_dir, out_filename):
 
 def process_samples_for_limma(
     expression_filename,
-    process_metadata_filename,
     grp_metadata_filename,
     out_expression_filename=None,
+    process_metadata_filename=None,
 ):
     """
     This function processes samples in the template and simulated
@@ -102,32 +102,35 @@ def process_samples_for_limma(
     expression_filename: str
         File containing unnormalized gene expression data for
         either template or simulated experiments
-    process_metadata_filename: str
-        File containing assignment for which samples to drop
     grp_metadata_filename: str
         File containing group assigments for samples to use
         for DESeq analysis
     out_expression_filename (optional): str
         File to save processed gene expression data to.
-        If not provided processed gene expression data will
-        be output to the same input filename   
+        If None then processed gene expression data will
+        be output to the same input filename
+    process_metadata_filename (optional): str
+        File containing assignment for which samples to drop.
+        If None then all samples will be used.   
 
     """
 
     # Read data
     expression = pd.read_csv(expression_filename, sep="\t", index_col=0, header=0)
-    process_metadata = pd.read_csv(
-        process_metadata_filename, sep="\t", index_col=0, header=0
-    )
+    if process_metadata_filename is not None:
+        process_metadata = pd.read_csv(
+            process_metadata_filename, sep="\t", index_col=0, header=0
+        )
     grp_metadata = pd.read_csv(grp_metadata_filename, sep="\t", header=0, index_col=0)
 
-    # Get samples ids to remove
-    samples_to_remove = list(
-        process_metadata[process_metadata["processing"] == "drop"].index
-    )
+    if process_metadata_filename is not None:
+        # Get samples ids to remove
+        samples_to_remove = list(
+            process_metadata[process_metadata["processing"] == "drop"].index
+        )
 
-    # Remove samples
-    expression = expression.drop(samples_to_remove)
+        # Remove samples
+        expression = expression.drop(samples_to_remove)
 
     # Check ordering of sample ids is consistent between gene expression data and metadata
     metadata_sample_ids = grp_metadata.index
@@ -152,10 +155,10 @@ def process_samples_for_limma(
 
 def process_samples_for_DESeq(
     expression_filename,
-    process_metadata_filename,
     grp_metadata_filename,
-    count_threshold=None,
     out_expression_filename=None,
+    count_threshold=None,
+    process_metadata_filename=None,
 ):
     """
     This function processes samples in the template and simulated
@@ -179,43 +182,47 @@ def process_samples_for_DESeq(
     expression_filename: str
         File containing unnormalized gene expression data for
         either template or simulated experiments
-    process_metadata_filename: str
-        File containing assignment for which samples to drop
     grp_metadata_filename: str
         File containing group assigments for samples to use
         for DESeq analysis
-    count_threshold: int
-        Remove genes that have mean count <= count_threshold
     out_expression_filename (optional): str
         File to save processed gene expression data to.
-        If not provided processed gene expression data will
-        be output to the same input filename  
+        If None then processed gene expression data will
+        be output to the same input filename
+    count_threshold (optinal): int
+        Remove genes that have mean count <= count_threshold
+        If None then no genes will be removed.
+    process_metadata_filename (optional): str
+        File containing assignment for which samples to drop.
+        If None then all samples will be used. 
     
     """
 
     # Read data
     expression = pd.read_csv(expression_filename, sep="\t", index_col=0, header=0)
-    process_metadata = pd.read_csv(
-        process_metadata_filename, sep="\t", index_col=0, header=0
-    )
+    if process_metadata_filename is not None:
+        process_metadata = pd.read_csv(
+            process_metadata_filename, sep="\t", index_col=0, header=0
+        )
     grp_metadata = pd.read_csv(grp_metadata_filename, sep="\t", header=0, index_col=0)
 
-    # Get samples ids to remove
-    samples_to_remove = list(
-        process_metadata[process_metadata["processing"] == "drop"].index
-    )
+    if process_metadata_filename is not None:
+        # Get samples ids to remove
+        samples_to_remove = list(
+            process_metadata[process_metadata["processing"] == "drop"].index
+        )
 
-    # Remove samples
-    expression = expression.drop(samples_to_remove)
+        # Remove samples
+        expression = expression.drop(samples_to_remove)
 
     # Cast as int
     expression = expression.astype(int)
 
     # Remove genes with 0 counts
-    all_zero_genes = list(expression.columns[(expression == 0).all()])
-    expression = expression.drop(columns=all_zero_genes)
+    # all_zero_genes = list(expression.columns[(expression == 0).all()])
+    # expression = expression.drop(columns=all_zero_genes)
 
-    assert len(list(expression.columns[(expression == 0).all()])) == 0
+    # assert len(list(expression.columns[(expression == 0).all()])) == 0
 
     # Remove genes below a certain threshold (if provided)
     if count_threshold is not None:
