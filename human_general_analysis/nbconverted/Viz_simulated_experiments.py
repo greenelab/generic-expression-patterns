@@ -146,7 +146,7 @@ def make_volcano_plot_simulated(
         # Label DEGs by traditional criteria
         # log2FC > 1
         # padj < 0.05
-        simulated_DE_stats_df["gene group"] = "none"
+        simulated_DE_stats_df["gene group"] = "other gene"
         simulated_DE_stats_df.loc[(abs(simulated_DE_stats_df["log2FoldChange"])>1) &
                               (simulated_DE_stats_df["padj"] <0.05),
                                   "gene group"
@@ -155,29 +155,47 @@ def make_volcano_plot_simulated(
         # Plot
         colors = ["lightgrey", "#2c7fb8"]
         
-        f = sns.scatterplot(
-           data=simulated_DE_stats_df,
-            x="log2FoldChange",
-            y="padj_log10",
-            hue="gene group",
-            hue_order=["none", "DEG"],
-            style="gene group",
-            markers={
-                "none": ".",
-                "DEG": "o",
-            },
-            palette=colors,
-            linewidth=0,
-            alpha=0.5,
-            legend=False,
-            ax=axes[i],
+        if i == 0:
+            f = sns.scatterplot(
+                data=simulated_DE_stats_df,
+                x="log2FoldChange",
+                y="padj_log10",
+                hue="gene group",
+                hue_order=["other gene", "DEG"],
+                style="gene group",
+                markers={"other gene": ".", "DEG": "o",},
+                palette=colors,
+                linewidth=0,
+                alpha=0.5,
+                legend="full",
+                ax=axes[i],
             )
-        
-        axes[i].set_ylabel("")
-        axes[i].set_xlabel("")
-        
-        
-    fig.legend(labels=["DEGs", "other genes"], loc='center right')
+
+            axes[i].set_ylabel("")
+            axes[i].set_xlabel("")
+            handles, labels = f.get_legend_handles_labels()
+            fig.legend(handles, labels, loc="center right")
+            f.legend_.remove()
+
+        else:
+            f = sns.scatterplot(
+                data=simulated_DE_stats_df,
+                x="log2FoldChange",
+                y="padj_log10",
+                hue="gene group",
+                hue_order=["other gene", "DEG"],
+                style="gene group",
+                markers={"other gene": ".", "DEG": "o",},
+                palette=colors,
+                linewidth=0,
+                alpha=0.5,
+                legend=False,
+                ax=axes[i],
+            )
+
+            axes[i].set_ylabel("")
+            axes[i].set_xlabel("")
+
     fig.text(0.5, 0.0, "log2 Fold Change",ha="center", fontsize=14, fontname="Verdana")
     fig.text(0.08, 0.5, "-log10(FDR adjusted p-value)", va="center", rotation="vertical", fontsize=14, fontname="Verdana")
     fig.suptitle(f"Example simulated experiments based on {project_id}", fontsize=16, fontname="Verdana")
