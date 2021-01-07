@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Process recount2 data
@@ -18,7 +18,7 @@
 # 
 # 3. Train VAE on recount2 data
 
-# In[1]:
+# In[10]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -26,7 +26,7 @@ get_ipython().run_line_magic('load_ext', 'rpy2.ipython')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[2]:
+# In[11]:
 
 
 import os
@@ -34,7 +34,7 @@ from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process
 
 
-# In[3]:
+# In[12]:
 
 
 # Set seeds to get reproducible VAE trained models
@@ -45,7 +45,7 @@ process.set_all_seeds()
 # 
 # Most parameters are read from `config_filename`. We manually selected bioproject [SRP012656](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37764) as the template experiment, which contains primary non-small cell lung adenocarcinoma tumors and adjacent normal tissues of 6 never-smoker Korean female patients with 2 replicates each.
 
-# In[4]:
+# In[13]:
 
 
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
@@ -85,7 +85,7 @@ scaler_filename = params['scaler_filename']
 
 # ### Download template experiment's expression data and generate raw template data file
 
-# In[5]:
+# In[14]:
 
 
 # Directory where the downloaded files of template experiment will be saved into
@@ -95,7 +95,7 @@ template_download_dir = os.path.join(local_dir, "template_download")
 os.makedirs(template_download_dir, exist_ok=True)
 
 
-# In[6]:
+# In[15]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i template_download_dir -i raw_template_filename -i base_dir', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/download_recount2_data.R'))\n\nget_recount2_template_experiment(project_id, template_download_dir, raw_template_filename)")
@@ -133,14 +133,14 @@ process.create_recount2_compendium(compendium_download_dir, raw_compendium_filen
 # ### Subset genes and convert gene names
 # For our downstream analysis, we will be comparing our set of differentially expression genes against the set found in [Crow et. al. publication](https://www.pnas.org/content/pnas/116/13/6491.full.pdf), therefore we will limit our genes to include only those genes shared between our starting set of genes and those in publication. 
 
-# In[10]:
+# In[16]:
 
 
 # File mapping ensembl ids to hgnc symbols
 gene_id_filename = os.path.join(local_dir, "ensembl_hgnc_mapping.tsv")
 
 
-# In[11]:
+# In[17]:
 
 
 get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename -i base_dir', '\n# Get mapping between ensembl gene ids (ours) to HGNC gene symbols (published)\n# Input: raw_template_filename, output: gene_id_filename\n\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/process_names.R\'))\n\n# Note: This mapping file from ensembl ids to hgnc symbols is based on the library("biomaRt")\n# that gets updated. In order to get the most up-to-date version, you can delete the \n# ensembl_hgnc_mapping file to re-run the script that generates this mapping.\n\nif (file.exists(gene_id_filename) == FALSE) {\n  get_ensembl_symbol_mapping(raw_template_filename, gene_id_filename)\n}')
@@ -153,7 +153,7 @@ get_ipython().run_cell_magic('R', '-i raw_template_filename -i gene_id_filename 
 # - `shared_genes_filename`: pickled list of shared genes (created only if it doesn't exist yet)
 # - `mapped_template_filename`: template data with column names mapped to hgnc gene symbols
 
-# In[12]:
+# In[18]:
 
 
 manual_mapping = {                                                                                  
