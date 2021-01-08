@@ -707,7 +707,7 @@ def rank_genes_or_pathways(col_to_rank, DE_summary_stats, is_template):
             )
 
     # If ranking by logFC then high rank = high abs(value)
-    elif col_to_rank in ["logFC", "t", "log2FoldChange"]:
+    elif col_to_rank in ["logFC", "t", "log2FoldChange", "ES"]:
         if is_template:
             DE_summary_stats["ranking"] = DE_summary_stats[col_to_rank].rank(
                 ascending=True
@@ -817,3 +817,76 @@ def process_and_rank_genes_pathways(
     )
 
     return template_stats, simulated_summary_stats
+
+
+def format_enrichment_output(
+    local_dir, project_id, enrichment_method, pathway_names, num_runs
+):
+    """
+    This function formats the output from the different enrichment methods
+    to rank and summarize pathway results
+
+    1. GSVA, which returns a matrix that is
+    gene set x sample containing enrichment
+    scores per sample
+
+    Arguments
+    ----------
+    local_dir: str
+        path to local machine where output file will be stored
+    project_id: str
+        Experiment identifier
+    enrichment_method: "GSVA", "ROAST", "CAMARA", "OSA"
+    pathway_names: df
+        df containing pathway names
+    num_runs: int
+        Number of simulated experiments
+
+    """
+
+    # Template EA filename
+    template_EA_filename = os.path.join(
+        local_dir,
+        "EA_stats",
+        f"{enrichment_method}_stats_template_data_{project_id}_real.txt",
+    )
+
+    # Read template file
+    template_EA_data = pd.read_csv(
+        template_EA_filename, sep="\t", index_col=0, header=0
+    )
+
+    if enrichment_method == "GSVA":
+        # Aggregate the enrichment statistic across samples so that there is a single
+        # enrichment score per gene set
+        template_EA_data_processed = template_EA_data.median(axis=1).rename("ES")
+
+        # Label columns and indices
+        template_EA_data_processed.index = list(
+            pathway_names["hallmark_DB$geneset.names"]
+        )
+
+        # Save formatted template experiment
+        template_EA_data_processed.to_csv(template_EA_filename, sep="\t")
+
+        for i in range(num_runs):
+            simulated_EA_filename = os.path.join(
+                local_dir,
+                "EA_stats",
+                f"{enrichment_method}_stats_simulated_data_{project_id}_{i}.txt",
+            )
+            # Read template file
+            simulated_EA_data = pd.read_csv(
+                simulated_EA_filename, sep="\t", index_col=0, header=0
+            )
+
+            simulated_EA_data_processed = simulated_EA_data.median(axis=1).rename("ES")
+
+            # Label columns and indices
+            template_EA_data_processed.index = list(
+                pathway_names["hallmark_DB$geneset.names"]
+            )
+
+            # Save formatted simulated experiment
+            simulated_EA_data_processed.to_csv(simulated_EA_filename, sep="\t")
+

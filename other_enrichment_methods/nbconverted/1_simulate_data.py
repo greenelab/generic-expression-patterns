@@ -2,6 +2,8 @@
 # coding: utf-8
 
 # # Simulate gene expression data
+# 
+# This notebook simulates gene expression data that can then be plugged into different enrichment methods
 
 # In[1]:
 
@@ -172,7 +174,7 @@ for i in range(num_runs):
 )
 
 
-# ### Differential expression analysis
+# ### DELETE??? Differential expression analysis
 # 
 # The gene expression dataset is using RNA-seq so we will use DESeq2 in this case
 
