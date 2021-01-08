@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Identify generic genes and pathways
@@ -408,12 +408,6 @@ for i in range(num_runs):
         None,
         sample_id_metadata_filename,
 )
-
-
-# In[10]:
-
-
-metadata_filename
 
 
 # ### Differential expression analysis
