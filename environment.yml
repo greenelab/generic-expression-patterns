@@ -13,6 +13,7 @@ dependencies:
 - bioconda::bioconductor-recount
 - bioconda::bioconductor-fgsea
 - bioconda::bioconductor-gsva
+- bioconda::bioconductor-DEFormats
 - conda-forge::python=3.7
 - conda-forge::scikit-learn
 - conda-forge::pandas=0.23.4
