@@ -829,6 +829,8 @@ def format_enrichment_output(
     1. GSVA, which returns a matrix that is
     gene set x sample containing enrichment
     scores per sample
+    2. ROAST returns a matrix that is gene set x statistics.
+    We need to add pathway names to index
 
     Arguments
     ----------

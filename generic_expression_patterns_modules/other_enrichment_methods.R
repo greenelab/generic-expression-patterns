@@ -2,45 +2,34 @@
 library("fgsea")
 library("limma")
 library("GSVA")
+library("DEFormats")
+library("edgeR")
 
-find_enriched_pathways_ROAST <- function(DE_stats_file,
-                                   pathway_DB_filename,
-                                   statistic) {
+find_enriched_pathways_ROAST <- function(expression_filename,
+                                          metadata_filename,
+                                          pathway_DB_filename) {
 
-  # Read in data
-  DE_stats_data <- read.table(DE_stats_file,
-                              sep = "\t",
-                              header = TRUE,
-                              row.names = NULL)
-  # Sort genes by feature 1
-
-  # feature 1: numeric vector
-  if (statistic == 'logFC') {
-    col_num = 2
-  } else if (statistic == 'log2FoldChange') {
-    col_num = 3
-  } else if (statistic == 't') {
-    col_num = 4
-  } else if (statistic == 'p-value') {
-    col_num = 5
-  } else if (statistic == 'adj p-value' || statistic == 'pvalue') {
-    col_num = 6
-  } else if ( statistic == 'padj') {
-    col_num = 7
-  }
-  rank_genes <- as.numeric(as.character(DE_stats_data[, col_num]))
-
-  # feature 2: named vector of gene ids
-  names(rank_genes) <- as.character(DE_stats_data[,1])
-
-  # feature 3: decreasing order
-  rank_genes <- sort(rank_genes, decreasing = TRUE)
-
+  # Read data
+  expression_data <- t(as.matrix(read.csv(expression_filename, sep="\t", header=TRUE, row.names=1)))
+  metadata <- as.matrix(read.csv(metadata_filename, sep="\t", header=TRUE, row.names=1))
   pathway_DB_data <- gmtPathways(pathway_DB_filename)
 
-  enrich_pathways <- roast(pathways = pathway_DB_data,
-                           stats = rank_genes,
-                           nperm = 10000)                         
+  print("Checking sample ordering...")
+  print(all.equal(colnames(expression_data), rownames(metadata)))
+
+  group <- interaction(metadata[,1])
+
+  # Create DEGList based on counts
+  dge = DGEList(expression_data, group=group)
+
+  # Design matrix
+  design <- model.matrix(~0 + group)
+
+  # Estimate dispersions
+  y <- estimateDisp(dge, design)
+
+  # Call ROAST
+  enrich_pathways <- roast(y, pathway_DB_data, design, contrast=ncol(design), nrot=1000)                       
 
   return(as.data.frame(enrich_pathways))
 }

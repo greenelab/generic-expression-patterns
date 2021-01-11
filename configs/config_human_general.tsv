@@ -24,7 +24,7 @@ intermediate_dim	2500
 latent_dim	30
 epsilon_std	1.0
 validation_frac	0.25
-project_id	"SRP061689"
+project_id	"SRP012656"
 count_threshold	None
 metadata_colname	'run'
 num_simulated	25
