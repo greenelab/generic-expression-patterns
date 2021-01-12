@@ -395,7 +395,7 @@ assert(
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
-os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
+os.makedirs(os.path.join(local_dir, "GSA_stats"), exist_ok=True)
 
 
 # In[26]:
@@ -408,13 +408,13 @@ hallmark_DB_filename = os.path.join(base_dir, dataset_name, "data", "metadata", 
 # In[27]:
 
 
-get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\nout_file <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_template_data_",\n                     project_id,\n                     "_real.txt", \n                     sep = "")\n\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)  \n    \nwrite.table(as.data.frame(template_enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")')
+get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\nout_file <- paste(local_dir, \n                     "GSA_stats/GSEA_stats_template_data_",\n                     project_id,\n                     "_real.txt", \n                     sep = "")\n\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)  \n    \nwrite.table(as.data.frame(template_enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")')
 
 
 # In[28]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir', '\nsource(paste0(base_dir,\'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_file <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_file <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n        \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")\n}')
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir', '\nsource(paste0(base_dir,\'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_file <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_file <- paste(local_dir, \n                     "GSA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n        \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_file, hallmark_DB_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\\t")\n}')
 
 
 # In[29]:
@@ -438,7 +438,7 @@ assert (os.path.getsize(GSEA_output1)>0 and os.path.getsize(GSEA_output2)>0)
 # In[31]:
 
 
-analysis_type = "GSEA"
+analysis_type = "GSA"
 template_GSEA_stats_filename = os.path.join(
     local_dir,
     "GSEA_stats",
@@ -452,6 +452,7 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
     project_id,
     analysis_type,
     col_to_rank_pathways,
+    "GSEA"
 )
 
 
