@@ -441,7 +441,7 @@ assert (os.path.getsize(GSEA_output1)>0 and os.path.getsize(GSEA_output2)>0)
 analysis_type = "GSA"
 template_GSEA_stats_filename = os.path.join(
     local_dir,
-    "GSEA_stats",
+    "GSA_stats",
     f"GSEA_stats_template_data_{project_id}_real.txt"
 )
 
