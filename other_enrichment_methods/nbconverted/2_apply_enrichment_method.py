@@ -51,9 +51,14 @@ hallmark_DB_filename = params["pathway_DB_filename"]
 num_runs = params["num_simulated"]
 dataset_name = params['dataset_name']
 
-# TO DO:
-# What are your choices of methods to use?
-enrichment_method = "ROAST"
+# Enrichment method
+# enrichment_method = ["GSEA", GSVA", "ROAST", "CAMERA", "OSA"]
+# If enrichment_method == "GSEA" then use "padj" to rank
+# If enrichment_method == "GSVA" then use "ES" to rank
+# If enrichment_method == "ROAST" or "CAMERA" then use "FDR" to rank
+# If using "OSA" then use
+enrichment_method = "CAMERA"
+col_to_rank_pathways = "FDR"
 
 
 # In[4]:
@@ -89,22 +94,11 @@ metadata_filename = os.path.join(
 # 
 # TO DO: Write about each method
 
-# In[5]:
-
-
-# Define function
-# ORA works on list of DE <<-- how to download and install???
-
-# ROAST, CAMERA <<- what input???
-
-# Process data using voom
-
-
 # In[6]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
-os.makedirs(os.path.join(local_dir, "EA_stats"), exist_ok=True)
+os.makedirs(os.path.join(local_dir, "GSA_stats"), exist_ok=True)
 
 
 # In[7]:
@@ -121,7 +115,7 @@ hallmark_DB_filename = params["pathway_DB_filename"]
 # In[8]:
 
 
-get_ipython().run_cell_magic('R', '-i base_dir -i local_dir -i project_id -i template_expression_filename -i hallmark_DB_filename -i metadata_filename -i enrichment_method -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/other_enrichment_methods.R\'))\n\nout_filename <- paste(local_dir, \n                      "EA_stats/",\n                      enrichment_method,\n                      "_stats_template_data_",\n                      project_id,\n                      "_real.txt", \n                      sep = "")\n\nif (enrichment_method == "GSVA"){\n    \n    template_enriched_pathways <- find_enriched_pathways_GSVA(template_expression_filename, hallmark_DB_filename)\n}\nelse if (enrichment_method == "ROAST"){\n    \n    template_enriched_pathways <- find_enriched_pathways_ROAST(template_expression_filename, metadata_filename, hallmark_DB_filename)\n}\nwrite.table(as.data.frame(template_enriched_pathways), file = out_filename, row.names = F, sep = "\\t")')
+get_ipython().run_cell_magic('R', '-i base_dir -i local_dir -i project_id -i template_expression_filename -i hallmark_DB_filename -i metadata_filename -i enrichment_method -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/other_enrichment_methods.R\'))\n\nout_filename <- paste(local_dir, \n                      "GSA_stats/",\n                      enrichment_method,\n                      "_stats_template_data_",\n                      project_id,\n                      "_real.txt", \n                      sep = "")\n\nif (enrichment_method == "GSVA"){\n    \n    template_enriched_pathways <- find_enriched_pathways_GSVA(template_expression_filename, hallmark_DB_filename)\n}\nelse if (enrichment_method == "ROAST"){\n    \n    template_enriched_pathways <- find_enriched_pathways_ROAST(template_expression_filename, metadata_filename, hallmark_DB_filename)\n}\nelse if (enrichment_method == "CAMERA"){\n    \n    template_enriched_pathways <- find_enriched_pathways_CAMERA(template_expression_filename, metadata_filename, hallmark_DB_filename)\n}\nwrite.table(as.data.frame(template_enriched_pathways), file = out_filename, row.names = F, sep = "\\t")')
 
 
 # In[9]:
@@ -137,13 +131,15 @@ template_enriched_pathways
 # In[10]:
 
 
-## TO DO: EA stats not outputting in correct location for some reason.
+## TO DO: Check issues
+## EA stats not outputting in correct location for some reason for GSVA.
+## All stats are the same using ROAST
 
 
-# In[15]:
+# In[11]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i metadata_filename -i num_runs -i base_dir -i enrichment_method', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/other_enrichment_methods.R\'))\n\nfor (i in 0:(num_runs-1)){\n    print(i)\n    simulated_expression_filename <- paste(local_dir, \n                                           "pseudo_experiment/selected_simulated_data_",\n                                           project_id,\n                                           "_", \n                                           i,\n                                           "_processed.txt",\n                                           sep = "")\n\n    out_filename <- paste(local_dir,\n                          "EA_stats/",\n                          enrichment_method,\n                          "_stats_simulated_data_",\n                          project_id,\n                          "_",\n                          i,\n                          ".txt", \n                          sep = "")\n    print(out_filename)\n    \n    if (enrichment_method == "GSVA"){\n        enriched_pathways <- find_enriched_pathways_GSVA(simulated_expression_filename, hallmark_DB_filename) \n        write.table(as.data.frame(enriched_pathways), file = out_filename, row.names = F, sep = "\\t")\n        print("in GSVA")\n    }\n    else if (enrichment_method == "ROAST"){\n        enriched_pathways <- find_enriched_pathways_ROAST(simulated_expression_filename, metadata_filename, hallmark_DB_filename) \n        write.table(as.data.frame(enriched_pathways), file = out_filename, row.names = F, sep = "\\t")\n        print("in ROAST")\n    }\n}')
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i metadata_filename -i num_runs -i base_dir -i enrichment_method', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/other_enrichment_methods.R\'))\n\nfor (i in 0:(num_runs-1)){\n    simulated_expression_filename <- paste(local_dir, \n                                           "pseudo_experiment/selected_simulated_data_",\n                                           project_id,\n                                           "_", \n                                           i,\n                                           "_processed.txt",\n                                           sep = "")\n\n    out_filename <- paste(local_dir,\n                          "GSA_stats/",\n                          enrichment_method,\n                          "_stats_simulated_data_",\n                          project_id,\n                          "_",\n                          i,\n                          ".txt", \n                          sep = "")\n    \n    if (enrichment_method == "GSVA"){\n        enriched_pathways <- find_enriched_pathways_GSVA(simulated_expression_filename, hallmark_DB_filename) \n        write.table(as.data.frame(enriched_pathways), file = out_filename, row.names = F, sep = "\\t")\n        print("in GSVA")\n    }\n    else if (enrichment_method == "ROAST"){\n        enriched_pathways <- find_enriched_pathways_ROAST(simulated_expression_filename, metadata_filename, hallmark_DB_filename) \n        write.table(as.data.frame(enriched_pathways), file = out_filename, row.names = F, sep = "\\t")\n        print("in ROAST")\n    }\n    else if (enrichment_method == "CAMERA"){\n        enriched_pathways <- find_enriched_pathways_CAMERA(simulated_expression_filename, metadata_filename, hallmark_DB_filename) \n        write.table(as.data.frame(enriched_pathways), file = out_filename, row.names = F, sep = "\\t")\n        print("in CAMERA")\n    }\n}')
 
 
 # ### TO DO:
@@ -176,8 +172,7 @@ ranking.format_enrichment_output(
 # In[14]:
 
 
-analysis_type = "GSEA"
-col_to_rank_pathways = "ES"
+analysis_type = "GSA"
 
 template_GSEA_stats_filename = os.path.join(
     local_dir,
@@ -191,12 +186,13 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
     project_id,
     analysis_type,
     col_to_rank_pathways,
+    enrichment_method
 )
 
 
 # ## Pathway summary table
 
-# In[ ]:
+# In[18]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
