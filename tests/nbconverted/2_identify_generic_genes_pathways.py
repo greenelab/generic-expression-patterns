@@ -421,8 +421,8 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_fil
 
 
 # Check GSEA stats files were created
-GSEA_output1 = os.path.join(local_dir, "GSEA_stats", "GSEA_stats_simulated_data_SRP012656_0.txt")
-GSEA_output2 = os.path.join(local_dir, "GSEA_stats", "GSEA_stats_simulated_data_SRP012656_1.txt")
+GSEA_output1 = os.path.join(local_dir, "GSA_stats", "GSEA_stats_simulated_data_SRP012656_0.txt")
+GSEA_output2 = os.path.join(local_dir, "GSA_stats", "GSEA_stats_simulated_data_SRP012656_1.txt")
 assert (os.path.exists(DE_output1) and os.path.exists(DE_output2))
 
 
