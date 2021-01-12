@@ -23,7 +23,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 def concat_simulated_data(
-    local_dir, num_runs, project_id, data_type, enrichment_method
+    local_dir, num_runs, project_id, data_type, enrichment_method=None
 ):
     """
     This function will concatenate the simulated experiments into a single dataframe
@@ -39,6 +39,7 @@ def concat_simulated_data(
         Project id to use to retrieve simulated experiments
     data_type: 'DE' or 'GSA'
     enrichment_method: "GSEA", GSVA", "ROAST", "CAMERA", "OSA"
+        None if DE analysis
 
     Returns
     -------
@@ -760,7 +761,7 @@ def process_and_rank_genes_pathways(
     project_id,
     analysis_type,
     col_to_rank_by,
-    enrichment_method,
+    enrichment_method=None,
 ):
     """
     This function uses DE or GSA statistics to rank genes or pathways
@@ -795,6 +796,7 @@ def process_and_rank_genes_pathways(
     col_to_rank_by: str
         Statistic to use to rank genes or pathways by
     enrichment_mdethod: "GSEA", GSVA", "ROAST", "CAMERA", "OSA"
+        None if DE analysis
 
     """
     # For template experiment
