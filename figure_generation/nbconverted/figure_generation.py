@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Figure generation
@@ -20,8 +20,7 @@ import matplotlib.image as mpimg
 
 # Directory of output figures
 output_directory = "output/"
-if not os.path.exists(output_directory):
-    os.makedirs(output_directory)
+os.makedirs(output_directory, exist_ok=True)
 
 
 # ## Function to plot
@@ -60,32 +59,32 @@ def make_figure_panel(filename, scale_x_input, scale_y_input, x_loc, y_loc):
 # Create panels for figure 1
 panel_1a = make_figure_panel(
     "fig1A.svg",
-    2.5, 
-    2.5,
-    30,
-    10
+    scale_x_input=2.5, 
+    scale_y_input=2.5,
+    x_loc=30,
+    y_loc=10
 )
 panel_1b = make_figure_panel(
     "../human_general_analysis/logs/NN_2500_30/tybalt_2layer_30latent_hist.svg",
-    0.8,
-    0.8,
-    600,
-    10
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=600,
+    y_loc=10
 )
 panel_1c = make_figure_panel(
     "fig1C.svg",
-    4.2,
-    4.2,
-    30,
-    250
+    scale_x_input=4.2,
+    scale_y_input=4.2,
+    x_loc=30,
+    y_loc=250
 )
 ## TO DO
 panel_1d = make_figure_panel(
     "../human_general_analysis/example_simulated_volcano.svg",
-    0.9,
-    0.9,
-    30,
-    700
+    scale_x_input=0.9,
+    scale_y_input=0.9,
+    x_loc=30,
+    y_loc=700
 )
 
 
@@ -131,38 +130,38 @@ figure_1.save("output/figure_1.svg")
 # Create panels for figure 2
 panel_2a = make_figure_panel(
     "fig2A.svg",
-    2,
-    2,
-    30,
-    10
+    scale_x_input=2,
+    scale_y_input=2,
+    x_loc=30,
+    y_loc=10
 )
 panel_2b = make_figure_panel(
     "../human_cancer_analysis/gene_ranking_logFC.svg",
-    0.6,
-    0.6,
-    470,
-    30
+    scale_x_input=0.6,
+    scale_y_input=0.6,
+    x_loc=470,
+    y_loc=30
 )
 panel_2c = make_figure_panel(
     "../human_general_analysis/gene_ranking_log2FoldChange.svg",
-    0.6,
-    0.6,
-    700,
-    30
+    scale_x_input=0.6,
+    scale_y_input=0.6,
+    x_loc=700,
+    y_loc=30
 )
 panel_2d = make_figure_panel(
     "fig2D.svg",
-    2,
-    2,
-    30,
-    300
+    scale_x_input=2,
+    scale_y_input=2,
+    x_loc=30,
+    y_loc=300
 )
 panel_2e = make_figure_panel(
     "../human_cancer_analysis/pathway_ranking_padj.svg",
-    0.6,
-    0.6,
-    470,
-    300
+    scale_x_input=0.6,
+    scale_y_input=0.6,
+    x_loc=470,
+    y_loc=300
 )
 
 
@@ -211,17 +210,17 @@ figure_2.save("output/figure_2.svg")
 # Create panels for figure 3
 panel_3a = make_figure_panel(
     "../multiplier_analysis/nonzero_LV_coverage.svg",
-    1,
-    1,
-    30,
-    10
+    scale_x_input=1,
+    scale_y_input=1,
+    x_loc=30,
+    y_loc=10
 )
 panel_3b = make_figure_panel(
     "../multiplier_analysis/highweight_LV_coverage.svg",
-    1,
-    1,
-    500,
-    10
+    scale_x_input=1,
+    scale_y_input=1,
+    x_loc=500,
+    y_loc=10
 )
 ## TO DO
 # Add panel showing proportion of generic genes per LV
