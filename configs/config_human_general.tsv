@@ -1,8 +1,8 @@
 local_dir	"/home/alexandra/Documents/Data/Generic_expression_patterns/"
 dataset_name	"human_general_analysis"
-raw_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/raw_recount2_template.tsv"
-mapped_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/mapped_recount2_template.tsv"
-processed_template_filename	"data/processed_recount2_template.tsv"
+raw_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/raw_recount2_template_SRP012656.tsv"
+mapped_template_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/mapped_recount2_template_SRP012656.tsv"
+processed_template_filename	"data/processed_recount2_template_SRP012656.tsv"
 raw_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/raw_recount2_compendium.tsv"
 mapped_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/mapped_recount2_compendium.tsv"
 normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/normalized_recount2_compendium.tsv"
@@ -24,7 +24,7 @@ intermediate_dim	2500
 latent_dim	30
 epsilon_std	1.0
 validation_frac	0.25
-project_id	"SRP061689"
+project_id	"SRP012656"
 count_threshold	None
 metadata_colname	'run'
 num_simulated	25
