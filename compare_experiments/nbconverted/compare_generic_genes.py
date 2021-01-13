@@ -149,7 +149,12 @@ print("Percent concordant genes with 0 expression in template 1:",
 print("Percent nonzero concordant genes in template 1:", 
       len(template1_mean[concordant_genes].loc[(template1_mean[concordant_genes]>0) &
                                            (template1_mean[concordant_genes]<1000)])/len(template1_mean[concordant_genes]))
-sns.distplot(template_1.mean()[concordant_genes], kde=False)
+
+f1 = sns.distplot(template_1.mean()[concordant_genes], kde=False)
+f1.set_title(f"Expression of concordant genes in {project_id1}")
+f1.set_xlabel("log(gene expression)")
+f1.set_ylabel("log(count)")
+f1.set(xscale="log", yscale="log")
 
 
 # In[12]:
@@ -165,7 +170,11 @@ print("Percent nonzero concordant genes in template 2:",
                                                 (template2_mean[concordant_genes]<1000)])/len(template2_mean[concordant_genes]))
 
 # There are more 0 expressed genes in this template experiment
-sns.distplot(template_2.mean()[concordant_genes], kde=False)
+f2 = sns.distplot(template_2.mean()[concordant_genes], kde=False)
+f2.set_title(f"Expression of concordant genes in {project_id2}")
+f2.set_xlabel("log(gene expression)")
+f2.set_ylabel("log(count)")
+f2.set(xscale="log", yscale="log")
 
 
 # In[13]:
@@ -182,7 +191,11 @@ print("Percent nonzero discordant genes in template 1:",
                                            (template1_mean[discordant_genes]<1000)])/len(template1_mean[discordant_genes]))
 
 print(len(template1_mean[discordant_genes].loc[template1_mean[discordant_genes]>0])/len(template1_mean[discordant_genes]))
-sns.distplot(template_1.mean()[discordant_genes], kde=False)
+f3 = sns.distplot(template_1.mean()[discordant_genes], kde=False)
+f3.set_title(f"Expression of discordant genes in {project_id1}")
+f3.set_xlabel("log(gene expression)")
+f3.set_ylabel("log(count)")
+f3.set(xscale="log", yscale="log")
 
 
 # In[14]:
@@ -198,7 +211,11 @@ print("Percent nonzero discordant genes in template 2:",
       len(template2_mean[discordant_genes].loc[(template2_mean[discordant_genes]>0) &
                                                 (template2_mean[discordant_genes]<1000)])/len(template2_mean[discordant_genes]))
 
-sns.distplot(template_2.mean()[discordant_genes], kde=False)
+f4 = sns.distplot(template_2.mean()[discordant_genes], kde=False)
+f4.set_title(f"Expression of discordant genes in {project_id2}")
+f4.set_xlabel("log(gene expression)")
+f4.set_ylabel("log(count)")
+f4.set(xscale="log", yscale="log")
 
 
 # **Takeaway:**
@@ -208,3 +225,5 @@ sns.distplot(template_2.mean()[discordant_genes], kde=False)
 # Theoretically, I would expect the scenario where a gene is lowly expressed in the context of template experiment 1 and therefore not found to be generic. But this same gene could be found to be generic in the context of template experiment 2 if it is more expressed. Its possible that differences in gene expression distribution can change which genes are found to be generic given that the simulation is producing experiments with a similar context. 
 # 
 # In this case, despite having similar gene expression distributions there are still many differences in gene ranking. This suggests to me that level of gene expression activity doesn't matter as much as the overall patterns perhaps. 
+# 
+# Overall we observe a slight shift showing that concordant genes are more lowly expressed compared to discordant genes, but most genes are still predominantly lowly gene expression. If most genes have expression levels very close to 0, then small fluctuations in the expression of some genes could lead to large changes in rank without changing the overall expression distribution. 
