@@ -173,6 +173,12 @@ def make_volcano_plot_simulated(
 
             axes[i].set_ylabel("")
             axes[i].set_xlabel("")
+            
+            # Note: We are creating a single global legend that apply
+            # to all the facets of this figure. To do this using
+            # matplotlib, we need to be a little creative here
+            # and add the legend to a new location that is applied
+            # to the figure and then remove the legend from the facet.
             handles, labels = f.get_legend_handles_labels()
             fig.legend(handles, labels, loc="center right")
             f.legend_.remove()
