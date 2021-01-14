@@ -871,15 +871,16 @@ def format_enrichment_output(
         f"{enrichment_method}_stats_template_data_{project_id}_real.txt",
     )
 
-    # Read template file
-    template_EA_data = pd.read_csv(
-        template_EA_filename, sep="\t", index_col=0, header=0
-    )
-
     if enrichment_method == "GSVA":
+        # Read template file
+        template_EA_data = pd.read_csv(
+            template_EA_filename, sep="\t", index_col=0, header=None
+        )
         # Aggregate the enrichment statistic across samples so that there is a single
         # enrichment score per gene set
-        template_EA_data_processed = template_EA_data.median(axis=1).rename("ES")
+        template_EA_data_processed = pd.DataFrame(
+            template_EA_data.median(axis=1), columns=["ES"]
+        )
 
         # Label columns and indices
         template_EA_data_processed.index = list(
@@ -887,6 +888,8 @@ def format_enrichment_output(
         )
         # Label index header
         template_EA_data_processed.index.name = "pathway"
+
+        print(template_EA_data_processed.head())
 
         # Save formatted template experiment
         template_EA_data_processed.to_csv(template_EA_filename, sep="\t")
@@ -899,10 +902,12 @@ def format_enrichment_output(
             )
             # Read template file
             simulated_EA_data = pd.read_csv(
-                simulated_EA_filename, sep="\t", index_col=0, header=0
+                simulated_EA_filename, sep="\t", index_col=0, header=None
             )
 
-            simulated_EA_data_processed = simulated_EA_data.median(axis=1).rename("ES")
+            simulated_EA_data_processed = pd.DataFrame(
+                simulated_EA_data.median(axis=1), columns=["ES"]
+            )
 
             # Label columns and indices
             template_EA_data_processed.index = list(
@@ -913,6 +918,10 @@ def format_enrichment_output(
             simulated_EA_data_processed.to_csv(simulated_EA_filename, sep="\t")
 
     elif enrichment_method == "ROAST" or enrichment_method == "CAMERA":
+        # Read template file
+        template_EA_data = pd.read_csv(
+            template_EA_filename, sep="\t", index_col=0, header=0
+        )
         # Label columns and indices
         template_EA_data.index = list(pathway_names["hallmark_DB$geneset.names"])
 

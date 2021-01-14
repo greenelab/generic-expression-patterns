@@ -29,9 +29,13 @@ find_enriched_pathways_ROAST <- function(expression_filename,
 
   # Estimate dispersions
   y <- estimateDisp(dge, design)
+  
+  # Format index
+  gene_ids <- row.names(expression_data)
+  pathway_ind <- ids2indices(pathway_DB_data, gene_ids)
 
   # Call ROAST
-  enrich_pathways <- mroast(y, pathway_DB_data, design, contrast=ncol(design), nrot=1000)                       
+  enrich_pathways <- roast(y, index=pathway_ind, design, contrast=ncol(design), nrot=1000)                       
 
   return(as.data.frame(enrich_pathways))
 }
@@ -59,7 +63,7 @@ find_enriched_pathways_CAMERA <- function(expression_filename,
   # Estimate dispersions
   y <- estimateDisp(dge, design)
 
-  # Call ROAST
+  # Call CAMERA
   enrich_pathways <- camera(y, pathway_DB_data, design, contrast=ncol(design), nrot=1000)                       
 
   return(as.data.frame(enrich_pathways))
@@ -80,7 +84,6 @@ find_enriched_pathways_GSVA <- function(expression_filename,
                           pathway_DB_data,
                           kcdf="Poisson"
   )                       
-
   return(as.data.frame(enrich_pathways))
 }
 
@@ -131,9 +134,9 @@ find_enriched_pathways_ORA <- function(expression_filename,
 
   # Get DEGs
   threshold=0.05
-  backgrd_genes <- names(deseq_results_df)
+  backgrd_genes <- row.names(deseq_results_df)
   degs <- deseq_results_df[deseq_results_df[,'padj']<threshold & abs(deseq_results_df[,'log2FoldChange'])>1,]
-  degs_name <- names(degs)
+  degs_name <- row.names(degs)
 
   # Get over-represented pathways
   pathway_DB_data <- read.gmt(pathway_DB_filename)
@@ -142,7 +145,7 @@ find_enriched_pathways_ORA <- function(expression_filename,
                               universe=backgrd_genes,
                               pvalueCutoff=0.05,
                               pAdjustMethod="BH",
-                              TERM2GENE=pathway_DB_data
-  )                      
-  return(as.data.frame(enrich_pathways))
+                              TERM2GENE=pathway_DB_data[, c("ont", "gene")]
+  )                     
+  return(as.data.frame(summary(enrich_pathways)))
 }
