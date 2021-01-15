@@ -192,7 +192,7 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
 
 # ## Pathway summary table
 
-# In[ ]:
+# In[14]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
@@ -209,7 +209,7 @@ summary_pathway_ranks = ranking.generate_summary_table(
 summary_pathway_ranks.sort_values(by="Z score", ascending=False).head()
 
 
-# In[ ]:
+# In[15]:
 
 
 # Create `pathway_summary_filename`
