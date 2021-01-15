@@ -35,7 +35,7 @@ find_enriched_pathways_ROAST <- function(expression_filename,
   pathway_ind <- ids2indices(pathway_DB_data, gene_ids)
 
   # Call ROAST
-  enrich_pathways <- roast(y, index=pathway_ind, design, contrast=ncol(design), nrot=1000)                       
+  enrich_pathways <- mroast(y, index=pathway_ind, design, contrast=ncol(design), nrot=10000, adjust.method="BH")                       
 
   return(as.data.frame(enrich_pathways))
 }
@@ -64,7 +64,7 @@ find_enriched_pathways_CAMERA <- function(expression_filename,
   y <- estimateDisp(dge, design)
 
   # Call CAMERA
-  enrich_pathways <- camera(y, pathway_DB_data, design, contrast=ncol(design), nrot=1000)                       
+  enrich_pathways <- camera(y, pathway_DB_data, design, contrast=ncol(design), nrot=10000)                       
 
   return(as.data.frame(enrich_pathways))
 }
@@ -82,7 +82,9 @@ find_enriched_pathways_GSVA <- function(expression_filename,
 
   enrich_pathways <- gsva(expression_data,
                           pathway_DB_data,
-                          kcdf="Poisson"
+                          kcdf="Poisson",
+                          parallel.sz=1,
+                          verbose=TRUE
   )                       
   return(as.data.frame(enrich_pathways))
 }

@@ -38,7 +38,7 @@ def concat_simulated_data(
     project_id: str
         Project id to use to retrieve simulated experiments
     data_type: 'DE' or 'GSA'
-    enrichment_method: "GSEA", GSVA", "ROAST", "CAMERA", "OSA"
+    enrichment_method: "GSEA", GSVA", "ROAST", "CAMERA", "ORA"
         None if DE analysis
 
     Returns
@@ -83,7 +83,7 @@ def concat_simulated_data(
 
 def abs_value_stats(simulated_DE_stats_all):
     """
-    This function takes the absolute value of columns=[`logFC`, `t`, `NES`].
+    This function takes the absolute value of columns=[`logFC`, `t`, `NES`, `ES`].
     For ranking genes or pathways, we only care about the magnitude of the change for
     the logFC, t, NES statistic, but not the direction.
 
@@ -99,7 +99,9 @@ def abs_value_stats(simulated_DE_stats_all):
     elif "t" in simulated_DE_stats_all.columns:
         simulated_DE_stats_all["t"] = simulated_DE_stats_all["t"].abs()
     elif "NES" in simulated_DE_stats_all.columns:
-        simulated_DE_stats_all["NES"] = simulated_DE_stats_all["NES"].abs()
+        simulated_DE_stats_all["ES"] = simulated_DE_stats_all["NES"].abs()
+    elif "ES" in simulated_DE_stats_all.columns:
+        simulated_DE_stats_all["ES"] = simulated_DE_stats_all["ES"].abs()
     return simulated_DE_stats_all
 
 
@@ -152,7 +154,6 @@ def generate_summary_table(
         simulated_ranking_summary, left_index=True, right_index=True
     )
     shared_genes = list(template_simulated_summary_stats.index)
-    print(template_simulated_summary_stats.head())
     # Parse columns
     if "adj.P.Val" in template_simulated_summary_stats.columns:
         median_pval_simulated = template_simulated_summary_stats[
@@ -165,6 +166,9 @@ def generate_summary_table(
     elif "FDR" in template_simulated_summary_stats.columns:
         median_pval_simulated = template_simulated_summary_stats[("FDR", "median")]
         col_name = "FDR"
+    elif "p.adjust" in template_simulated_summary_stats.columns:
+        median_pval_simulated = template_simulated_summary_stats[("p.adjust", "median")]
+        col_name = "p.adjust"
     mean_test_simulated = template_simulated_summary_stats[(col_to_rank, "mean")]
     std_test_simulated = template_simulated_summary_stats[(col_to_rank, "std")]
     count_simulated = template_simulated_summary_stats[(col_to_rank, "count")]
@@ -176,7 +180,7 @@ def generate_summary_table(
     # t-statistic, Normalized Enrichment Score
     # then we want to also report the raw
     # value for users to know the directionality
-    abs_stats_terms = ["t", "NES", "logFC", "log2FoldChange"]
+    abs_stats_terms = ["t", "NES", "ES", "logFC", "log2FoldChange"]
 
     # Set variable strings depends on analysis
     if pathway_or_gene.lower() == "pathway":
@@ -194,24 +198,42 @@ def generate_summary_table(
     # Create summary table
 
     if test_statistic in abs_stats_terms:
-        summary = pd.DataFrame(
-            data={
-                index_header: template_simulated_summary_stats.index,
-                "Adj P-value (Real)": template_simulated_summary_stats[col_name],
-                "Rank (Real)": template_simulated_summary_stats["ranking"],
-                f"{test_statistic_label} (Real)": template_simulated_summary_stats[
-                    col_to_rank
-                ],
-                f"{test_statistic} (Real)": template_stats.loc[
-                    shared_genes, test_statistic
-                ],
-                "Median adj p-value (simulated)": median_pval_simulated,
-                "Rank (simulated)": rank_simulated,
-                f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
-                "Std deviation (simulated)": std_test_simulated,
-                "Number of experiments (simulated)": count_simulated,
-            }
-        )
+        if test_statistic == "ES":
+            summary = pd.DataFrame(
+                data={
+                    index_header: template_simulated_summary_stats.index,
+                    "Rank (Real)": template_simulated_summary_stats["ranking"],
+                    f"{test_statistic_label} (Real)": template_simulated_summary_stats[
+                        col_to_rank
+                    ],
+                    f"{test_statistic} (Real)": template_stats.loc[
+                        shared_genes, test_statistic
+                    ],
+                    "Rank (simulated)": rank_simulated,
+                    f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
+                    "Std deviation (simulated)": std_test_simulated,
+                    "Number of experiments (simulated)": count_simulated,
+                }
+            )
+        else:
+            summary = pd.DataFrame(
+                data={
+                    index_header: template_simulated_summary_stats.index,
+                    "Adj P-value (Real)": template_simulated_summary_stats[col_name],
+                    "Rank (Real)": template_simulated_summary_stats["ranking"],
+                    f"{test_statistic_label} (Real)": template_simulated_summary_stats[
+                        col_to_rank
+                    ],
+                    f"{test_statistic} (Real)": template_stats.loc[
+                        shared_genes, test_statistic
+                    ],
+                    "Median adj p-value (simulated)": median_pval_simulated,
+                    "Rank (simulated)": rank_simulated,
+                    f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
+                    "Std deviation (simulated)": std_test_simulated,
+                    "Number of experiments (simulated)": count_simulated,
+                }
+            )
         summary["Z score"] = (
             summary[f"{test_statistic_label} (Real)"]
             - summary[f"Mean {test_statistic_label} (simulated)"]
@@ -638,7 +660,12 @@ def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
     experiments that were generated.
     """
     if data_type.lower() == "gsa":
-        if col_to_rank == "padj" or col_to_rank == "FDR":
+        if (
+            col_to_rank == "padj"
+            or col_to_rank == "FDR"
+            or col_to_rank == "p.adjust"
+            or col_to_rank == "ES"
+        ):
             simulated_summary_stats = simulated_stats_all.groupby(["pathway"])[
                 [col_to_rank]
             ].agg(["median", "mean", "std", "count"])
@@ -701,7 +728,7 @@ def rank_genes_or_pathways(col_to_rank, DE_summary_stats, is_template):
     """
 
     # If ranking by p-value or adjusted p-value then high rank = low value
-    if col_to_rank in ["P.Value", "adj.P.Val", "pvalue", "padj", "FDR"]:
+    if col_to_rank in ["P.Value", "adj.P.Val", "pvalue", "padj", "FDR", "p.adjust"]:
         if is_template:
             DE_summary_stats["ranking"] = DE_summary_stats[col_to_rank].rank(
                 ascending=False
@@ -795,7 +822,7 @@ def process_and_rank_genes_pathways(
     analysis_type: 'DE' or 'GSA'
     col_to_rank_by: str
         Statistic to use to rank genes or pathways by
-    enrichment_mdethod: "GSEA", GSVA", "ROAST", "CAMERA", "OSA"
+    enrichment_mdethod: "GSEA", GSVA", "ROAST", "CAMERA", "ORA"
         None if DE analysis
 
     """
@@ -847,8 +874,10 @@ def format_enrichment_output(
     1. GSVA, which returns a matrix that is
     gene set x sample containing enrichment
     scores per sample
-    2. ROAST and CAMERA return a matrix that is gene set x statistics.
+    2. ROAST, CAMERA, ORA return a matrix that is gene set x statistics.
     We need to add pathway names to index
+    3. ORA returns a matrix that is gene set x statistics.
+    We need to re-label index column as "pathway"
 
     Arguments
     ----------
@@ -856,7 +885,7 @@ def format_enrichment_output(
         path to local machine where output file will be stored
     project_id: str
         Experiment identifier
-    enrichment_method: "GSVA", "ROAST", "CAMARA", "OSA"
+    enrichment_method: "GSVA", "ROAST", "CAMARA", "ORA"
     pathway_names: df
         df containing pathway names
     num_runs: int
@@ -874,22 +903,19 @@ def format_enrichment_output(
     if enrichment_method == "GSVA":
         # Read template file
         template_EA_data = pd.read_csv(
-            template_EA_filename, sep="\t", index_col=0, header=None
+            template_EA_filename, sep="\t", index_col=0, header=0
         )
         # Aggregate the enrichment statistic across samples so that there is a single
         # enrichment score per gene set
         template_EA_data_processed = pd.DataFrame(
             template_EA_data.median(axis=1), columns=["ES"]
         )
-
         # Label columns and indices
         template_EA_data_processed.index = list(
             pathway_names["hallmark_DB$geneset.names"]
         )
         # Label index header
         template_EA_data_processed.index.name = "pathway"
-
-        print(template_EA_data_processed.head())
 
         # Save formatted template experiment
         template_EA_data_processed.to_csv(template_EA_filename, sep="\t")
@@ -902,7 +928,7 @@ def format_enrichment_output(
             )
             # Read template file
             simulated_EA_data = pd.read_csv(
-                simulated_EA_filename, sep="\t", index_col=0, header=None
+                simulated_EA_filename, sep="\t", index_col=0, header=0
             )
 
             simulated_EA_data_processed = pd.DataFrame(
@@ -910,9 +936,12 @@ def format_enrichment_output(
             )
 
             # Label columns and indices
-            template_EA_data_processed.index = list(
+            simulated_EA_data_processed.index = list(
                 pathway_names["hallmark_DB$geneset.names"]
             )
+
+            # Label index header
+            simulated_EA_data_processed.index.name = "pathway"
 
             # Save formatted simulated experiment
             simulated_EA_data_processed.to_csv(simulated_EA_filename, sep="\t")
@@ -946,6 +975,33 @@ def format_enrichment_output(
             simulated_EA_data.index = list(pathway_names["hallmark_DB$geneset.names"])
 
             # Label index header
+            simulated_EA_data.index.name = "pathway"
+
+            # Save formatted simulated experiment
+            simulated_EA_data.to_csv(simulated_EA_filename, sep="\t")
+
+    elif enrichment_method == "ORA":
+        # Read template file
+        template_EA_data = pd.read_csv(
+            template_EA_filename, sep="\t", index_col=0, header=0
+        )
+        # re-label index header
+        template_EA_data.index.name = "pathway"
+
+        # Save formatted template experiment
+        template_EA_data.to_csv(template_EA_filename, sep="\t")
+
+        for i in range(num_runs):
+            simulated_EA_filename = os.path.join(
+                local_dir,
+                "GSA_stats",
+                f"{enrichment_method}_stats_simulated_data_{project_id}_{i}.txt",
+            )
+            # Read template file
+            simulated_EA_data = pd.read_csv(
+                simulated_EA_filename, sep="\t", index_col=0, header=0
+            )
+            # re-label index header
             simulated_EA_data.index.name = "pathway"
 
             # Save formatted simulated experiment

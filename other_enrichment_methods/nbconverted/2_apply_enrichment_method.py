@@ -45,20 +45,20 @@ params = utils.read_config(config_filename)
 
 # Load params
 local_dir = params["local_dir"]
-project_id = params['project_id']
-statistic = params['gsea_statistic']
+project_id = params["project_id"]
+statistic = params["gsea_statistic"]
 hallmark_DB_filename = params["pathway_DB_filename"]
 num_runs = params["num_simulated"]
-dataset_name = params['dataset_name']
+dataset_name = params["dataset_name"]
 
 # Select enrichment method
-# enrichment_method = ["GSEA", GSVA", "ROAST", "CAMERA", "OSA"]
+# enrichment_method = ["GSEA", GSVA", "ROAST", "CAMERA", "ORA"]
 # If enrichment_method == "GSEA" then use "padj" to rank
 # If enrichment_method == "GSVA" then use "ES" to rank
 # If enrichment_method == "ROAST" or "CAMERA" then use "FDR" to rank
-# If using "OSA" then use "p.adjust" to rank
+# If using "ORA" then use "p.adjust" to rank
 enrichment_method = "GSVA"
-col_to_rank_pathways = "ES"
+col_to_rank_pathways = params["rank_pathways_by"]
 
 
 # In[4]:
@@ -86,20 +86,31 @@ metadata_filename = os.path.join(
 )
 
 
+# In[5]:
+
+
+# Output file
+pathway_summary_filename = os.path.join(
+    base_dir, 
+    dataset_name, 
+    f"generic_pathway_summary_{project_id}_{enrichment_method}.tsv"
+)
+
+
 # ## Enrichment methods
 # * [ROAST](https://pubmed.ncbi.nlm.nih.gov/20610611/) (rotation gene set tests) performs a focused gene set testing, in which interest focuses on a few gene sets as opposed to a large dataset. (available in limma).
 # * [CAMERA](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3458527/) (Correlation Adjusted MEan RAnk gene set test) is based on the idea of estimating the variance inflation factor associated with inter-gene correlation, and incorporating this into parametric or rank-based test procedures. (available in limma) 
 # * [GSVA](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3618321/) (Gene Set Variation Analysis) calculates sample-wise gene set enrichment scores as a function of genes inside and outside the gene set. This method is well-suited for assessing gene set variation across a dichotomous phenotype. (biocontuctor package GSVA) 
 # * [ORA](https://www.rdocumentation.org/packages/clusterProfiler/versions/3.0.4/topics/enricher) (over-representation analysis) uses the hypergeometric test to determine if there a significant over-representation of pathway in the selected set of DEGs. Here we're using clusterProfiler library but there are multiple options for this analysis. See [slide 6](https://docs.google.com/presentation/d/1t4rK7UiLAeIKIzeRJK-YzspNUfGM-8nuRCcevh2lx34/edit?usp=sharing)
 
-# In[5]:
+# In[6]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
 os.makedirs(os.path.join(local_dir, "GSA_stats"), exist_ok=True)
 
 
-# In[6]:
+# In[7]:
 
 
 # Load pathway data
@@ -110,13 +121,13 @@ hallmark_DB_filename = params["pathway_DB_filename"]
 # 
 # See supplementary tables: https://academic.oup.com/bib/advance-article/doi/10.1093/bib/bbz158/5722384
 
-# In[7]:
+# In[8]:
 
 
 get_ipython().run_cell_magic('R', '-i base_dir -i local_dir -i project_id -i template_expression_filename -i hallmark_DB_filename -i metadata_filename -i enrichment_method -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/other_enrichment_methods.R\'))\n\nout_filename <- paste(local_dir, \n                      "GSA_stats/",\n                      enrichment_method,\n                      "_stats_template_data_",\n                      project_id,\n                      "_real.txt", \n                      sep = "")\n\nif (enrichment_method == "GSVA"){\n    \n    template_enriched_pathways <- find_enriched_pathways_GSVA(\n        template_expression_filename,\n        hallmark_DB_filename\n    )\n}\nelse if (enrichment_method == "ROAST"){\n    \n    template_enriched_pathways <- find_enriched_pathways_ROAST(\n        template_expression_filename,\n        metadata_filename,\n        hallmark_DB_filename\n    )\n}\nelse if (enrichment_method == "CAMERA"){\n    \n    template_enriched_pathways <- find_enriched_pathways_CAMERA(\n        template_expression_filename,\n        metadata_filename,\n        hallmark_DB_filename\n    )\n}\nelse if (enrichment_method == "ORA"){\n    \n    template_enriched_pathways <- find_enriched_pathways_ORA(\n        template_expression_filename,\n        metadata_filename, \n        hallmark_DB_filename\n    )\n}\nwrite.table(as.data.frame(template_enriched_pathways), file = out_filename, row.names = F, sep = "\\t")')
 
 
-# In[8]:
+# In[9]:
 
 
 # Quick check
@@ -126,9 +137,9 @@ template_enriched_pathways
 
 # **Apply enrichment to simulated experiments**
 # 
-# Note: GSA takes a while to run (for 2 simulated experiments it took ~30 minutes)
+# Note: GSA takes a while to run (each simulated experiment took ~2-3 minutes)
 
-# In[ ]:
+# In[10]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_filename -i metadata_filename -i num_runs -i base_dir -i enrichment_method', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/other_enrichment_methods.R\'))\n\nfor (i in 0:(num_runs-1)){\n    simulated_expression_filename <- paste(local_dir, \n                                           "pseudo_experiment/selected_simulated_data_",\n                                           project_id,\n                                           "_", \n                                           i,\n                                           "_processed.txt",\n                                           sep = "")\n\n    out_filename <- paste(local_dir,\n                          "GSA_stats/",\n                          enrichment_method,\n                          "_stats_simulated_data_",\n                          project_id,\n                          "_",\n                          i,\n                          ".txt", \n                          sep = "")\n    \n    if (enrichment_method == "GSVA"){\n        enriched_pathways <- find_enriched_pathways_GSVA(\n            simulated_expression_filename, \n            hallmark_DB_filename\n        ) \n        write.table(as.data.frame(enriched_pathways), file = out_filename, row.names = F, sep = "\\t")\n        print("in GSVA")\n    }\n    else if (enrichment_method == "ROAST"){\n        enriched_pathways <- find_enriched_pathways_ROAST(\n            simulated_expression_filename,\n            metadata_filename,\n            hallmark_DB_filename\n        ) \n        write.table(as.data.frame(enriched_pathways), file = out_filename, row.names = F, sep = "\\t")\n        print("in ROAST")\n    }\n    else if (enrichment_method == "CAMERA"){\n        enriched_pathways <- find_enriched_pathways_CAMERA(\n            simulated_expression_filename,\n            metadata_filename, \n            hallmark_DB_filename\n        ) \n        write.table(as.data.frame(enriched_pathways), file = out_filename, row.names = F, sep = "\\t")\n        print("in CAMERA")\n    }\n    else if (enrichment_method == "ORA"){\n        enriched_pathways <- find_enriched_pathways_ORA(\n            simulated_expression_filename,\n            metadata_filename, \n            hallmark_DB_filename\n        ) \n        write.table(as.data.frame(enriched_pathways), file = out_filename, row.names = F, sep = "\\t")\n        print("in ORA")\n    }\n}')
@@ -138,13 +149,13 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i hallmark_DB_fil
 # 
 # Each method yields a different output format so we will need to format the data before we can rank and summarize it
 
-# In[ ]:
+# In[11]:
 
 
 get_ipython().run_cell_magic('R', '-i hallmark_DB_filename -o hallmark_DB_names', 'library("GSA")\n\nhallmark_DB <- GSA.read.gmt(hallmark_DB_filename)\n\nhallmark_DB_names <- as.data.frame(hallmark_DB$geneset.names)')
 
 
-# In[ ]:
+# In[12]:
 
 
 ranking.format_enrichment_output(
@@ -158,7 +169,7 @@ ranking.format_enrichment_output(
 
 # ## Rank pathways
 
-# In[ ]:
+# In[13]:
 
 
 analysis_type = "GSA"
@@ -177,18 +188,6 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
     col_to_rank_pathways,
     enrichment_method
 )
-
-
-# In[ ]:
-
-
-simulated_GSEA_stats_filename = os.path.join(
-    local_dir,
-    "GSA_stats",
-    f"{enrichment_method}_stats_simulated_data_{project_id}_0.txt")
-    
-simulated = pd.read_csv(simulated_GSEA_stats_filename, sep="\t")
-simulated.head()
 
 
 # ## Pathway summary table
