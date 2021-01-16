@@ -57,7 +57,7 @@ dataset_name = params["dataset_name"]
 # If enrichment_method == "GSVA" then use "ES" to rank
 # If enrichment_method == "ROAST" or "CAMERA" then use "FDR" to rank
 # If using "ORA" then use "p.adjust" to rank
-enrichment_method = "GSVA"
+enrichment_method = "CAMERA"
 col_to_rank_pathways = params["rank_pathways_by"]
 
 
