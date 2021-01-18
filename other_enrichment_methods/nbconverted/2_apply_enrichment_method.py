@@ -57,7 +57,7 @@ dataset_name = params["dataset_name"]
 # If enrichment_method == "GSVA" then use "ES" to rank
 # If enrichment_method == "ROAST" or "CAMERA" then use "FDR" to rank
 # If using "ORA" then use "p.adjust" to rank
-enrichment_method = "CAMERA"
+enrichment_method = "ROAST"
 col_to_rank_pathways = params["rank_pathways_by"]
 
 
@@ -98,9 +98,23 @@ pathway_summary_filename = os.path.join(
 
 
 # ## Enrichment methods
+# These methods are important because they permit differential expression questions to be posed in terms of ensembles of genes representing pathways or other biologically interpretable processes. 
+# 
+# There are two main groups of methods: ‘self-contained’ gene set tests examine a set of genes in their own right without reference to other genes in the genome whereas ‘competitive’ gene set tests compare genes in the test set relative to all other genes. Self-contained tests are of interest for assessing the relevance of an individual biological process to the experiment at hand, whereas the competitive tests focus more on distinguishing the most important biological processes from those that are less important. Competitive tests are overwhelmingly more commonly used in the genomic literature. (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3458527/)
+# 
 # * [ROAST](https://pubmed.ncbi.nlm.nih.gov/20610611/) (rotation gene set tests) performs a focused gene set testing, in which interest focuses on a few gene sets as opposed to a large dataset. (available in limma).
+#   * Self contained gene set test
+#   * Instead of permutations they use rotations (i.e. fractional permutation) in order to allow for more complex experimental designs than binary experiments (i.e. time-course, more than 2 groups)
+#   * Also esimates correlation between genes
+#   * Best power to detect modest fold changes with minority of genes changed
 # * [CAMERA](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3458527/) (Correlation Adjusted MEan RAnk gene set test) is based on the idea of estimating the variance inflation factor associated with inter-gene correlation, and incorporating this into parametric or rank-based test procedures. (available in limma) 
+#   * Competitive gene set test
+#   * Performs the same rank-based test procedure as GSEA, but also estimates the correlation between genes, instead of treating genes as independent
+#   * Recall GSEA: 1) Rank all genes using DE association statistics. 2) An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 3) Estimate the statistical significance of the ES by a phenotypic-based permutation (permute samples assigned to label) test in order to produce a null distribution for the ES (i.e. scores based on permuted phenotype)
+#   * Appropriate for small and large fold changes
 # * [GSVA](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3618321/) (Gene Set Variation Analysis) calculates sample-wise gene set enrichment scores as a function of genes inside and outside the gene set. This method is well-suited for assessing gene set variation across a dichotomous phenotype. (biocontuctor package GSVA) 
+#   * Competitive gene set test
+#   * Estimates variation of gene set enrichment over the samples independently of any class label
 # * [ORA](https://www.rdocumentation.org/packages/clusterProfiler/versions/3.0.4/topics/enricher) (over-representation analysis) uses the hypergeometric test to determine if there a significant over-representation of pathway in the selected set of DEGs. Here we're using clusterProfiler library but there are multiple options for this analysis. See [slide 6](https://docs.google.com/presentation/d/1t4rK7UiLAeIKIzeRJK-YzspNUfGM-8nuRCcevh2lx34/edit?usp=sharing)
 
 # In[6]:

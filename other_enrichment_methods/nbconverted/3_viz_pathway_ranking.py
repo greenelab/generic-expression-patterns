@@ -149,10 +149,15 @@ def plot_significance_vs_ranking(summary_df, method_name, x_label, output_figure
     
     fig = pn.ggplot(plot_df, pn.aes(x='Test statistic', y='Percentile rank'))
     fig += pn.geom_point()
+    fig += pn.geom_point(plot_df[plot_df['Percentile rank']>0.9],
+                         pn.aes(x='Test statistic', y='Percentile rank'),
+                         color='red'
+                        )
     fig += pn.geom_text(pn.aes(label=
                                [x if plot_df.loc[x,'Percentile rank']>0.9 else "" for x in plot_df.index]),
-                        ha='right',
-                        va='top'
+                        ha='left',
+                        va='top',
+                        size=5
                        )
     fig += pn.labs(x = x_label,
                 y = 'Percentile of ranking',
@@ -185,40 +190,34 @@ def plot_significance_vs_ranking(summary_df, method_name, x_label, output_figure
 # In[13]:
 
 
-"""plot_df = pd.DataFrame(
-    data={"Test statistic": gsea_pathway_summary[method_stats_dict["GSEA"]+" (Real)"].values,
-          "Percentile rank": gsea_pathway_summary["Rank (simulated)"].rank(pct=True).values
-         }
-    )
-[x if plot_df.loc[x,'Percentile rank']>0.8 else "" for x in list(plot_df.index)]"""
+plot_significance_vs_ranking(gsea_pathway_summary, "GSEA", "adjusted p-value (BH)", "GSEA_pathway_ranking.svg")
 
 
 # In[14]:
 
 
-plot_significance_vs_ranking(gsea_pathway_summary, "GSEA", "adjusted p-value", "GSEA_pathway_ranking.svg")
+plot_significance_vs_ranking(gsva_pathway_summary, "GSVA", "Enrichment score", "GSVA_pathway_ranking.svg")
 
 
 # In[15]:
 
 
-plot_significance_vs_ranking(gsva_pathway_summary, "GSVA", "Enrichment score", "GSVA_pathway_ranking.svg")
+plot_significance_vs_ranking(roast_pathway_summary, "ROAST", "FDR (BH)", "ROAST_pathway_ranking.svg")
 
 
 # In[16]:
 
 
-plot_significance_vs_ranking(roast_pathway_summary, "ROAST", "FDR", "ROAST_pathway_ranking.svg")
+plot_significance_vs_ranking(camera_pathway_summary, "CAMERA", "FDR (BH)", "CAMERA_pathway_ranking.svg")
 
 
 # In[17]:
 
 
-plot_significance_vs_ranking(camera_pathway_summary, "CAMERA", "FDR", "CAMERA_pathway_ranking.svg")
+plot_significance_vs_ranking(ora_pathway_summary, "ORA", "adjusted p-value (BH)", "ORA_pathway_ranking.svg")
 
 
-# In[18]:
-
-
-plot_significance_vs_ranking(ora_pathway_summary, "ORA", "adjusted p-value", "ORA_pathway_ranking.svg")
-
+# **Takeaway:**
+# * Here are the results demonstrating that different enrichment methods can easily be plugged into our simulation workflow to identify generic gene sets
+# * Overall, it appears that the most enrichment gene sets are also those that are most commonly found to be enriched. However, depending on the enrichment method, generic gene sets will vary slightly due to the different assumptions and modeling procedures. More details about the methods can be found in the [previous notebook](2_apply_enrichment_method.ipynb)
+# * ROAST performs a self-contained test, which assesses the relevance of an individual biological process to the experiment at hand without reference to other genes in the genome. This lack of reference might account for why the scores are uniform across the different gene sets.
