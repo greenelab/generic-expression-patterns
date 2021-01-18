@@ -1,3 +1,8 @@
+# Alternative enrichment analyses to GSEA
+# These are methods were implemented, expecting
+# RNA-seq input. These will need to be adjusted if
+# using microarray data
+  
 # Load libraries
 library("fgsea")
 library("limma")
@@ -16,26 +21,29 @@ find_enriched_pathways_ROAST <- function(expression_filename,
   metadata <- as.matrix(read.csv(metadata_filename, sep="\t", header=TRUE, row.names=1))
   pathway_DB_data <- gmtPathways(pathway_DB_filename)
 
-  print("Checking sample ordering...")
-  print(all.equal(colnames(expression_data), rownames(metadata)))
-
   group <- interaction(metadata[,1])
 
   # Create DEGList based on counts
-  dge = DGEList(expression_data, group=group)
+  #dge = DGEList(expression_data, group=group)
 
   # Design matrix
   design <- model.matrix(~0 + group)
 
+  expression_data_voom <- voom(expression_data, design)
+  #print(expression_data_voom)
+
   # Estimate dispersions
-  y <- estimateDisp(dge, design)
+  #y <- estimateDisp(dge, design)
   
   # Format index
-  gene_ids <- row.names(expression_data)
+  gene_ids <- row.names(expression_data_voom)
   pathway_ind <- ids2indices(pathway_DB_data, gene_ids)
 
+  print("Checking sample ordering...")
+  print(all.equal(colnames(expression_data_voom), rownames(metadata)))
+
   # Call ROAST
-  enrich_pathways <- mroast(y, index=pathway_ind, design, contrast=ncol(design), nrot=10000, adjust.method="BH")                       
+  enrich_pathways <- mroast(expression_data_voom, index=pathway_ind, design, contrast=ncol(design), nrot=10000, adjust.method="BH")                       
 
   return(as.data.frame(enrich_pathways))
 }
