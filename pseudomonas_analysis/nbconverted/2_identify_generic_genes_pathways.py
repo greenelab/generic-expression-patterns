@@ -106,12 +106,12 @@ scaler = pickle.load(open(scaler_filename, "rb"))
 gene_summary_filename = os.path.join(
     base_dir, 
     dataset_name, 
-    f"generic_gene_summary_{project_id}_WTLB_v_WTBSM.tsv"
+    f"generic_gene_summary_{project_id}_test.tsv"
 )
 pathway_summary_filename = os.path.join(
     base_dir, 
     dataset_name, 
-    f"generic_pathway_summary_{project_id}_WTLB_v_WTBSM.tsv"
+    f"generic_pathway_summary_{project_id}_test.tsv"
 )
 
 
@@ -278,7 +278,7 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 # ### GSEA 
 # **Goal:** To detect modest but coordinated changes in prespecified sets of related genes (i.e. those genes in the same pathway or share the same GO term).
 # 
-# 1. Ranks all genes based using DE association statistics. In this case we used the p-value scores to rank genes. logFC returned error -- need to look into this.
+# 1. Ranks all genes based using DE association statistics. 
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
