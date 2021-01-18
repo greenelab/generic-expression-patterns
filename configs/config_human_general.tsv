@@ -14,7 +14,7 @@ reference_rank_col	"DE_Prior_Rank"
 rank_genes_by	"log2FoldChange"
 pathway_DB_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/hallmark_DB.gmt"
 gsea_statistic	'log2FoldChange'
-rank_pathways_by	"padj"
+rank_pathways_by	"FDR"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10

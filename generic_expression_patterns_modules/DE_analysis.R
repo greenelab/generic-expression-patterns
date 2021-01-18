@@ -1,3 +1,6 @@
+# Functions to perform DE analysis using
+# Limma (microarray) and DESeq2 (RNA-seq)
+
 # Load libraries
 library("limma")
 library("DESeq2")
