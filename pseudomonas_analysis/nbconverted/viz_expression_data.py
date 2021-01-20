@@ -153,6 +153,13 @@ sns.distplot(simulated_expression.loc["GSM822712_delta_cbrBLB_A.CEL"])
 # In[10]:
 
 
+# Heatmap visualization
+sns.heatmap(simulated_expression.iloc[:,10:20])
+
+
+# In[11]:
+
+
 # Lets look at the expression data for the flat volcano plot
 simulated_expression_filename = os.path.join(
     local_dir,
@@ -170,14 +177,21 @@ flat_simulated_expression = pd.read_csv(
 flat_simulated_expression
 
 
-# In[11]:
+# In[12]:
 
 
 sns.distplot(flat_simulated_expression.loc["GSM822708_wtLB_A.CEL"])
 sns.distplot(flat_simulated_expression.loc["GSM822712_delta_cbrBLB_A.CEL"])
 
 
-# In[12]:
+# In[13]:
+
+
+# Heatmap visualization
+sns.heatmap(flat_simulated_expression.iloc[:,10:20])
+
+
+# In[14]:
 
 
 # Lets look at the DE stats associated with this flat volcano plot
@@ -197,7 +211,7 @@ flat_simulated_DE = pd.read_csv(
 flat_simulated_DE
 
 
-# In[13]:
+# In[15]:
 
 
 # Lets look at the DE stats associated with DEGs volcano plot
@@ -223,7 +237,7 @@ simulated_DE
 # 
 # Why do volcano plots level out at at then extend outward? Is this an issue with the plotting?
 
-# In[14]:
+# In[16]:
 
 
 import matplotlib.pyplot as plt    
@@ -351,7 +365,7 @@ def make_volcano_plot_simulated_notransform(
     )
 
 
-# In[15]:
+# In[17]:
 
 
 simulated_DE_stats_dir = os.path.join(local_dir, "DE_stats")
@@ -371,7 +385,7 @@ make_volcano_plot_simulated_notransform(
 
 # There is still a leveling off but it doesn't look as dramatic if we don't take the log10 but just negate the adjusted p-values.
 
-# In[25]:
+# In[18]:
 
 
 # Let's look at the distribution of adjusted p-value scores for those volcano
@@ -390,7 +404,7 @@ leveloff_simulated_DE = pd.read_csv(
 )
 
 
-# In[26]:
+# In[19]:
 
 
 # Compare the distribution of adjusted p-value scores
@@ -410,11 +424,156 @@ simulated_DE = pd.read_csv(
 )
 
 
-# In[27]:
+# In[20]:
 
 
 sns.distplot(leveloff_simulated_DE[pval_name])
 sns.distplot(simulated_DE[pval_name])
 
 
+# In[21]:
+
+
+# Get genes in peak of distribution (blue)
+gene_ids = list(leveloff_simulated_DE[leveloff_simulated_DE[pval_name]<0.4].index)
+print(leveloff_simulated_DE[leveloff_simulated_DE[pval_name]<0.4].head(20))
+
+leveloff_simulated_expression_filename = os.path.join(
+    local_dir,
+    "pseudo_experiment",
+    f"selected_simulated_data_{project_id}_1.txt"
+)
+
+leveloff_simulated_expression = pd.read_csv(
+    leveloff_simulated_expression_filename, 
+    sep="\t", 
+    header=0, 
+    index_col=0
+)
+sns.heatmap(leveloff_simulated_expression[gene_ids[0:20]])
+
+
+# In[22]:
+
+
+# Get genes in peak of distribution (orange)
+gene_ids = list(simulated_DE[simulated_DE[pval_name]<0.4].index)
+print(simulated_DE[simulated_DE[pval_name]<0.4].head(20))
+
+simulated_expression_filename = os.path.join(
+    local_dir,
+    "pseudo_experiment",
+    f"selected_simulated_data_{project_id}_2.txt"
+)
+
+simulated_expression = pd.read_csv(
+    simulated_expression_filename, 
+    sep="\t", 
+    header=0, 
+    index_col=0
+)
+sns.heatmap(simulated_expression[gene_ids[0:20]])
+
+
 # Looks like there is a peak of adjusted p-values at the minimum range of the distribution which is causing the leveling out (i.e. there are many genes with a similar low adjusted p-value). I am guessing this is also a result of the VAE shrinkage, where instead of genes having varying logFC, genes are compressed such that there are groups of genes with similar logFC and therefore similar adjusted p-values.
+# 
+# The first heatmap shows the expression in the simulated experiment with flat top (blue) for those genes with low adjusted p-values (i.e. in the peak of the distribution). The second heatmap shows the expression of the simulated experiment with a more V-shape (orange) for those genes with low adjusted p-values (i.e. those with adjusted p-values = 0-0.4). For the more V-shaped experiment, it looks there was more consistency amongst samples within the group (i.e. WT vs mutant). Depending on the simulation experiment generated, there might be some noise created by the VAE.
+
+# ## Expression of template experiment
+# 
+# Do the samples have a clear separation in gene space (WT vs mutant)?
+
+# In[23]:
+
+
+normalized_compendium_data = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
+template_data = pd.read_csv(template_filename, sep="\t", index_col=0, header=0)
+
+
+# In[24]:
+
+
+print(template_data.shape)
+template_data
+
+
+# In[25]:
+
+
+# If template experiment included in training compendium
+# Get normalized template data
+sample_ids = list(template_data.index)
+normalized_template_data = normalized_compendium_data.loc[sample_ids]
+
+print(normalized_template_data.shape)
+normalized_template_data.head()
+
+
+# In[26]:
+
+
+# Label samples 
+wt_sample_ids = ["GSM822708_wtLB_A.CEL", "GSM822709_wtLB_B.CEL"]
+mutant_sample_ids = ["GSM822712_delta_cbrBLB_A.CEL", "GSM822713_delta_cbrBLB_B.CEL"]
+normalized_compendium_data['sample group'] = "compendium"
+normalized_template_data.loc[wt_sample_ids, 'sample group'] = "template_WT"
+normalized_template_data.loc[mutant_sample_ids, 'sample group'] = "template_mutant"
+
+
+# In[27]:
+
+
+normalized_all_data = pd.concat([normalized_template_data,
+                                 normalized_compendium_data
+])
+
+
+# In[30]:
+
+
+# Plot
+
+# Drop label column
+normalized_all_data_numeric = normalized_all_data.drop(['sample group'], axis=1)
+
+model = umap.UMAP(random_state=1).fit(normalized_all_data_numeric)
+
+normalized_all_data_UMAPencoded = model.transform(normalized_all_data_numeric)
+normalized_all_data_UMAPencoded_df = pd.DataFrame(data=normalized_all_data_UMAPencoded,
+                                         index=normalized_all_data.index,
+                                         columns=['1','2'])
+
+# Add back label column
+normalized_all_data_UMAPencoded_df['sample group'] = normalized_all_data['sample group']
+
+# Plot
+fig = pn.ggplot(normalized_all_data_UMAPencoded_df, pn.aes(x='1', y='2'))
+fig += pn.geom_point(pn.aes(color='sample group'), alpha=0.4)
+fig += pn.labs(x ='UMAP 1',
+            y = 'UMAP 2',
+            title = 'Gene expression data in gene space')
+fig += pn.theme_bw()
+fig += pn.theme(
+    legend_title_align = "center",
+    plot_background=pn.element_rect(fill='white'),
+    legend_key=pn.element_rect(fill='white', colour='white'), 
+    legend_title=pn.element_text(family='sans-serif', size=15),
+    legend_text=pn.element_text(family='sans-serif', size=12),
+    plot_title=pn.element_text(family='sans-serif', size=15),
+    axis_text=pn.element_text(family='sans-serif', size=12),
+    axis_title=pn.element_text(family='sans-serif', size=15)
+    )
+fig += pn.scale_color_manual(['#bdbdbd', 'red', 'blue'])
+fig += pn.guides(colour=pn.guide_legend(override_aes={'alpha': 1}))
+
+fig += pn.scales.xlim(9,10)
+print(fig)
+
+
+# Based on a UMAP of the normalized gene expression data, it looks like there isn't a clear separation between WT and mutant samples, though there are only 2 samples per group so this type of clustering observation is limited.
+# 
+# **Takeaway:**
+# 
+# In trying to understand why there are these flat-tops to some of the volcano plots and why some volcano plots are completely flat, we found:
+# 1. This behavior is _not_ a result of how we are plotting in python (there was some speculation about there being an issue with the numpy library used)
+# 2. The latent space shifting we're doing seems to roughly preserve differences between groups, but this signal can be muddled/noisy depending on where the experiment was shifted to (i.e. the representation that is found in that location can cause the experiment to have a more compressed difference between groups) as seen in the heatmaps. The heatmap of the two simulation experiments shows that some experiments have a more noisey distinction between groups (WT vs mutant) whereas the other simulation experiment has a more distinct difference where the within grouping is cleaner. This definitely points to the need to understand how this simulation process is working and how biology is represented in the latent space. This will definitely be a project for the future. For now we at least have an explanation for why we are observing these shapes in the volcano plots
