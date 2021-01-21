@@ -885,7 +885,7 @@ def format_enrichment_output(
         path to local machine where output file will be stored
     project_id: str
         Experiment identifier
-    enrichment_method: "GSVA", "ROAST", "CAMARA", "ORA"
+    enrichment_method: "GSVA", "ROAST", "CAMERA", "ORA"
     pathway_names: df
         df containing pathway names
     num_runs: int
@@ -1006,4 +1006,3 @@ def format_enrichment_output(
 
             # Save formatted simulated experiment
             simulated_EA_data.to_csv(simulated_EA_filename, sep="\t")
-
