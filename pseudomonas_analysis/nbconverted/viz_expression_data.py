@@ -431,7 +431,7 @@ sns.distplot(leveloff_simulated_DE[pval_name])
 sns.distplot(simulated_DE[pval_name])
 
 
-# In[21]:
+# In[22]:
 
 
 # Get genes in peak of distribution (blue)
@@ -453,7 +453,7 @@ leveloff_simulated_expression = pd.read_csv(
 sns.heatmap(leveloff_simulated_expression[gene_ids[0:20]])
 
 
-# In[22]:
+# In[23]:
 
 
 # Get genes in peak of distribution (orange)
@@ -483,21 +483,21 @@ sns.heatmap(simulated_expression[gene_ids[0:20]])
 # 
 # Do the samples have a clear separation in gene space (WT vs mutant)?
 
-# In[23]:
+# In[24]:
 
 
 normalized_compendium_data = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
 template_data = pd.read_csv(template_filename, sep="\t", index_col=0, header=0)
 
 
-# In[24]:
+# In[25]:
 
 
 print(template_data.shape)
 template_data
 
 
-# In[25]:
+# In[26]:
 
 
 # If template experiment included in training compendium
@@ -509,7 +509,7 @@ print(normalized_template_data.shape)
 normalized_template_data.head()
 
 
-# In[26]:
+# In[27]:
 
 
 # Label samples 
@@ -520,7 +520,7 @@ normalized_template_data.loc[wt_sample_ids, 'sample group'] = "template_WT"
 normalized_template_data.loc[mutant_sample_ids, 'sample group'] = "template_mutant"
 
 
-# In[27]:
+# In[28]:
 
 
 normalized_all_data = pd.concat([normalized_template_data,
@@ -528,7 +528,7 @@ normalized_all_data = pd.concat([normalized_template_data,
 ])
 
 
-# In[30]:
+# In[29]:
 
 
 # Plot
@@ -576,4 +576,4 @@ print(fig)
 # 
 # In trying to understand why there are these flat-tops to some of the volcano plots and why some volcano plots are completely flat, we found:
 # 1. This behavior is _not_ a result of how we are plotting in python (there was some speculation about there being an issue with the numpy library used)
-# 2. The latent space shifting we're doing seems to roughly preserve differences between groups, but this signal can be muddled/noisy depending on where the experiment was shifted to (i.e. the representation that is found in that location can cause the experiment to have a more compressed difference between groups) as seen in the heatmaps. The heatmap of the two simulation experiments shows that some experiments have a more noisey distinction between groups (WT vs mutant) whereas the other simulation experiment has a more distinct difference where the within grouping is cleaner. This definitely points to the need to understand how this simulation process is working and how biology is represented in the latent space. This will definitely be a project for the future. For now we at least have an explanation for why we are observing these shapes in the volcano plots
+# 2. The latent space shifting we're doing seems to roughly preserve differences between groups (as seen in [this notebook](https://github.com/greenelab/simulate-expression-compendia/blob/master/Pseudo_experiments/create_heatmap.ipynb) where the structure of the samples is preserved but there is a different set of related genes that are DE. More information can be found in Figure 3D in [this paper](https://academic.oup.com/gigascience/article/9/11/giaa117/5952607)), but this signal can be muddled/noisy depending on where the experiment was shifted to (i.e. the representation that is found in that location can cause the experiment to have a more compressed difference between groups) as seen in the heatmaps. The heatmap of the two simulation experiments shows that some experiments have a more noisey distinction between groups (WT vs mutant) whereas the other simulation experiment has a more distinct difference where the within grouping is cleaner. This definitely points to the need to understand how this simulation process is working and how biology is represented in the latent space. This will definitely be a project for the future. For now we at least have an explanation for why we are observing these shapes in the volcano plots
