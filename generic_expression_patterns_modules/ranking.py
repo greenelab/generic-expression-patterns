@@ -422,7 +422,9 @@ def get_shared_rank_scaled(
     ]
 
     # Get correlation
-    r, p, ci_low, ci_high = spearman_ci(0.95, shared_rank_scaled_df, 1000, ref_rank_col, data_type)
+    r, p, ci_low, ci_high = spearman_ci(
+        0.95, shared_rank_scaled_df, 1000, ref_rank_col, data_type
+    )
 
     correlations = {"r": r, "p": p, "ci_low": ci_low, "ci_high": ci_high}
 
@@ -1008,7 +1010,3 @@ def format_enrichment_output(
 
             # Save formatted simulated experiment
             simulated_EA_data.to_csv(simulated_EA_filename, sep="\t")
-<<<<<<< HEAD
-
-=======
->>>>>>> upstream/master
