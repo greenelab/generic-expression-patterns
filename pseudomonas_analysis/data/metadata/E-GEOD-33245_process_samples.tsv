@@ -11,7 +11,7 @@ GSM822708_wtLB_A.CEL	1
 GSM822709_wtLB_B.CEL	1
 GSM822710_delta_crcLB_A.CEL	drop
 GSM822711_delta_crcLB_B.CEL	drop
-GSM822712_delta_cbrBLB_A.CEL	drop
-GSM822713_delta_cbrBLB_B.CEL	drop
-GSM822714_delta_crcZLB_A.CEL	2
-GSM822715_delta_crcZLB_B.CEL	2
+GSM822712_delta_cbrBLB_A.CEL	2
+GSM822713_delta_cbrBLB_B.CEL	2
+GSM822714_delta_crcZLB_A.CEL	drop
+GSM822715_delta_crcZLB_B.CEL	drop

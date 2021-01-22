@@ -410,12 +410,6 @@ for i in range(num_runs):
 )
 
 
-# In[10]:
-
-
-metadata_filename
-
-
 # ### Differential expression analysis
 # 
 # The gene expression dataset is array-based so we will use Limma in this case
