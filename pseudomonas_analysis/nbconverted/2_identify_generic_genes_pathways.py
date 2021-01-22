@@ -106,12 +106,12 @@ scaler = pickle.load(open(scaler_filename, "rb"))
 gene_summary_filename = os.path.join(
     base_dir, 
     dataset_name, 
-    f"generic_gene_summary_{project_id}_test.tsv"
+    f"generic_gene_summary_{project_id}.tsv"
 )
 pathway_summary_filename = os.path.join(
     base_dir, 
     dataset_name, 
-    f"generic_pathway_summary_{project_id}_test.tsv"
+    f"generic_pathway_summary_{project_id}.tsv"
 )
 
 
@@ -127,7 +127,7 @@ pathway_summary_filename = os.path.join(
 # In[5]:
 
 
-# Simulate multiple experiments
+"""# Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:           
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -144,7 +144,7 @@ for run_id in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        run_id)
+        run_id)"""
 
 
 # ### Process template and simulated data
@@ -155,7 +155,7 @@ for run_id in range(num_runs):
 # In[6]:
 
 
-if not os.path.exists(sample_id_metadata_filename):
+"""if not os.path.exists(sample_id_metadata_filename):
     sample_id_metadata_filename = None
 
 stats.process_samples_for_limma(
@@ -176,7 +176,7 @@ for i in range(num_runs):
         metadata_filename,
         None,
         sample_id_metadata_filename,
-)
+)"""
 
 
 # In[7]:
@@ -275,6 +275,45 @@ summary_gene_ranks.isna().any()
 summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 
 
+# ## Compare gene ranking
+
+# In[16]:
+
+
+# Get generic genes identified by Crow et. al.
+GAPE_filename = params['reference_gene_filename']
+ref_gene_col = params['reference_gene_name_col']
+ref_rank_col = params['reference_rank_col']
+
+figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
+
+corr, shared_ranking = ranking.compare_gene_ranking(
+    summary_gene_ranks,
+    GAPE_filename,
+    ref_gene_col,
+    ref_rank_col,
+    figure_filename
+)
+
+
+# In[17]:
+
+
+# Get genes that are highly generic in both
+shared_ranking[(shared_ranking["Rank (simulated)"]>5000) & (shared_ranking["prop DEGs"]>5000)]
+
+
+# **Takeaway:**
+# 
+# * X-axis: gene ranking using SOPHIE (trained on Pseudomonas compendium containing ~1K experiments)
+# * Y-axis: gene ranking using GAPE (curated set of 73 experiments)
+# 
+# * Overall there is good consistency between SOPHIE and the reference set of experiments. There is especially more consistency amongst lowly ranked genes (genes that consistently didn’t change or genes that changed in a subset of cases). Perhaps the signal from these low ranked genes are very robust in P. aeruginosa
+#   * Housekeeping genes make sense as contributing to a very strong consistent signal.
+#   * What about those inconsistently DE genes? Assuming the 73 contexts are represented in the compendium, then those genes that are in consisten
+# * There is some noise in the bottom right corner (i.e. genes that the reference didn't think were as generic but SOPHIE did). These might be the result of the reference being limited to 73 experiments and differences in data processing (ANOVA vs RMA).
+#   * Assuming the 73 contexts are represented in the compendium, if a gene is generic in the compendium, then this gene was found to be DE across many contexts, including the subset of 73 contexts. We suspect the reason for generic genes being highly generic in the compendium but NOT in the 73 experiments is because the signal to noise ratio will be lower in the smaller subset that reduce the generic signal.
+
 # ### GSEA 
 # **Goal:** To detect modest but coordinated changes in prespecified sets of related genes (i.e. those genes in the same pathway or share the same GO term).
 # 
@@ -282,21 +321,21 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
-# In[16]:
+# In[18]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
 os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
 
 
-# In[17]:
+# In[19]:
 
 
 # Load pathway data
 adage_kegg_DB_filename = params['pathway_DB_filename']
 
 
-# In[18]:
+# In[20]:
 
 
 # Need to format data into tab-delimited matrix
@@ -312,20 +351,20 @@ adage_kegg_DB_processed_filename = os.path.join(
 stats.format_pseudomonas_pathway_DB(adage_kegg_DB_filename, local_dir, adage_kegg_DB_processed_filename)
 
 
-# In[19]:
+# In[21]:
 
 
 get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i adage_kegg_DB_processed_filename -i statistic -o template_enriched_pathways', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/GSEA_analysis.R'))\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, adage_kegg_DB_processed_filename, statistic)")
 
 
-# In[20]:
+# In[22]:
 
 
 print(template_enriched_pathways.shape)
 template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj').head()
 
 
-# In[21]:
+# In[23]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_processed_filename -i num_runs -i statistic', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, adage_kegg_DB_processed_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
@@ -333,7 +372,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_p
 
 # ### Rank pathways 
 
-# In[22]:
+# In[24]:
 
 
 analysis_type = "GSEA"
@@ -354,7 +393,7 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
 
 # ### Pathway summary table
 
-# In[23]:
+# In[25]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
@@ -371,7 +410,7 @@ summary_pathway_ranks = ranking.generate_summary_table(
 summary_pathway_ranks.sort_values(by='Rank (simulated)', ascending=False).head()
 
 
-# In[24]:
+# In[26]:
 
 
 # Create `pathway_summary_filename`
