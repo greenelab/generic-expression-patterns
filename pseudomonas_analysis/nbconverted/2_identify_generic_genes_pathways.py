@@ -127,7 +127,7 @@ pathway_summary_filename = os.path.join(
 # In[5]:
 
 
-"""# Simulate multiple experiments
+# Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:           
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -144,7 +144,7 @@ for run_id in range(num_runs):
         scaler,
         local_dir,
         base_dir,
-        run_id)"""
+        run_id)
 
 
 # ### Process template and simulated data
@@ -155,7 +155,7 @@ for run_id in range(num_runs):
 # In[6]:
 
 
-"""if not os.path.exists(sample_id_metadata_filename):
+if not os.path.exists(sample_id_metadata_filename):
     sample_id_metadata_filename = None
 
 stats.process_samples_for_limma(
@@ -176,7 +176,7 @@ for i in range(num_runs):
         metadata_filename,
         None,
         sample_id_metadata_filename,
-)"""
+)
 
 
 # In[7]:
@@ -300,7 +300,16 @@ corr, shared_ranking = ranking.compare_gene_ranking(
 
 
 # Get genes that are highly generic in both
-shared_ranking[(shared_ranking["Rank (simulated)"]>5000) & (shared_ranking["prop DEGs"]>5000)]
+generic_both = shared_ranking[(shared_ranking["Rank (simulated)"]>4500) & (shared_ranking["prop DEGs"]>3500)]
+generic_both.to_csv(os.path.join(local_dir, "SOPHIE_GAPE_generic.tsv"), sep="\t")
+
+
+# In[18]:
+
+
+# Get genes that are highly generic by SOPHIE but not by GAPE
+generic_SOPHIE_only = shared_ranking[(shared_ranking["Rank (simulated)"]>4500) & (shared_ranking["prop DEGs"]<2000)]
+generic_SOPHIE_only.to_csv(os.path.join(local_dir, "SOPHIE_generic_only.tsv"), sep="\t")
 
 
 # **Takeaway:**
@@ -321,21 +330,21 @@ shared_ranking[(shared_ranking["Rank (simulated)"]>5000) & (shared_ranking["prop
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
-# In[18]:
+# In[19]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
-os.makedirs(os.path.join(local_dir, "GSEA_stats"), exist_ok=True)
+os.makedirs(os.path.join(local_dir, "GSA_stats"), exist_ok=True)
 
 
-# In[19]:
+# In[20]:
 
 
 # Load pathway data
 adage_kegg_DB_filename = params['pathway_DB_filename']
 
 
-# In[20]:
+# In[21]:
 
 
 # Need to format data into tab-delimited matrix
@@ -351,34 +360,34 @@ adage_kegg_DB_processed_filename = os.path.join(
 stats.format_pseudomonas_pathway_DB(adage_kegg_DB_filename, local_dir, adage_kegg_DB_processed_filename)
 
 
-# In[21]:
-
-
-get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i adage_kegg_DB_processed_filename -i statistic -o template_enriched_pathways', "\nsource(paste0(base_dir, '/generic_expression_patterns_modules/GSEA_analysis.R'))\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, adage_kegg_DB_processed_filename, statistic)")
-
-
 # In[22]:
+
+
+get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i adage_kegg_DB_processed_filename -i statistic -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\nout_filename <- paste(local_dir, \n                     "GSA_stats/GSEA_stats_template_data_",\n                     project_id,\n                     "_real.txt", \n                     sep = "")\n\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, adage_kegg_DB_processed_filename, statistic)\nwrite.table(as.data.frame(template_enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")')
+
+
+# In[23]:
 
 
 print(template_enriched_pathways.shape)
 template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj').head()
 
 
-# In[23]:
+# In[24]:
 
 
-get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_processed_filename -i num_runs -i statistic', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSEA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, adage_kegg_DB_processed_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
+get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_processed_filename -i num_runs -i statistic', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, adage_kegg_DB_processed_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
 
 
 # ### Rank pathways 
 
-# In[24]:
+# In[25]:
 
 
-analysis_type = "GSEA"
+analysis_type = "GSA"
 template_GSEA_stats_filename = os.path.join(
     local_dir,
-    "GSEA_stats",
+    "GSA_stats",
     f"GSEA_stats_template_data_{project_id}_real.txt"    
 )
 template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_genes_pathways(
@@ -388,12 +397,13 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
     project_id,
     analysis_type,
     col_to_rank_pathways,
+    "GSEA"
 )
 
 
 # ### Pathway summary table
 
-# In[25]:
+# In[26]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
@@ -410,7 +420,7 @@ summary_pathway_ranks = ranking.generate_summary_table(
 summary_pathway_ranks.sort_values(by='Rank (simulated)', ascending=False).head()
 
 
-# In[26]:
+# In[27]:
 
 
 # Create `pathway_summary_filename`

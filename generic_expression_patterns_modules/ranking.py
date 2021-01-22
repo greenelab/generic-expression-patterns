@@ -19,6 +19,7 @@ import numpy as np
 from scipy import stats
 import pandas as pd
 import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -472,6 +473,7 @@ def compare_gene_ranking(
     fig.set_axis_labels(
         "SOPHIE", "DE prior (Crow et. al. 2019)", fontsize=14, fontname="Verdana"
     )
+    plt.colorbar()
 
     fig.savefig(
         output_figure_filename,
@@ -605,7 +607,7 @@ def spearman_ci(ci, gene_rank_df, num_permutations, ref_rank_col, data_type):
     """
     if data_type.lower() == "de":
         r, p = stats.spearmanr(
-            gene_rank_df["Rank (simulated)"], gene_rank_df["DE_Prior_Rank"]
+            gene_rank_df["Rank (simulated)"], gene_rank_df[ref_rank_col]
         )
     elif data_type.lower() == "gsa":
         r, p = stats.spearmanr(
@@ -619,7 +621,7 @@ def spearman_ci(ci, gene_rank_df, num_permutations, ref_rank_col, data_type):
 
         if data_type.lower() == "de":
             r_perm, p_perm = stats.spearmanr(
-                sample["Rank (simulated)"], sample["DE_Prior_Rank"]
+                sample["Rank (simulated)"], sample[ref_rank_col]
             )
         elif data_type.lower() == "gsa":
             r_perm, p_perm = stats.spearmanr(
