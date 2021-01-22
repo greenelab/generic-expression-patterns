@@ -422,7 +422,7 @@ def get_shared_rank_scaled(
     ]
 
     # Get correlation
-    r, p, ci_low, ci_high = spearman_ci(0.95, shared_rank_scaled_df, 1000, data_type)
+    r, p, ci_low, ci_high = spearman_ci(0.95, shared_rank_scaled_df, 1000, ref_rank_col, data_type)
 
     correlations = {"r": r, "p": p, "ci_low": ci_low, "ci_high": ci_high}
 
@@ -480,7 +480,7 @@ def compare_gene_ranking(
         dpi=300,
     )
 
-    return correlations
+    return correlations, shared_gene_rank_scaled_df
 
 
 def compare_pathway_ranking(summary_df, reference_filename, output_figure_filename):
@@ -585,7 +585,7 @@ def add_pseudomonas_gene_name_col(summary_gene_ranks, base_dir):
     return summary_gene_ranks
 
 
-def spearman_ci(ci, gene_rank_df, num_permutations, data_type):
+def spearman_ci(ci, gene_rank_df, num_permutations, ref_rank_col, data_type):
     """
     Returns spearman correlation score and confidence interval
     
@@ -597,6 +597,8 @@ def spearman_ci(ci, gene_rank_df, num_permutations, data_type):
         Dataframe containing the our rank and Crow et. al. rank
     num_permutations: int
         The number of permutations to estimate the confidence interval
+    ref_rank_col: str
+        Name of column header containing reference ranks of genes
     data_type: 'DE' or 'GSA'
     """
     if data_type.lower() == "de":
