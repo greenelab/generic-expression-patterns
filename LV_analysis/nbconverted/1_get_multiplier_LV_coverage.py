@@ -37,7 +37,7 @@ from ponyo import utils
 from generic_expression_patterns_modules import lv
 
 
-# In[ ]:
+# In[2]:
 
 
 # Get data directory containing gene summary data
@@ -56,7 +56,7 @@ local_dir = params["local_dir"]
 project_id = params["project_id"]
 
 
-# In[ ]:
+# In[3]:
 
 
 # Output file
@@ -66,7 +66,7 @@ highweight_figure_filename = "highweight_LV_coverage.svg"
 
 # ## Load data
 
-# In[ ]:
+# In[4]:
 
 
 # Get gene summary file
@@ -76,7 +76,7 @@ summary_data_filename = os.path.join(
 )
 
 
-# In[ ]:
+# In[5]:
 
 
 # Load gene summary data
@@ -86,7 +86,7 @@ data = pd.read_csv(summary_data_filename, sep="\t", index_col=0, header=0)
 assert(data.shape[0] == len(data["Gene ID"].unique()))
 
 
-# In[ ]:
+# In[6]:
 
 
 # Load multiplier models
@@ -96,12 +96,13 @@ assert(data.shape[0] == len(data["Gene ID"].unique()))
 multiplier_model_z = pd.read_csv("multiplier_model_z.tsv", sep="\t", index_col=0, header=0)
 
 
-# In[ ]:
+# In[7]:
 
 
 # Get a rough sense for how many genes contribute to a given LV
-# (i.e. how many genes have a value > 0 for a given LV)
-(multiplier_model_z > 0).sum().sort_values(ascending=True)
+# (i.e. how many genes have a value != 0 for a given LV)
+# Notice that multiPLIER is a sparse model
+(multiplier_model_z != 0).sum().sort_values(ascending=True)
 
 
 # ## Get gene data
@@ -117,14 +118,14 @@ multiplier_model_z = pd.read_csv("multiplier_model_z.tsv", sep="\t", index_col=0
 # 
 # (Having a lower rank indicates that these genes are not consistently changed across simulated experiments - i.e. the genes are specifically changed in an experiment. It could also indicate genes that are consistently unchanged.)
 
-# In[ ]:
+# In[8]:
 
 
 generic_threshold = 10000
 dict_genes = lv.get_generic_specific_genes(data, generic_threshold)
 
 
-# In[ ]:
+# In[9]:
 
 
 # Check overlap between multiplier genes and our genes
@@ -136,14 +137,14 @@ print(len(our_genes))
 print(len(shared_genes))
 
 
-# In[ ]:
+# In[10]:
 
 
 # Drop gene ids not used in multiplier analysis
 processed_dict_genes = lv.process_generic_specific_gene_lists(dict_genes, multiplier_model_z)
 
 
-# In[ ]:
+# In[11]:
 
 
 # Check numbers add up
@@ -158,13 +159,13 @@ assert len(shared_genes) == len(processed_dict_genes["generic"]) + len(processed
 
 # ### Nonzero LV coverage
 
-# In[ ]:
+# In[12]:
 
 
 dict_nonzero_coverage = lv.get_nonzero_LV_coverage(processed_dict_genes, multiplier_model_z)
 
 
-# In[ ]:
+# In[13]:
 
 
 # Check genes mapped correctly
@@ -175,7 +176,7 @@ assert len(dict_nonzero_coverage["other"]) == len(processed_dict_genes["other"])
 
 # ### High weight LV coverage
 
-# In[ ]:
+# In[14]:
 
 
 # Quick look at the distribution of gene weights per LV
@@ -183,13 +184,13 @@ sns.distplot(multiplier_model_z["LV2"], kde=False)
 plt.yscale("log")
 
 
-# In[ ]:
+# In[15]:
 
 
 dict_highweight_coverage = lv.get_highweight_LV_coverage(processed_dict_genes, multiplier_model_z)
 
 
-# In[ ]:
+# In[16]:
 
 
 # Check genes mapped correctly
@@ -200,10 +201,10 @@ assert len(dict_highweight_coverage["other"]) == len(processed_dict_genes["other
 
 # ### Assemble LV coverage and plot
 
-# In[ ]:
+# In[17]:
 
 
-"""all_coverage = []
+all_coverage = []
 for gene_label in dict_genes.keys():
     merged_df = pd.DataFrame(
         dict_nonzero_coverage[gene_label],
@@ -219,10 +220,10 @@ for gene_label in dict_genes.keys():
     merged_df['gene type'] = gene_label
     all_coverage.append(merged_df)
 
-all_coverage_df = pd.concat(all_coverage)"""
+all_coverage_df = pd.concat(all_coverage)
 
 
-# In[ ]:
+# In[18]:
 
 
 all_coverage_df = lv.assemble_coverage_df(
@@ -233,7 +234,7 @@ all_coverage_df = lv.assemble_coverage_df(
 all_coverage_df.head()
 
 
-# In[ ]:
+# In[19]:
 
 
 # Plot coverage distribution given list of generic coverage, specific coverage
@@ -251,7 +252,7 @@ nonzero_fig.tick_params(labelsize=14)
 nonzero_fig.set_title("Number of LVs genes are present in", fontsize=16, fontname="Verdana")
 
 
-# In[ ]:
+# In[20]:
 
 
 # Plot coverage distribution given list of generic coverage, specific coverage
@@ -272,10 +273,11 @@ highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16
 # * Is the reduction in generic coverage significant?
 # * Is the difference between generic versus other genes signficant?
 
-# In[ ]:
+# In[21]:
 
 
 # Test: mean number of LVs generic genes present in vs mean number of LVs that generic gene is high weight in
+# (compare two blue boxes between plots)
 generic_nonzero = all_coverage_df[all_coverage_df["gene type"]=="generic"]["nonzero LV coverage"].values
 generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["highweight LV coverage"].values
 
@@ -283,10 +285,11 @@ generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["h
 print(pvalue)
 
 
-# In[ ]:
+# In[22]:
 
 
-# Test: mean number of LVs generic genes present in vs mean number of LVs other genes present in
+# Test: mean number of LVs generic genes present in vs mean number of LVs other genes high weight in
+# (compare blue and grey boxes in high weight plot)
 other_highweight = all_coverage_df[all_coverage_df["gene type"]=="other"]["highweight LV coverage"].values
 generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["highweight LV coverage"].values
 
@@ -294,10 +297,11 @@ generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["h
 print(pvalue)
 
 
-# In[ ]:
+# In[23]:
 
 
 # Check that coverage of other and generic genes across all LVs is NOT signficantly different
+# (compare blue and grey boxes in nonzero weight plot)
 other_nonzero = all_coverage_df[all_coverage_df["gene type"]=="other"]["nonzero LV coverage"].values
 generic_nonzero = all_coverage_df[all_coverage_df["gene type"]=="generic"]["nonzero LV coverage"].values
 
@@ -309,7 +313,7 @@ print(pvalue)
 # 
 # Since we are using quantiles to get high weight genes per LV, each LV has the same number of high weight genes. For each set of high weight genes, we will get the proportion of generic vs other genes. We will select the LVs that have a high proportion of generic genes to examine. 
 
-# In[ ]:
+# In[24]:
 
 
 # Get proportion of generic genes per LV
@@ -318,7 +322,7 @@ prop_highweight_generic_dict = lv.get_prop_highweight_generic_genes(
     multiplier_model_z)
 
 
-# In[ ]:
+# In[25]:
 
 
 # Return selected rows from summary matrix
@@ -330,129 +334,17 @@ lv.create_LV_df(
     "Generic_LV_summary_table.tsv")
 
 
-# ## Try looking at coverage after normalization
-# 
-# Below we will perform the same analysis: examine the coverage of generic and other genes as high weight in LVs. But for this analysis we will normalize the weight matrix (Z) first. We expect the results will be similar unless there is dramatic skewing in the LV distributions.
-
-# In[ ]:
+# In[26]:
 
 
-# Normalize Z matrix per LV
-scaler = MinMaxScaler()
-
-# Fitting (2 minutes, ~8 GB of RAM)
-normalized_multiplier_model_z = scaler.fit_transform(multiplier_model_z)
-normalized_multiplier_model_z_df = pd.DataFrame(
-    normalized_multiplier_model_z,
-    columns=multiplier_model_z.columns,
-    index=multiplier_model_z.index,
-)
-
-
-# In[ ]:
-
-
-sns.distplot(normalized_multiplier_model_z_df["LV10"], kde=False)
-
-
-# In[ ]:
-
-
-# Calculate 2 standard deviations from mean per LV and use that
-(normalized_multiplier_model_z_df.mean()+2*normalized_multiplier_model_z_df.std()).median()
-
-
-# In[ ]:
-
-
-# Get coverage of high weight generic genes
-# Use threshold cutoff of 0.063 (~ 2 standard deviations from above calculations)
-dict_highweight_coverage_normalized = lv.get_highweight_LV_coverage(
-    processed_dict_genes,
-    normalized_multiplier_model_z_df,
-    True
-)
-
-
-# In[ ]:
-
-
-all_coverage_normalized_df = lv.assemble_coverage_df(
-    processed_dict_genes,
-    dict_nonzero_coverage,
-    dict_highweight_coverage_normalized
-)
-all_coverage_normalized_df.head()
-
-
-# In[ ]:
-
-
-# Plot coverage distribution given list of generic coverage, specific coverage
-highweight_fig2 = sns.boxplot(data=all_coverage_normalized_df, 
-                             x='gene type',
-                             y='highweight LV coverage',
-                             notch=True,
-                             palette=['powderblue', 'grey']
-                            )
-plt.ylim(0, 700)
-highweight_fig2.set_xlabel("Gene Type",fontsize=14)
-highweight_fig2.set_ylabel(textwrap.fill("Number of LVs", width=30),fontsize=14)
-highweight_fig2.tick_params(labelsize=14)
-highweight_fig2.set_title("Number of LVs genes contribute highly to (normalized)", fontsize=16)
-
-
-# In[ ]:
-
-
-# Test: mean number of LVs generic genes present in vs mean number of LVs that generic gene is high weight in
-generic_nonzero = all_coverage_normalized_df[
-    all_coverage_normalized_df["gene type"]=="generic"]["nonzero LV coverage"].values
-generic_highweight = all_coverage_normalized_df[
-    all_coverage_normalized_df["gene type"]=="generic"]["highweight LV coverage"].values
-
-(stats, pvalue) = scipy.stats.ttest_ind(generic_nonzero, generic_highweight)
-print(pvalue)
-
-
-# In[ ]:
-
-
-# Test: mean number of LVs generic genes present in vs mean number of LVs other genes present in
-other_highweight = all_coverage_normalized_df[
-    all_coverage_normalized_df["gene type"]=="other"]["highweight LV coverage"].values
-generic_highweight = all_coverage_normalized_df[
-    all_coverage_normalized_df["gene type"]=="generic"]["highweight LV coverage"].values
-
-(stats, pvalue) = scipy.stats.ttest_ind(other_highweight, generic_highweight)
-print(pvalue)
-
-
-# In[ ]:
-
-
-# Get proportion of generic genes per LV
-prop_highweight_generic_dict = lv.get_prop_highweight_generic_genes(
-    processed_dict_genes,
-    normalized_multiplier_model_z_df,
-    True
-)
-
-
-# In[ ]:
-
-
-# Return selected rows from summary matrix
-lv.create_LV_df(
-    prop_highweight_generic_dict,
-    multiplier_model_summary,
-    0.4,
-    "Normalized_generic_LV_summmary_table.tsv")
+# Plot distribution of weights for these nodes
+node = "LV61"
+lv.plot_dist_weights(node, multiplier_model_z, shared_genes, 20, all_coverage_df, f"weight_dist_{node}")
 
 
 # ## Save
 
-# In[ ]:
+# In[27]:
 
 
 # Save plot
@@ -479,7 +371,7 @@ highweight_fig.figure.savefig(
 # **Takeaway:**
 # * Generic and other genes are present in a similar number of LVs. This isn't surprising since the number of genes that contribute to each LV is <1000.
 # * Other genes are highly weighted in more LVs compared to generic genes
-# * So, generic genes contribute a little to many LVs versus other genes that contribute a lot to some LVs
+# * So, generic genes contribute a little to many LVs (looking at the difference between the blue box plots) versus other genes that contribute a lot to some LVs (looking at the difference between the blue and grey high weight box plots)
 # * The LV that was found to contain a high proportion of generic genes can be found in [table](Generic_LV_summary_table.tsv). The single LV includes pathways related to immune response (neutraphils), signaling (DMAP_ERY2), wound healing ( megakaryocyte platelet production) 
 # 
 # **Overall, it looks like generic genes are associated with many pathways, acting as *gene hubs*, which is why they are "generic"**

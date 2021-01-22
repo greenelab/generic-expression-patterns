@@ -108,8 +108,8 @@ eADAGE_weight.shape
 
 # Get a rough sense for how many genes contribute to a given LV
 # (i.e. how many genes have a value > 0 for a given LV)
-# Most LV have at least half of the genes contributing some amount
-(eADAGE_weight > 0).sum().sort_values(ascending=True)
+# Notice that eADAGE is NOT sparse
+(eADAGE_weight != 0).sum().sort_values(ascending=True)
 
 
 # ## Get gene data
@@ -186,24 +186,25 @@ assert len(dict_nonzero_coverage["other"]) == len(processed_dict_genes["other"])
 # In[15]:
 
 
-# Quick look at the distribution of gene weights per LV
-sns.distplot(eADAGE_weight["Node2"], kde=False)
-plt.yscale("log")
+dict_highweight_coverage = lv.get_highweight_LV_coverage_pseudomonas(processed_dict_genes, eADAGE_weight)
 
 
 # In[16]:
-
-
-dict_highweight_coverage = lv.get_highweight_LV_coverage(processed_dict_genes, eADAGE_weight)
-
-
-# In[17]:
 
 
 # Check genes mapped correctly
 assert processed_dict_genes["generic"][0] in dict_highweight_coverage["generic"].index
 assert len(dict_highweight_coverage["generic"]) == len(processed_dict_genes["generic"])
 assert len(dict_highweight_coverage["other"]) == len(processed_dict_genes["other"])
+
+
+# In[17]:
+
+
+# Check high weight genes obtained are in fact at the extremes of the distribution
+# Quick look at the distribution of gene weights per LV
+sns.distplot(eADAGE_weight["Node2"], kde=False)
+plt.yscale("log")
 
 
 # ### Assemble LV coverage and plot
@@ -259,6 +260,8 @@ nonzero_fig.tick_params(labelsize=14)
 nonzero_fig.set_title("Number of LVs genes are present in", fontsize=16, fontname="Verdana")
 
 
+# Notice that since our weight matrix is not sparse, all genes are present in all 300 nodes, as expected
+
 # In[21]:
 
 
@@ -284,6 +287,7 @@ highweight_fig.set_title("Number of LVs genes contribute highly to", fontsize=16
 
 
 # Test: mean number of LVs generic genes present in vs mean number of LVs that generic gene is high weight in
+# (compare two blue boxes between plots)
 generic_nonzero = all_coverage_df[all_coverage_df["gene type"]=="generic"]["nonzero LV coverage"].values
 generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["highweight LV coverage"].values
 
@@ -295,6 +299,7 @@ print(pvalue)
 
 
 # Test: mean number of LVs generic genes are high weight in vs mean number of LVs other genes high weight in
+# (compare blue and grey boxes in high weight plot)
 other_highweight = all_coverage_df[all_coverage_df["gene type"]=="other"]["highweight LV coverage"].values
 generic_highweight = all_coverage_df[all_coverage_df["gene type"]=="generic"]["highweight LV coverage"].values
 
@@ -306,6 +311,7 @@ print(pvalue)
 
 
 # Check that coverage of other and generic genes across all LVs is NOT signficantly different
+# (compare blue and grey boxes in nonzero weight plot)
 other_nonzero = all_coverage_df[all_coverage_df["gene type"]=="other"]["nonzero LV coverage"].values
 generic_nonzero = all_coverage_df[all_coverage_df["gene type"]=="generic"]["nonzero LV coverage"].values
 
@@ -342,14 +348,14 @@ for k, v in prop_highweight_generic_dict.items():
 
 # Plot distribution of weights for these nodes
 node = generic_LV[0]
-lv.plot_dist_weights(node, eADAGE_weight, 20, all_coverage_df, f"weight_dist_{node}")
+lv.plot_dist_weights_pseudomonas(node, eADAGE_weight, shared_genes, 20, all_coverage_df, f"weight_dist_{node}")
 
 
 # In[28]:
 
 
 node = generic_LV[1]
-lv.plot_dist_weights(node, eADAGE_weight, 20, all_coverage_df, f"weight_dist_{node}")
+lv.plot_dist_weights_pseudomonas(node, eADAGE_weight, shared_genes, 20, all_coverage_df, f"weight_dist_{node}")
 
 
 # ## Save
@@ -379,8 +385,7 @@ highweight_fig.figure.savefig(
 
 
 # **Takeaway:**
-# * Generic and other genes are present in a similar number of LVs. This isn't surprising since the number of genes that contribute to each LV is <2000 (out of 5549 genes).
-# * Generic genes are highly weighted in more LVs compared to other genes. WHAT DOES THIS MEAN???
-# 
-# * The LV that was found to contain a high proportion of generic genes are node198 and node257. These nodes don't have an association with any KEGG pathway. WHAT DOES DEB'S GROUP HAVE TO SAY ABOUT THESE?
+# * Generic and other genes are present in all LVs since the eADAGE model is fully connected. 
+# * Generic genes are highly weighted in more LVs compared to other genes. Perhaps indicating that generic genes are more wide spread compared to other genes (i.e. these generic genes are associated with many more pathways compared to other genes)
+# * The LV that was found to contain a high proportion of generic genes are node198 and node257. These nodes don't have an association with any KEGG pathways based on [Supp Table S6](https://www.biorxiv.org/content/10.1101/078659v3.supplementary-material) 
 # 
