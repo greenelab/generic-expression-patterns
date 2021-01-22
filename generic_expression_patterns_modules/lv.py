@@ -5,10 +5,12 @@ Date Created: 18 December 2020
 This script provide supporting functions to run analysis notebooks.
 
 This script includes functions to perform latent variable analysis
+using features from either multiPLIER or eADAGE models.
 """
 
 from glob import glob
 import pandas as pd
+import seaborn as sns
 
 
 def get_generic_specific_genes(summary_data, generic_threshold):
@@ -65,9 +67,10 @@ def get_generic_specific_genes(summary_data, generic_threshold):
 def process_generic_specific_gene_lists(dict_genes, LV_matrix):
     """
     This function returns the dictionary of generic genes and specific genes
-    that were included in the multiPLIER or eADAGE analysis. 
-
-    This prevents indexing by a gene that doesn't exist and resulting in NA values
+    that were included in the multiPLIER or eADAGE analyses. We want to make
+    sure that our gene lists obtained from SOPHIE vs multiPLIER or eADAGE
+    are consistent. This will prevent indexing by a gene that doesn't
+    exist and resulting in NA values downstream.
 
     Arguments
     ---------
@@ -90,7 +93,7 @@ def process_generic_specific_gene_lists(dict_genes, LV_matrix):
 
 def get_nonzero_LV_coverage(dict_genes, LV_matrix):
     """
-    This function count the number of LVs that each
+    This function counts the number of LVs that each
     gene is present in (i.e. has a nonzero contribution).
     This function returns a dictionary [gene id]: number of LVs
 
@@ -111,12 +114,11 @@ def get_nonzero_LV_coverage(dict_genes, LV_matrix):
     return dict_nonzero_coverage
 
 
-def get_highweight_LV_coverage(
-    dict_genes, LV_matrix, if_normalized=False, quantile=0.9
-):
+def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile=0.9):
     """
     This function count the number of LVs that each
-    gene contributes a lot to (i.e. has a high weight contribution).
+    gene contributes a lot to (i.e. has a high negative or positive
+    weight contribution).
     This function returns a dictionary [gene id]: number of LVs
 
     Note: If we didn't normalize per LV so each LV has the same number
@@ -130,27 +132,26 @@ def get_highweight_LV_coverage(
     LV_matrix: df
         Dataframe containing contribution of gene to LV (gene x LV matrix)
 
-    if_normalized: bool
-        True if LV_matrix is normalized per LV
-
     quantile: float(0,1)
         Quantile to use to threshold weights. Default set to 90th quantile.
     """
-    if if_normalized:
-        threshold = 0.063
-        dict_highweight_coverage = {}
-        for gene_label, ls_genes in dict_genes.items():
-            LV_series = (LV_matrix > threshold).sum(axis=1)[ls_genes]
+    thresholds_per_LV = LV_matrix.quantile(quantile)
 
-            dict_highweight_coverage[gene_label] = LV_series
-    else:
-        thresholds_per_LV = LV_matrix.quantile(quantile)
+    # Manually checked that genes selected as high weight
+    # are above threshold using below print statements
+    # print(thresholds_per_LV)
+    # print(LV_matrix)
+    # print(
+    #    LV_matrix.loc[
+    #        (LV_matrix.abs() > thresholds_per_LV)["Node2"].values, "Node2"
+    #    ]
+    # )
+    dict_highweight_coverage = {}
+    for gene_label, ls_genes in dict_genes.items():
 
-        dict_highweight_coverage = {}
-        for gene_label, ls_genes in dict_genes.items():
-            LV_series = (LV_matrix > thresholds_per_LV).sum(axis=1)[ls_genes]
+        LV_series = (LV_matrix.abs() > thresholds_per_LV).sum(axis=1)[ls_genes]
 
-            dict_highweight_coverage[gene_label] = LV_series
+        dict_highweight_coverage[gene_label] = LV_series
 
     return dict_highweight_coverage
 
@@ -191,11 +192,9 @@ def assemble_coverage_df(dict_genes, nonzero_dict, highweight_dict):
     return all_coverage_df
 
 
-def get_prop_highweight_generic_genes(
-    dict_genes, LV_matrix, if_normalized=False, quantile=0.9
-):
+def get_prop_highweight_generic_genes(dict_genes, LV_matrix, quantile=0.9):
     """
-    This function returns a dictionary mapping 
+    This function returns a dictionary mapping
     [LV id]: proportion of high weight generic genes
 
     Arguments
@@ -207,9 +206,6 @@ def get_prop_highweight_generic_genes(
 
     LV_matrix: df
         Dataframe containing contribution of gene to LV (gene x LV matrix)
-    
-    if_normalized: bool
-        True if LV_matrix is normalized per LV
 
     quantile: float(0,1)
         Quantile to use to threshold weights. Default set to 90th quantile.
@@ -218,37 +214,21 @@ def get_prop_highweight_generic_genes(
     prop_highweight_generic_dict = {}
     generic_gene_ids = dict_genes["generic"]
 
-    if if_normalized:
-        for LV_id in LV_matrix.columns:
-            threshold = 0.063
-            num_highweight_genes = (LV_matrix > threshold).sum()[0]
-            highweight_genes_per_LV = list(
-                LV_matrix[(LV_matrix > quantile)[LV_id] == True].index
-            )
+    thresholds_per_LV = LV_matrix.quantile(quantile)
+    num_highweight_genes = (LV_matrix > thresholds_per_LV).sum()[0]
 
-            num_highweight_generic_genes = len(
-                set(generic_gene_ids).intersection(highweight_genes_per_LV)
-            )
-            prop_highweight_generic_genes = (
-                num_highweight_generic_genes / num_highweight_genes
-            )
-            prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
-    else:
-        thresholds_per_LV = LV_matrix.quantile(quantile)
-        num_highweight_genes = (LV_matrix > thresholds_per_LV).sum()[0]
+    for LV_id in LV_matrix.columns:
+        highweight_genes_per_LV = list(
+            LV_matrix[(LV_matrix > thresholds_per_LV)[LV_id] == True].index
+        )
 
-        for LV_id in LV_matrix.columns:
-            highweight_genes_per_LV = list(
-                LV_matrix[(LV_matrix > thresholds_per_LV)[LV_id] == True].index
-            )
-
-            num_highweight_generic_genes = len(
-                set(generic_gene_ids).intersection(highweight_genes_per_LV)
-            )
-            prop_highweight_generic_genes = (
-                num_highweight_generic_genes / num_highweight_genes
-            )
-            prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
+        num_highweight_generic_genes = len(
+            set(generic_gene_ids).intersection(highweight_genes_per_LV)
+        )
+        prop_highweight_generic_genes = (
+            num_highweight_generic_genes / num_highweight_genes
+        )
+        prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
 
     return prop_highweight_generic_dict
 
@@ -262,6 +242,9 @@ def create_LV_df(
     """
     This function creates and saves dataframe that contains the metadata
     associated with the LV that is contributed most by generic genes
+
+    Note: This is only used for multiPLIER model, where we have
+    information of LV and pathways associations.
 
     Arguments
     ---------
@@ -292,15 +275,24 @@ def create_LV_df(
         print("No LVs with high proportion of generic genes")
 
 
-def plot_dist_weights(LV_id, LV_matrix, num_genes, gene_id_mapping, out_filename):
+def plot_dist_weights(
+    LV_id, LV_matrix, shared_genes, num_genes, gene_id_mapping, out_filename
+):
     """
-    This function creates a distribution of weights for select
-    LV
+    This function creates a distribution of weights for selected
+    `LV_id`. This allows us to explore the contribution of genes
+    to this LV
 
+    Arguments
+    ----------
     LV_id: str
         identifier for LV
     LV_matrix: df
         gene x LV matrix with weight values
+    shared_genes: list
+        list of genes that are shared by the multiPLIER or eADAGE analysis
+        (so they have LV weight information) and SOPHIE analysis (so they have
+        generic label)
     num_genes: int
         Number of genes to display
     gene_id_mapping: df
@@ -313,10 +305,11 @@ def plot_dist_weights(LV_id, LV_matrix, num_genes, gene_id_mapping, out_filename
     LV_matrix.index.rename("geneID", inplace=True)
 
     # Get top 20 weights
-    weight_df = LV_matrix[LV_id].nlargest(num_genes).reset_index()
+    weight_df = LV_matrix.loc[shared_genes, LV_id].nlargest(num_genes).reset_index()
 
     # Add label for if generic or not
     gene_ids = list(weight_df["geneID"].values)
+    print(weight_df)
     weight_df["gene type"] = list(gene_id_mapping.loc[gene_ids, "gene type"].values)
 
     fig = sns.barplot(data=weight_df, x=LV_id, y="geneID", hue="gene type", dodge=False)
