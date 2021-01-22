@@ -4,7 +4,7 @@ Date Created: 18 December 2020
 
 This script provide supporting functions to run analysis notebooks.
 
-This script includes functions to perform multiPLIER analysis
+This script includes functions to perform latent variable analysis
 """
 
 from glob import glob
@@ -65,7 +65,7 @@ def get_generic_specific_genes(summary_data, generic_threshold):
 def process_generic_specific_gene_lists(dict_genes, LV_matrix):
     """
     This function returns the dictionary of generic genes and specific genes
-    that were included in the multiplier analysis. 
+    that were included in the multiPLIER or eADAGE analysis. 
 
     This prevents indexing by a gene that doesn't exist and resulting in NA values
 
@@ -77,11 +77,11 @@ def process_generic_specific_gene_lists(dict_genes, LV_matrix):
     LV_matrix: df
         Dataframe containing contribution of gene to LV (gene x LV matrix)
     """
-    multiplier_genes = list(LV_matrix.index)
+    model_genes = list(LV_matrix.index)
 
     processed_dict_genes = {}
     for gene_label, ls_genes in dict_genes.items():
-        ls_genes_processed = list(set(multiplier_genes).intersection(ls_genes))
+        ls_genes_processed = list(set(model_genes).intersection(ls_genes))
 
         processed_dict_genes[gene_label] = ls_genes_processed
 
@@ -290,3 +290,46 @@ def create_LV_df(
         LV_df.to_csv(out_filename, sep="\t")
     else:
         print("No LVs with high proportion of generic genes")
+
+
+def plot_dist_weights(LV_id, LV_matrix, num_genes, gene_id_mapping, out_filename):
+    """
+    This function creates a distribution of weights for select
+    LV
+
+    LV_id: str
+        identifier for LV
+    LV_matrix: df
+        gene x LV matrix with weight values
+    num_genes: int
+        Number of genes to display
+    gene_id_mapping: df
+        dataframe containing mapping between genes and "generic" or "other"
+        label
+    out_filename: str
+        file to save plot to
+    """
+    # Get index name
+    LV_matrix.index.rename("geneID", inplace=True)
+
+    # Get top 20 weights
+    weight_df = LV_matrix[LV_id].nlargest(num_genes).reset_index()
+
+    # Add label for if generic or not
+    gene_ids = list(weight_df["geneID"].values)
+    weight_df["gene type"] = list(gene_id_mapping.loc[gene_ids, "gene type"].values)
+
+    fig = sns.barplot(data=weight_df, x=LV_id, y="geneID", hue="gene type", dodge=False)
+
+    fig.set_xlabel("Weight", fontsize=14, fontname="Verdana")
+    fig.set_ylabel("Gene", fontsize=14, fontname="Verdana")
+    fig.set_title(f"Weight distribution for {LV_id}", fontsize=14, fontname="Verdana")
+
+    fig.figure.savefig(
+        out_filename,
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )
