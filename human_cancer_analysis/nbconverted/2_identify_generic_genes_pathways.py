@@ -517,7 +517,7 @@ ref_rank_col = params['reference_rank_col']
 
 figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
 
-ranking.compare_gene_ranking(
+corr, shared_ranking = ranking.compare_gene_ranking(
     summary_gene_ranks,
     DE_prior_filename,
     ref_gene_col,
