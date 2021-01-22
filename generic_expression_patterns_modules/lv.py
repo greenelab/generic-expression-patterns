@@ -107,7 +107,7 @@ def get_nonzero_LV_coverage(dict_genes, LV_matrix):
     """
     dict_nonzero_coverage = {}
     for gene_label, ls_genes in dict_genes.items():
-        LV_series = (LV_matrix.loc[ls_genes] > 0).sum(axis=1)
+        LV_series = (LV_matrix.loc[ls_genes] != 0).sum(axis=1)
 
         dict_nonzero_coverage[gene_label] = LV_series
 
@@ -304,12 +304,14 @@ def plot_dist_weights(
     # Get index name
     LV_matrix.index.rename("geneID", inplace=True)
 
-    # Get top 20 weights
-    weight_df = LV_matrix.loc[shared_genes, LV_id].nlargest(num_genes).reset_index()
+    # Get gene with num_gene top weights
+    top_genes = list(LV_matrix.loc[shared_genes, LV_id].abs().nlargest(num_genes).index)
+    weight_df = LV_matrix.loc[top_genes].reset_index()
+    print(weight_df[LV_id])
 
     # Add label for if generic or not
     gene_ids = list(weight_df["geneID"].values)
-    print(weight_df)
+
     weight_df["gene type"] = list(gene_id_mapping.loc[gene_ids, "gene type"].values)
 
     fig = sns.barplot(data=weight_df, x=LV_id, y="geneID", hue="gene type", dodge=False)
