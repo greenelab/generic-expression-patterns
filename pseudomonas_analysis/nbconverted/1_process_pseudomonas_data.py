@@ -22,7 +22,7 @@ from sklearn import preprocessing
 import pickle
 
 from ponyo import utils, train_vae_modules
-from generic_expression_patterns_modules import process, calc
+from generic_expression_patterns_modules import process
 
 
 # In[ ]:
@@ -94,39 +94,6 @@ process.process_raw_compendium_pseudomonas(
     normalized_compendium_filename,
     scaler_filename,
 )
-
-
-# ### Select template experiment and drop subset of samples
-# 
-# We manually selected bioproject selected [GEOD-33245](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-33245/?s_sortby=col_8&s_sortorder=ascending), which contains multiple different comparisons including WT vs *crc* mutants, WT vs *cbr* mutants in different conditions.
-
-# In[4]:
-
-
-process.process_raw_template_pseudomonas(
-    processed_compendium_filename,
-    project_id,
-    dataset_name,
-    metadata_colname,
-    sample_id_metadata_filename,
-    raw_template_filename,
-    processed_template_filename,
-)
-
-
-# In[5]:
-
-
-# Check
-template_data = pd.read_csv(
-    processed_template_filename, 
-    header=0,
-    index_col=0,
-    sep="\t"
-)
-
-if project_id == "E-GEOD-33245":
-    assert(template_data.shape[0] == 4)
 
 
 # **Note:**
