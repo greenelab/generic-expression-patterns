@@ -156,6 +156,57 @@ def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile=0.9):
     return dict_highweight_coverage
 
 
+def get_highweight_LV_coverage_pseudomonas(dict_genes, LV_matrix):
+    """
+    This function count the number of LVs that each
+    gene contributes a lot to (i.e. has a high negative or positive
+    weight contribution).
+
+    The high weight genes are determined based on the eADAGE paper
+    (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5532071/). In
+    this paper genes are considered high weight if their weight
+    is at least 2.5 standard deviations from the mean. The method
+    is described in an earlier paper 
+    (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5700673/)
+
+    This function returns a dictionary [gene id]: number of LVs
+
+    Arguments
+    ---------
+    dict_genes: dict
+        Dictionary mapping gene ids to label="generic", "other"
+
+    LV_matrix: df
+        Dataframe containing contribution of gene to LV (gene x LV matrix)
+    """
+    mean_per_LV = LV_matrix.mean()
+
+    std_per_LV = LV_matrix.std() * 2.5
+
+    upper_threshold = mean_per_LV + std_per_LV
+    lower_threshold = mean_per_LV - std_per_LV
+
+    # Manually checked that genes selected as high weight
+    # are above threshold using below print statements
+    # print(thresholds_per_LV)
+    # print(LV_matrix)
+    # print(
+    #    LV_matrix.loc[
+    #        (LV_matrix.abs() > thresholds_per_LV)["Node2"].values, "Node2"
+    #    ]
+    # )
+
+    dict_highweight_coverage = {}
+    for gene_label, ls_genes in dict_genes.items():
+        HW_pos = (LV_matrix > upper_threshold).sum(axis=1)[ls_genes]
+        HW_neg = (LV_matrix < lower_threshold).sum(axis=1)[ls_genes]
+        LV_series = HW_pos.add(HW_neg)
+
+        dict_highweight_coverage[gene_label] = LV_series
+
+    return dict_highweight_coverage
+
+
 def assemble_coverage_df(dict_genes, nonzero_dict, highweight_dict):
     """
     This function assembles the coverage dfs into
@@ -314,7 +365,97 @@ def plot_dist_weights(
 
     weight_df["gene type"] = list(gene_id_mapping.loc[gene_ids, "gene type"].values)
 
-    fig = sns.barplot(data=weight_df, x=LV_id, y="geneID", hue="gene type", dodge=False)
+    fig = sns.barplot(
+        data=weight_df,
+        x=LV_id,
+        y="geneID",
+        hue="gene type",
+        hue_order=["generic", "other"],
+        dodge=False,
+        palette=["#2c7fb8", "lightgrey"],
+    )
+
+    fig.set_xlabel("Weight", fontsize=14, fontname="Verdana")
+    fig.set_ylabel("Gene", fontsize=14, fontname="Verdana")
+    fig.set_title(f"Weight distribution for {LV_id}", fontsize=14, fontname="Verdana")
+
+    fig.figure.savefig(
+        out_filename,
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )
+
+
+def plot_dist_weights_pseudomonas(
+    LV_id, LV_matrix, shared_genes, num_genes, gene_id_mapping, out_filename
+):
+    """
+    This function creates a distribution of weights for selected
+    `LV_id`. This allows us to explore the contribution of genes
+    to this LV.
+
+    Here we are looking at only those HW genes identified using
+    2.5 standard deviation from the mean weight at the `LV_id`
+
+    Arguments
+    ----------
+    LV_id: str
+        identifier for LV
+    LV_matrix: df
+        gene x LV matrix with weight values
+    shared_genes: list
+        list of genes that are shared by the multiPLIER or eADAGE analysis
+        (so they have LV weight information) and SOPHIE analysis (so they have
+        generic label)
+    num_genes: int
+        Number of genes to display
+    gene_id_mapping: df
+        dataframe containing mapping between genes and "generic" or "other"
+        label
+    out_filename: str
+        file to save plot to
+    """
+    # Get weight for LV_id
+    LV_id_weight = LV_matrix[LV_id]
+
+    # Calculate thresholds
+    mean_weight = LV_id_weight.mean()
+    std_weight = LV_id_weight.std() * 2.5
+    upper_threshold = mean_weight + std_weight
+    lower_threshold = mean_weight - std_weight
+
+    # Get high weight genes
+    HW_pos_genes = list(LV_id_weight[(LV_id_weight > upper_threshold).values].index)
+    HW_neg_genes = list(LV_id_weight[(LV_id_weight < lower_threshold).values].index)
+
+    HW_genes = HW_pos_genes + HW_neg_genes
+
+    # Sort HW genes by abs weight
+    sorted_HW_genes = list(
+        LV_id_weight[HW_genes].abs().sort_values(ascending=False).index
+    )[0:num_genes]
+
+    # Get gene with num_gene top weights
+    LV_matrix.index.rename("geneID", inplace=True)
+    weight_df = LV_matrix.loc[sorted_HW_genes, LV_id].reset_index()
+    print(weight_df)
+    # Add label for if generic or not
+    gene_ids = list(weight_df["geneID"].values)
+
+    weight_df["gene type"] = list(gene_id_mapping.loc[gene_ids, "gene type"].values)
+
+    fig = sns.barplot(
+        data=weight_df,
+        x=LV_id,
+        y="geneID",
+        hue="gene type",
+        hue_order=["generic", "other"],
+        dodge=False,
+        palette=["#2c7fb8", "lightgrey"],
+    )
 
     fig.set_xlabel("Weight", fontsize=14, fontname="Verdana")
     fig.set_ylabel("Gene", fontsize=14, fontname="Verdana")
