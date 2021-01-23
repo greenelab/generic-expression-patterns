@@ -121,8 +121,9 @@ def get_highweight_LV_coverage(dict_genes, LV_matrix, quantile=0.9):
     weight contribution).
     This function returns a dictionary [gene id]: number of LVs
 
-    Note: If we didn't normalize per LV so each LV has the same number
-    of high weight values.
+    Note: Using the quantile means that each LV has the same number
+    of high weight values. Also here we are using a quantile cutoff
+    since our distribution is not normal (exponential PDF)
 
     Arguments
     ---------
@@ -163,11 +164,12 @@ def get_highweight_LV_coverage_pseudomonas(dict_genes, LV_matrix):
     weight contribution).
 
     The high weight genes are determined based on the eADAGE paper
-    (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5532071/). In
-    this paper genes are considered high weight if their weight
-    is at least 2.5 standard deviations from the mean. The method
-    is described in an earlier paper 
-    (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5700673/)
+    (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5532071/). 
+    Though the method is described in an earlier paper 
+    (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5700673/).
+    In this paper genes are considered high weight if their weight
+    is at least 2.5 standard deviations from the mean since weights
+    are normally distributed.
 
     This function returns a dictionary [gene id]: number of LVs
 
@@ -188,13 +190,12 @@ def get_highweight_LV_coverage_pseudomonas(dict_genes, LV_matrix):
 
     # Manually checked that genes selected as high weight
     # are above threshold using below print statements
-    # print(thresholds_per_LV)
-    # print(LV_matrix)
-    # print(
-    #    LV_matrix.loc[
-    #        (LV_matrix.abs() > thresholds_per_LV)["Node2"].values, "Node2"
-    #    ]
-    # )
+    # print(upper_threshold)
+    # print(lower_threshold)
+    # print(LV_matrix.head(10))
+    # print((LV_matrix > upper_threshold).head(10)
+    # print((LV_matrix > upper_threshold).loc["PA0007"].sum())
+    # print((LV_matrix > upper_threshold).sum(axis=1).head(10))
 
     dict_highweight_coverage = {}
     for gene_label, ls_genes in dict_genes.items():
@@ -266,18 +267,92 @@ def get_prop_highweight_generic_genes(dict_genes, LV_matrix, quantile=0.9):
     generic_gene_ids = dict_genes["generic"]
 
     thresholds_per_LV = LV_matrix.quantile(quantile)
-    num_highweight_genes = (LV_matrix > thresholds_per_LV).sum()[0]
+    # print(thresholds_per_LV)
+    num_highweight_genes = (LV_matrix.abs() > thresholds_per_LV).sum()[0]
+
+    # Manually checks
+    # Note: all LV have the same number of total high weight genes since
+    # we used quantile here
+    # print((LV_matrix.abs() > thresholds_per_LV).sum())
+    # print(num_highweight_genes)
 
     for LV_id in LV_matrix.columns:
+        # print(thresholds_per_LV[LV_id])
         highweight_genes_per_LV = list(
-            LV_matrix[(LV_matrix > thresholds_per_LV)[LV_id] == True].index
+            LV_matrix[(LV_matrix.abs() > thresholds_per_LV)[LV_id] == True].index
         )
+        # print(LV_matrix.abs()[LV_id])
+        # print((LV_matrix.abs() > thresholds_per_LV)[LV_id])
+        # print(highweight_genes_per_LV)
+        # break
 
         num_highweight_generic_genes = len(
             set(generic_gene_ids).intersection(highweight_genes_per_LV)
         )
         prop_highweight_generic_genes = (
             num_highweight_generic_genes / num_highweight_genes
+        )
+        prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
+
+    return prop_highweight_generic_dict
+
+
+def get_prop_highweight_generic_genes_pseudomonas(dict_genes, LV_matrix):
+    """
+    This function returns a dictionary mapping
+    [LV id]: proportion of high weight generic genes
+
+    Arguments
+    ---------
+    Arguments
+    ---------
+    dict_genes: dict
+        Dictionary mapping gene ids to label="generic", "other"
+
+    LV_matrix: df
+        Dataframe containing contribution of gene to LV (gene x LV matrix)
+    """
+
+    prop_highweight_generic_dict = {}
+    generic_gene_ids = dict_genes["generic"]
+
+    mean_per_LV = LV_matrix.mean()
+
+    std_per_LV = LV_matrix.std() * 2.5
+
+    upper_threshold = mean_per_LV + std_per_LV
+    lower_threshold = mean_per_LV - std_per_LV
+
+    num_highweight_pos_genes = (LV_matrix > upper_threshold).sum()
+    num_highweight_neg_genes = (LV_matrix < lower_threshold).sum()
+    num_highweight_genes = num_highweight_pos_genes.add(num_highweight_neg_genes)
+    # print((LV_matrix > upper_threshold).sum())
+    # print((LV_matrix < lower_threshold).sum())
+    # print(num_highweight_genes)
+
+    for LV_id in LV_matrix.columns:
+        # print(LV_matrix[LV_id])
+        # print(upper_threshold[LV_id])
+        # print(lower_threshold[LV_id])
+        pos_highweight_genes_per_LV = list(
+            LV_matrix[(LV_matrix > upper_threshold)[LV_id] == True].index
+        )
+        neg_highweight_genes_per_LV = list(
+            LV_matrix[(LV_matrix < lower_threshold)[LV_id] == True].index
+        )
+        highweight_genes_per_LV = (
+            pos_highweight_genes_per_LV + neg_highweight_genes_per_LV
+        )
+        # print(pos_highweight_genes_per_LV)
+        # print(neg_highweight_genes_per_LV)
+        # print(highweight_genes_per_LV)
+        # print(num_highweight_genes[LV_id])
+
+        num_highweight_generic_genes = len(
+            set(generic_gene_ids).intersection(highweight_genes_per_LV)
+        )
+        prop_highweight_generic_genes = (
+            num_highweight_generic_genes / num_highweight_genes[LV_id]
         )
         prop_highweight_generic_dict[LV_id] = prop_highweight_generic_genes
 
