@@ -327,7 +327,7 @@ print(pvalue)
 
 
 # Get proportion of generic genes per LV
-prop_highweight_generic_dict = lv.get_prop_highweight_generic_genes(
+prop_highweight_generic_dict = lv.get_prop_highweight_generic_genes_pseudomonas(
     processed_dict_genes,
     eADAGE_weight)
 
@@ -348,14 +348,14 @@ for k, v in prop_highweight_generic_dict.items():
 
 # Plot distribution of weights for these nodes
 node = generic_LV[0]
-lv.plot_dist_weights_pseudomonas(node, eADAGE_weight, shared_genes, 20, all_coverage_df, f"weight_dist_{node}")
+lv.plot_dist_weights_pseudomonas(node, eADAGE_weight, shared_genes, 20, all_coverage_df, f"weight_dist_{node}.svg")
 
 
 # In[28]:
 
 
 node = generic_LV[1]
-lv.plot_dist_weights_pseudomonas(node, eADAGE_weight, shared_genes, 20, all_coverage_df, f"weight_dist_{node}")
+lv.plot_dist_weights_pseudomonas(node, eADAGE_weight, shared_genes, 20, all_coverage_df, f"weight_dist_{node}.svg")
 
 
 # ## Save
@@ -385,7 +385,5 @@ highweight_fig.figure.savefig(
 
 
 # **Takeaway:**
-# * Generic and other genes are present in all LVs since the eADAGE model is fully connected. 
-# * Generic genes are highly weighted in more LVs compared to other genes. Perhaps indicating that generic genes are more wide spread compared to other genes (i.e. these generic genes are associated with many more pathways compared to other genes)
-# * The LV that was found to contain a high proportion of generic genes are node198 and node257. These nodes don't have an association with any KEGG pathways based on [Supp Table S6](https://www.biorxiv.org/content/10.1101/078659v3.supplementary-material) 
-# 
+# * In the first nonzero box plot, generic and other genes are present in all LVs since the eADAGE model is fully connected. 
+# * In the second highweight box plot, generic genes are found to contribute a lot to more LVs compared to other genes. This would indicate that generic genes are contributing alot across many LVs compared to other genes, that contribute a lot more specifically to some LVs.

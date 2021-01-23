@@ -54,6 +54,7 @@ params = utils.read_config(config_filename)
 local_dir = params["local_dir"]
 
 project_id = params["project_id"]
+quantile_threshold = 0.98
 
 
 # In[3]:
@@ -180,14 +181,14 @@ assert len(dict_nonzero_coverage["other"]) == len(processed_dict_genes["other"])
 
 
 # Quick look at the distribution of gene weights per LV
-sns.distplot(multiplier_model_z["LV2"], kde=False)
+sns.distplot(multiplier_model_z["LV3"], kde=False)
 plt.yscale("log")
 
 
 # In[15]:
 
 
-dict_highweight_coverage = lv.get_highweight_LV_coverage(processed_dict_genes, multiplier_model_z)
+dict_highweight_coverage = lv.get_highweight_LV_coverage(processed_dict_genes, multiplier_model_z, quantile_threshold)
 
 
 # In[16]:
@@ -319,7 +320,9 @@ print(pvalue)
 # Get proportion of generic genes per LV
 prop_highweight_generic_dict = lv.get_prop_highweight_generic_genes(
     processed_dict_genes,
-    multiplier_model_z)
+    multiplier_model_z,
+    quantile_threshold
+)
 
 
 # In[25]:
@@ -339,7 +342,7 @@ lv.create_LV_df(
 
 # Plot distribution of weights for these nodes
 node = "LV61"
-lv.plot_dist_weights(node, multiplier_model_z, shared_genes, 20, all_coverage_df, f"weight_dist_{node}")
+lv.plot_dist_weights(node, multiplier_model_z, shared_genes, 20, all_coverage_df, f"weight_dist_{node}.svg")
 
 
 # ## Save
@@ -369,9 +372,9 @@ highweight_fig.figure.savefig(
 
 
 # **Takeaway:**
-# * Generic and other genes are present in a similar number of LVs. This isn't surprising since the number of genes that contribute to each LV is <1000.
-# * Other genes are highly weighted in more LVs compared to generic genes
-# * So, generic genes contribute a little to many LVs (looking at the difference between the blue box plots) versus other genes that contribute a lot to some LVs (looking at the difference between the blue and grey high weight box plots)
-# * The LV that was found to contain a high proportion of generic genes can be found in [table](Generic_LV_summary_table.tsv). The single LV includes pathways related to immune response (neutraphils), signaling (DMAP_ERY2), wound healing ( megakaryocyte platelet production) 
+# * In the first nonzero boxplot, generic and other genes are present in a similar number of LVs. This isn't surprising since the number of genes that contribute to each LV is <1000.
+# * In the second highweight boxplot, other genes are highly weighted in more LVs compared to generic genes. This would indicate that generic genes contribute alot to few LVs.
 # 
-# **Overall, it looks like generic genes are associated with many pathways, acting as *gene hubs*, which is why they are "generic"**
+# This is the opposite trend found using [_P. aeruginosa_ data](1_get_eADAGE_LV_coverage.ipynb). Perhaps this indicates that generic genes have different behavior/roles depending on the organism. In humans, perhaps these generic genes are related to a few hyper-responsive pathways, whereas in _P. aeruginosa_ perhaps generic genes are associated with many pathways, acting as *gene hubs*. 
+# 
+# * There are a number of LVs that contain a high proportion of generic genes can be found in [table](Generic_LV_summary_table.tsv). By quick visual inspection, it looks like many LVs are associated with immune response, signaling and metabolism. Which are consistent with the hypothesis that these generic genes are related to hyper-responsive pathways.
