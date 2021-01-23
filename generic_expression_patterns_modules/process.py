@@ -358,15 +358,12 @@ def map_recount2_data(
                 ofh.write(sample_id + "\t" + "\t".join(output_values) + "\n")
 
 
-# TO DO: decide if not needed
 def process_raw_template_pseudomonas(
     processed_compendium_filename,
     project_id,
     dataset_name,
     metadata_colname,
-    sample_id_metadata_filename,
     raw_template_filename,
-    processed_template_filename,
 ):
     """
     Create processed pseudomonas template data file based on
@@ -387,23 +384,6 @@ def process_raw_template_pseudomonas(
     template_data = processed_compendium.loc[sample_ids]
 
     template_data.to_csv(raw_template_filename, sep="\t")
-
-    sample_ids_to_drop = set()
-    if os.path.exists(sample_id_metadata_filename):
-        # Read in metadata and get samples to be dropped:
-        metadata = pd.read_csv(
-            sample_id_metadata_filename, sep="\t", header=0, index_col=0
-        )
-        sample_ids_to_drop = set(metadata[metadata["processing"] == "drop"].index)
-
-    # Write the processed pseudomonas template output file on disk
-    with open(raw_template_filename) as ifh, open(
-        processed_template_filename, "w"
-    ) as ofh:
-        for idx, line in enumerate(ifh):
-            sample_id = line.split("\t")[0]
-            if idx == 0 or sample_id not in sample_ids_to_drop:
-                ofh.write(line)
 
 
 def normalize_compendium(
