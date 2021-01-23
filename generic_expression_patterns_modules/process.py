@@ -449,12 +449,12 @@ def process_raw_compendium_pseudomonas(
     # Create processed pseudomonas compendium data file
     raw_compendium = pd.read_csv(raw_filename, header=0, index_col=0, sep="\t")
 
-    if raw_compendium.shape != (950, 5549):
+    if raw_compendium.shape[1] != 5549:
         processed_compendium = raw_compendium.T
     else:
         processed_compendium = raw_compendium
 
-    assert processed_compendium.shape == (950, 5549)
+    assert processed_compendium.shape[1] == 5549
 
     # Save transformed compendium data
     processed_compendium.to_csv(processed_filename, sep="\t")
