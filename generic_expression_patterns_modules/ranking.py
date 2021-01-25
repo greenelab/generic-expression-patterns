@@ -470,9 +470,14 @@ def compare_gene_ranking(
         marginal_kws={"color": "white"},
     )
 
-    fig.set_axis_labels(
-        "SOPHIE", "DE prior (Crow et. al. 2019)", fontsize=14, fontname="Verdana"
-    )
+    if ref_rank_col == "DE_Prior_Rank":
+        fig.set_axis_labels(
+            "SOPHIE", "DE prior (Crow et. al. 2019)", fontsize=14, fontname="Verdana"
+        )
+    elif ref_rank_col == "prop DEGs":
+        fig.set_axis_labels(
+            "SOPHIE", "GAPE (Stanton lab, 2020)", fontsize=14, fontname="Verdana"
+        )
     plt.colorbar()
 
     fig.savefig(
