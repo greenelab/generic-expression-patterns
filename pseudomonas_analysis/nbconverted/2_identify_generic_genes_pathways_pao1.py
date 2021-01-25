@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Identify generic genes and pathways using subset of training compendium
@@ -546,7 +546,7 @@ generic_SOPHIE_only.to_csv(os.path.join(local_dir, "SOPHIE_generic_only.tsv"), s
 # * X-axis: gene ranking using SOPHIE (trained on Pseudomonas compendium containing ~1K experiments)
 # * Y-axis: gene ranking using GAPE (curated set of 73 experiments)
 # 
-# * Compared to _____
+# * Compared to the correlation plot comparing SOPHIE trained on the full pseudomonas compendium vs GAPE experiments [here](2_identify_generic_genes_pathways.ipynb), it looks like there is more noise in the above correlation plot. Looking up the experiment ids associated with GAPE [here](https://github.com/DartmouthStantonLab/GAPE/blob/main/Pa_GSEnum_unzip.rds) it looks like GAPE does contain a mix of PAO1, PA14 and clinical strains. So by subsetting out training compendium to only represent PAO1 patterns, which is adding more noise to the bottom left of the plot as expected (genes that GAPE finds generic are not found by SOPHIE due to our limited representation in our training compendium)
 
 # ### GSEA 
 # **Goal:** To detect modest but coordinated changes in prespecified sets of related genes (i.e. those genes in the same pathway or share the same GO term).

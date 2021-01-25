@@ -1,9 +1,9 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Subset training compendium
 # 
-# This notebook subsets the normalized compendium to only include those samples that use PAO1 strains. This filtered training compendium will be used to examine the hypothesis that _____
+# This notebook subsets the normalized compendium to only include those samples that use PAO1 strains. This filtered training compendium will be used to examine the hypothesis that the subset of genes that are found to be generic by SOPHIE are not generic using GAPE-curated experiments because SOPHIE is trained on a compendium containing multiple strains, whereas we suspect that the GAPE experiments are only from a single strain (PAO1). So genes that are generic in other strain contexts will not be detected by GAPE.
 
 # In[1]:
 
