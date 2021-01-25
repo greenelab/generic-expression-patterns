@@ -181,9 +181,11 @@ def get_highweight_LV_coverage_pseudomonas(dict_genes, LV_matrix):
     LV_matrix: df
         Dataframe containing contribution of gene to LV (gene x LV matrix)
     """
+    eADAGE_std_cutoff = 2.5
+
     mean_per_LV = LV_matrix.mean()
 
-    std_per_LV = LV_matrix.std() * 2.5
+    std_per_LV = LV_matrix.std() * eADAGE_std_cutoff
 
     upper_threshold = mean_per_LV + std_per_LV
     lower_threshold = mean_per_LV - std_per_LV
@@ -312,13 +314,14 @@ def get_prop_highweight_generic_genes_pseudomonas(dict_genes, LV_matrix):
     LV_matrix: df
         Dataframe containing contribution of gene to LV (gene x LV matrix)
     """
+    eADAGE_std_cutoff = 2.5
 
     prop_highweight_generic_dict = {}
     generic_gene_ids = dict_genes["generic"]
 
     mean_per_LV = LV_matrix.mean()
 
-    std_per_LV = LV_matrix.std() * 2.5
+    std_per_LV = LV_matrix.std() * eADAGE_std_cutoff
 
     upper_threshold = mean_per_LV + std_per_LV
     lower_threshold = mean_per_LV - std_per_LV
@@ -497,8 +500,9 @@ def plot_dist_weights_pseudomonas(
     LV_id_weight = LV_matrix[LV_id]
 
     # Calculate thresholds
+    eADAGE_std_cutoff = 2.5
     mean_weight = LV_id_weight.mean()
-    std_weight = LV_id_weight.std() * 2.5
+    std_weight = LV_id_weight.std() * eADAGE_std_cutoff
     upper_threshold = mean_weight + std_weight
     lower_threshold = mean_weight - std_weight
 
