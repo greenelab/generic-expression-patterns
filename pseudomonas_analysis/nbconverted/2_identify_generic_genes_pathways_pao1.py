@@ -194,7 +194,8 @@ def shift_template_experiment_tmp(
 ):
     """
     Generate new simulated experiment using the selected_experiment_id as a template
-    experiment using the same workflow as `simulate_by_latent_transform`
+    experiment and shifting this template experiment in the latent space to a new
+    location. This shifted experiment will be the new simulated experiment.
 
     This will return a file with a single simulated experiment following the workflow mentioned.
     This function can be run multiple times to generate multiple simulated experiments from a
@@ -253,9 +254,6 @@ def shift_template_experiment_tmp(
     model_decoder_file = glob.glob(os.path.join(NN_dir, "*_decoder_model.h5"))[0]
 
     weights_decoder_file = glob.glob(os.path.join(NN_dir, "*_decoder_weights.h5"))[0]
-    
-    #print("model files used")
-    #print(model_encoder_file)
 
     # Load saved models
     loaded_model = load_model(model_encoder_file, compile=False)
@@ -266,7 +264,6 @@ def shift_template_experiment_tmp(
 
     # Read data
     normalized_data = pd.read_csv(normalized_data_file, header=0, sep="\t", index_col=0)
-    #print(normalized_data_file)
 
     # Get corresponding sample ids
     sample_ids = get_sample_ids(selected_experiment_id, dataset_name, sample_id_colname)
@@ -300,7 +297,6 @@ def shift_template_experiment_tmp(
         new_centroid[j] = np.random.normal(encoded_means[j], encoded_stds[j])
 
     shift_vec_df = new_centroid - centroid
-    # print(shift_vec_df)
 
     simulated_data_encoded_df = data_encoded_df.apply(
         lambda x: x + shift_vec_df, axis=1
@@ -645,7 +641,7 @@ summary_pathway_ranks = ranking.generate_summary_table(
 summary_pathway_ranks.sort_values(by='Rank (simulated)', ascending=False).head()
 
 
-# In[28]:
+# In[29]:
 
 
 # Create `pathway_summary_filename`

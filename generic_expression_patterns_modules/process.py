@@ -424,6 +424,10 @@ def process_raw_compendium_pseudomonas(
     """
     Create processed pseudomonas compendium data file based on raw compendium
     data file (`raw_filename`), and normalize the processed compendium.
+
+    Note: This function was designed to processed data from the pseudomonas
+    compendium defined in the ADAGE paper
+    (https://msystems.asm.org/content/1/1/e00025-15).
     """
 
     # Create processed pseudomonas compendium data file
