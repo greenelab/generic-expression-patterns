@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Identify generic genes and pathways
+# # Identify generic genes and pathways using subset of training compendium
 # 
 # Studies have found that some genes are more likely to be differentially expressed even across a wide range of experimental designs. These generic genes and subsequent pathways are not necessarily specific to the biological process being studied but instead represent a more systematic change. 
 # 
@@ -56,7 +56,7 @@ base_dir = os.path.abspath(os.path.join(os.getcwd(),"../"))
 
 config_filename = os.path.abspath(os.path.join(base_dir,
                                            "configs",
-                                           "config_pseudomonas_33245.tsv"))
+                                           "config_pseudomonas_pao1.tsv"))
 params = utils.read_config(config_filename)
 
 
@@ -106,12 +106,12 @@ scaler = pickle.load(open(scaler_filename, "rb"))
 gene_summary_filename = os.path.join(
     base_dir, 
     dataset_name, 
-    f"generic_gene_summary_{project_id}.tsv"
+    f"generic_gene_summary_{project_id}_pao1.tsv"
 )
 pathway_summary_filename = os.path.join(
     base_dir, 
     dataset_name, 
-    f"generic_pathway_summary_{project_id}.tsv"
+    f"generic_pathway_summary_{project_id}_pao1.tsv"
 )
 
 
@@ -127,6 +127,231 @@ pathway_summary_filename = os.path.join(
 # In[5]:
 
 
+# Note: We are manually changing the function to suit our nex experiment where we 
+# subset our training compendium. Ponyo will be updated to address this change to
+# be more robust to user inputs
+import glob
+import warnings
+from keras.models import load_model
+from sklearn import preprocessing
+
+def get_sample_ids(experiment_id, dataset_name, sample_id_colname):
+    """
+    Returns sample ids (found in gene expression df) associated with
+    a given list of experiment ids (found in the metadata)
+
+    Arguments
+    ----------
+    experiment_ids_file: str
+        File containing all cleaned experiment ids
+
+    dataset_name: str
+        Name for analysis directory. Either "Human" or "Pseudomonas"
+
+    sample_id_colname: str
+        Column header that contains sample id that maps expression data
+        and metadata
+
+    """
+    base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
+
+    if "pseudomonas" in dataset_name.lower():
+        # metadata file
+        mapping_file = os.path.join(
+            base_dir, dataset_name, "data", "metadata", "sample_annotations.tsv"
+        )
+
+        # Read in metadata
+        metadata = pd.read_csv(mapping_file, header=0, sep="\t", index_col=0)
+
+        selected_metadata = metadata.loc[experiment_id]
+        sample_ids = list(selected_metadata[sample_id_colname])
+
+    else:
+        # metadata file
+        mapping_file = os.path.join(
+            base_dir, dataset_name, "data", "metadata", "recount2_metadata.tsv"
+        )
+
+        # Read in metadata
+        metadata = pd.read_csv(mapping_file, header=0, sep="\t", index_col=0)
+
+        selected_metadata = metadata.loc[experiment_id]
+        sample_ids = list(selected_metadata[sample_id_colname])
+
+    return sample_ids
+
+def shift_template_experiment_tmp(
+    normalized_data_file,
+    selected_experiment_id,
+    sample_id_colname,
+    NN_architecture,
+    dataset_name,
+    scaler,
+    local_dir,
+    base_dir,
+    run,
+):
+    """
+    Generate new simulated experiment using the selected_experiment_id as a template
+    experiment and shifting this template experiment in the latent space to a new
+    location. This shifted experiment will be the new simulated experiment.
+
+    This will return a file with a single simulated experiment following the workflow mentioned.
+    This function can be run multiple times to generate multiple simulated experiments from a
+    single selected_experiment_id.
+
+    Arguments
+    ----------
+    normalized_data_file: str
+        File containing normalized gene expression data
+
+        ------------------------------| PA0001 | PA0002 |...
+        05_PA14000-4-2_5-10-07_S2.CEL | 0.8533 | 0.7252 |...
+        54375-4-05.CEL                | 0.7789 | 0.7678 |...
+        ...                           | ...    | ...    |...
+
+    selected_experiment_id: str
+        Experiment id selected as template
+
+    sample_id_colname: str
+        Column header that contains sample id that maps expression data and metadata
+
+    NN_architecture: str
+        Name of neural network architecture to use.
+        Format 'NN_<intermediate layer>_<latent layer>'
+
+    dataset_name: str
+        Name for analysis directory. Either "Human" or "Pseudomonas"
+
+    scaler: minmax model
+        Model used to transform data into a different range
+
+    local_dir: str
+        Parent directory on local machine to store intermediate results
+
+    base_dir: str
+        Root directory containing analysis subdirectories
+
+    run: int
+        Simulation run
+
+    Returns
+    --------
+    simulated_data_file: str
+        File containing simulated gene expression data
+
+    """
+
+    # Files
+    NN_dir = os.path.join(base_dir, dataset_name, "models", NN_architecture)
+    latent_dim = NN_architecture.split("_")[-2] # Here we manually changed the index to work
+
+    model_encoder_file = glob.glob(os.path.join(NN_dir, "*_encoder_model.h5"))[0]
+
+    weights_encoder_file = glob.glob(os.path.join(NN_dir, "*_encoder_weights.h5"))[0]
+
+    model_decoder_file = glob.glob(os.path.join(NN_dir, "*_decoder_model.h5"))[0]
+
+    weights_decoder_file = glob.glob(os.path.join(NN_dir, "*_decoder_weights.h5"))[0]
+
+    # Load saved models
+    loaded_model = load_model(model_encoder_file, compile=False)
+    loaded_decode_model = load_model(model_decoder_file, compile=False)
+
+    loaded_model.load_weights(weights_encoder_file)
+    loaded_decode_model.load_weights(weights_decoder_file)
+
+    # Read data
+    normalized_data = pd.read_csv(normalized_data_file, header=0, sep="\t", index_col=0)
+
+    # Get corresponding sample ids
+    sample_ids = get_sample_ids(selected_experiment_id, dataset_name, sample_id_colname)
+
+    # Gene expression data for selected samples
+    selected_data_df = normalized_data.loc[sample_ids]
+
+    # Encode selected experiment into latent space
+    data_encoded = loaded_model.predict_on_batch(selected_data_df)
+    data_encoded_df = pd.DataFrame(data_encoded, index=selected_data_df.index)
+
+    # Get centroid of original data
+    centroid = data_encoded_df.mean(axis=0)
+
+    # Add individual vectors(centroid, sample point) to new_centroid
+
+    # Encode original gene expression data into latent space
+    data_encoded_all = loaded_model.predict_on_batch(normalized_data)
+    data_encoded_all_df = pd.DataFrame(data_encoded_all, index=normalized_data.index)
+
+    data_encoded_all_df.head()
+
+    # Find a new location in the latent space by sampling from the latent space
+    encoded_means = data_encoded_all_df.mean(axis=0)
+    encoded_stds = data_encoded_all_df.std(axis=0)
+
+    latent_dim = int(latent_dim)
+    new_centroid = np.zeros(latent_dim)
+
+    for j in range(latent_dim):
+        new_centroid[j] = np.random.normal(encoded_means[j], encoded_stds[j])
+
+    shift_vec_df = new_centroid - centroid
+
+    simulated_data_encoded_df = data_encoded_df.apply(
+        lambda x: x + shift_vec_df, axis=1
+    )
+
+    # Decode simulated data into raw gene space
+    simulated_data_decoded = loaded_decode_model.predict_on_batch(
+        simulated_data_encoded_df
+    )
+
+    simulated_data_decoded_df = pd.DataFrame(
+        simulated_data_decoded,
+        index=simulated_data_encoded_df.index,
+        columns=selected_data_df.columns,
+    )
+
+    # Un-normalize the data in order to run DE analysis downstream
+    simulated_data_scaled = scaler.inverse_transform(simulated_data_decoded_df)
+
+    simulated_data_scaled_df = pd.DataFrame(
+        simulated_data_scaled,
+        columns=simulated_data_decoded_df.columns,
+        index=simulated_data_decoded_df.index,
+    )
+
+    # Save template data for visualization validation
+    test_file = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        "template_normalized_data_" + selected_experiment_id + "_test.txt",
+    )
+
+    selected_data_df.to_csv(test_file, float_format="%.3f", sep="\t")
+
+    # Save
+    out_file = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        "selected_simulated_data_" + selected_experiment_id + "_" + str(run) + ".txt",
+    )
+
+    simulated_data_scaled_df.to_csv(out_file, float_format="%.3f", sep="\t")
+
+    out_encoded_file = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        f"selected_simulated_encoded_data_{selected_experiment_id}_{run}.txt",
+    )
+
+    simulated_data_encoded_df.to_csv(out_encoded_file, float_format="%.3f", sep="\t")
+
+
+# In[6]:
+
+
 # Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:           
 #   - selected_simulated_data_SRP012656_<n>.txt
@@ -135,7 +360,7 @@ pathway_summary_filename = os.path.join(
 # in which "<n>" is an integer in the range of [0, num_runs-1] 
 os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
 for run_id in range(num_runs):
-    simulate_expression_data.shift_template_experiment(
+    shift_template_experiment_tmp(
         normalized_compendium_filename,
         project_id,
         metadata_col_id,
@@ -152,7 +377,7 @@ for run_id in range(num_runs):
 # * Remove samples not required for comparison. 
 # * Make sure ordering of samples matches metadata for proper comparison
 
-# In[6]:
+# In[7]:
 
 
 if not os.path.exists(sample_id_metadata_filename):
@@ -179,7 +404,7 @@ for i in range(num_runs):
 )
 
 
-# In[7]:
+# In[8]:
 
 
 # Quick check
@@ -195,20 +420,20 @@ assert(template_data.shape[0] == 4)
 
 # ### Differential expression analysis
 
-# In[8]:
+# In[9]:
 
 
 # Create subdirectory: "<local_dir>/DE_stats/"
 os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 
 
-# In[9]:
+# In[10]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i processed_template_filename -i local_dir -i base_dir', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/DE_analysis.R\'))\n\nget_DE_stats_limma(metadata_filename,\n                   project_id, \n                   processed_template_filename,\n                   "template",\n                   local_dir,\n                   "real")')
 
 
-# In[10]:
+# In[11]:
 
 
 get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs -o num_sign_DEGs_simulated', '\nsource(paste0(base_dir,\'/generic_expression_patterns_modules/DE_analysis.R\'))\n\nnum_sign_DEGs_simulated <- c()\n\nfor (i in 0:(num_runs-1)){\n    simulated_data_filename <- paste(\n        local_dir, \n        "pseudo_experiment/selected_simulated_data_",\n        project_id,\n        "_", \n        i,\n        ".txt",\n        sep=""\n    )\n    \n    run_output <- get_DE_stats_limma(\n        metadata_filename,\n        project_id, \n        simulated_data_filename,\n        "simulated",\n        local_dir,\n        i\n    )\n    num_sign_DEGs_simulated <- c(num_sign_DEGs_simulated, run_output)\n}')
@@ -216,7 +441,7 @@ get_ipython().run_cell_magic('R', '-i metadata_filename -i project_id -i base_di
 
 # ### Rank genes
 
-# In[11]:
+# In[12]:
 
 
 analysis_type = "DE"
@@ -237,7 +462,7 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
 
 # ### Gene summary table
 
-# In[12]:
+# In[13]:
 
 
 summary_gene_ranks = ranking.generate_summary_table(
@@ -253,7 +478,7 @@ summary_gene_ranks = ranking.generate_summary_table(
 summary_gene_ranks.sort_values(by="Z score", ascending=False).head()
 
 
-# In[13]:
+# In[14]:
 
 
 # Add gene name as column to summary dataframe
@@ -261,14 +486,14 @@ summary_gene_ranks = ranking.add_pseudomonas_gene_name_col(summary_gene_ranks, b
 summary_gene_ranks.sort_values(by="Z score", ascending=False).head()
 
 
-# In[14]:
+# In[15]:
 
 
 # Check if there is an NaN values, there should not be
 summary_gene_ranks.isna().any()
 
 
-# In[15]:
+# In[16]:
 
 
 # Create `gene_summary_filename`
@@ -277,7 +502,7 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 
 # ## Compare gene ranking
 
-# In[16]:
+# In[17]:
 
 
 # Get generic genes identified by Crow et. al.
@@ -285,7 +510,7 @@ GAPE_filename = params['reference_gene_filename']
 ref_gene_col = params['reference_gene_name_col']
 ref_rank_col = params['reference_rank_col']
 
-figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
+figure_filename = f"gene_ranking_{col_to_rank_genes}_pao1.svg"
 
 corr, shared_ranking = ranking.compare_gene_ranking(
     summary_gene_ranks,
@@ -296,7 +521,7 @@ corr, shared_ranking = ranking.compare_gene_ranking(
 )
 
 
-# In[17]:
+# In[18]:
 
 
 # Get genes that are highly generic in both
@@ -304,7 +529,7 @@ generic_both = shared_ranking[(shared_ranking["Rank (simulated)"]>4500) & (share
 generic_both.to_csv(os.path.join(local_dir, "SOPHIE_GAPE_generic.tsv"), sep="\t")
 
 
-# In[18]:
+# In[19]:
 
 
 # Get genes that are highly generic by SOPHIE but not by GAPE
@@ -317,11 +542,7 @@ generic_SOPHIE_only.to_csv(os.path.join(local_dir, "SOPHIE_generic_only.tsv"), s
 # * X-axis: gene ranking using SOPHIE (trained on Pseudomonas compendium containing ~1K experiments)
 # * Y-axis: gene ranking using GAPE (curated set of 73 experiments)
 # 
-# * Overall there is good consistency between SOPHIE and the reference set of experiments. There is especially more consistency amongst lowly ranked genes (genes that consistently didn’t change or genes that changed in a subset of cases). Perhaps the signal from these low ranked genes are very robust in P. aeruginosa
-#   * Housekeeping genes make sense as contributing to a very strong consistent signal.
-#   * What about those inconsistently DE genes? Assuming the 73 contexts are represented in the compendium, then those genes that are in consisten
-# * There is some noise in the bottom right corner (i.e. genes that the reference didn't think were as generic but SOPHIE did). These might be the result of the reference being limited to 73 experiments and differences in data processing (ANOVA vs RMA).
-#   * Assuming the 73 contexts are represented in the compendium, if a gene is generic in the compendium, then this gene was found to be DE across many contexts, including the subset of 73 contexts. We suspect the reason for generic genes being highly generic in the compendium but NOT in the 73 experiments is because the signal to noise ratio will be lower in the smaller subset that reduce the generic signal.
+# * Compared to the correlation plot comparing SOPHIE trained on the full pseudomonas compendium vs GAPE experiments [here](2_identify_generic_genes_pathways.ipynb), it looks like there is more noise in the above correlation plot. Looking up the experiment ids associated with GAPE [here](https://github.com/DartmouthStantonLab/GAPE/blob/main/Pa_GSEnum_unzip.rds) it looks like GAPE does contain a mix of PAO1, PA14 and clinical strains. So by subsetting out training compendium to only represent PAO1 patterns, which is adding more noise to the bottom left of the plot as expected (genes that GAPE finds generic are not found by SOPHIE due to our limited representation in our training compendium)
 
 # ### GSEA 
 # **Goal:** To detect modest but coordinated changes in prespecified sets of related genes (i.e. those genes in the same pathway or share the same GO term).
@@ -330,21 +551,21 @@ generic_SOPHIE_only.to_csv(os.path.join(local_dir, "SOPHIE_generic_only.tsv"), s
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
-# In[19]:
+# In[20]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
 os.makedirs(os.path.join(local_dir, "GSA_stats"), exist_ok=True)
 
 
-# In[20]:
+# In[21]:
 
 
 # Load pathway data
 adage_kegg_DB_filename = params['pathway_DB_filename']
 
 
-# In[21]:
+# In[22]:
 
 
 # Need to format data into tab-delimited matrix
@@ -360,20 +581,20 @@ adage_kegg_DB_processed_filename = os.path.join(
 stats.format_pseudomonas_pathway_DB(adage_kegg_DB_filename, local_dir, adage_kegg_DB_processed_filename)
 
 
-# In[22]:
+# In[23]:
 
 
 get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i adage_kegg_DB_processed_filename -i statistic -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\nout_filename <- paste(local_dir, \n                     "GSA_stats/GSEA_stats_template_data_",\n                     project_id,\n                     "_real.txt", \n                     sep = "")\n\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, adage_kegg_DB_processed_filename, statistic)\nwrite.table(as.data.frame(template_enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")')
 
 
-# In[23]:
+# In[24]:
 
 
 print(template_enriched_pathways.shape)
 template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj').head()
 
 
-# In[24]:
+# In[25]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_processed_filename -i num_runs -i statistic', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, adage_kegg_DB_processed_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
@@ -381,7 +602,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_p
 
 # ### Rank pathways 
 
-# In[25]:
+# In[26]:
 
 
 analysis_type = "GSA"
@@ -403,7 +624,7 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
 
 # ### Pathway summary table
 
-# In[26]:
+# In[27]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
@@ -420,7 +641,7 @@ summary_pathway_ranks = ranking.generate_summary_table(
 summary_pathway_ranks.sort_values(by='Rank (simulated)', ascending=False).head()
 
 
-# In[27]:
+# In[29]:
 
 
 # Create `pathway_summary_filename`

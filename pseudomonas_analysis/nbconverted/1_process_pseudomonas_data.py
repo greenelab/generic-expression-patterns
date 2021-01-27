@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Process pseudomonas data
@@ -25,7 +25,7 @@ from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process
 
 
-# In[ ]:
+# In[2]:
 
 
 # Set seeds to get reproducible VAE trained models
@@ -36,14 +36,14 @@ process.set_all_seeds()
 # 
 # Most parameters are read from `config_filename`. We manually selected bioproject [GEOD-33245](https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-33245/?s_sortby=col_8&s_sortorder=ascending), as the template experiment, which contains multiple different comparisons including WT vs *crc* mutants, WT vs *cbr* mutants in different conditions.
 
-# In[2]:
+# In[3]:
 
 
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 # Read in config variables
 config_filename = os.path.abspath(
-    os.path.join(base_dir, "configs", "config_pseudomonas_33245.tsv")
+    os.path.join(base_dir, "configs", "config_pseudomonas_pao1.tsv")
 )
 
 params = utils.read_config(config_filename)
@@ -85,7 +85,7 @@ sample_id_metadata_filename = os.path.join(
 # ### Transpose raw pseudomonas compendium and normalize it
 # The compendium is from https://raw.githubusercontent.com/greenelab/adage/master/Data_collection_processing/Pa_compendium_02.22.2014.pcl
 
-# In[3]:
+# In[4]:
 
 
 process.process_raw_compendium_pseudomonas(
@@ -93,6 +93,20 @@ process.process_raw_compendium_pseudomonas(
     processed_compendium_filename,
     normalized_compendium_filename,
     scaler_filename,
+)
+
+
+# ## Get raw pseudomonas template experiment
+
+# In[7]:
+
+
+process.process_raw_template_pseudomonas(
+    processed_compendium_filename,
+    project_id,
+    dataset_name,
+    metadata_colname,
+    raw_template_filename,
 )
 
 
@@ -106,7 +120,7 @@ process.process_raw_compendium_pseudomonas(
 
 # ### Train VAE 
 
-# In[6]:
+# In[5]:
 
 
 # Create VAE directories if needed
@@ -123,7 +137,7 @@ for each_dir in output_dirs:
     os.makedirs(sub_dir, exist_ok=True)
 
 
-# In[7]:
+# In[6]:
 
 
 # Train VAE on new compendium data

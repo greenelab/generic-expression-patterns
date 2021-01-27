@@ -8,6 +8,9 @@ normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expressio
 shared_genes_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/shared_genes_pseudomonas.pickle"
 scaler_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/scaler_transform_pseudomonas.pickle"
 rank_genes_by	"logFC"
+reference_gene_filename	"GAPE_proportions.txt"
+reference_gene_name_col	"gene id"
+reference_rank_col	"prop DEGs"
 pathway_DB_filename	"https://raw.githubusercontent.com/greenelab/adage/master/Node_interpretation/pseudomonas_KEGG_terms.txt"
 gsea_statistic	'log2FoldChange'
 rank_pathways_by	"padj"
