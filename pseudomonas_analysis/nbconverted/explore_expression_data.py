@@ -431,7 +431,7 @@ sns.distplot(leveloff_simulated_DE[pval_name])
 sns.distplot(simulated_DE[pval_name])
 
 
-# In[22]:
+# In[21]:
 
 
 # Get genes in peak of distribution (blue)
@@ -453,7 +453,7 @@ leveloff_simulated_expression = pd.read_csv(
 sns.heatmap(leveloff_simulated_expression[gene_ids[0:20]])
 
 
-# In[23]:
+# In[22]:
 
 
 # Get genes in peak of distribution (orange)
@@ -475,29 +475,84 @@ simulated_expression = pd.read_csv(
 sns.heatmap(simulated_expression[gene_ids[0:20]])
 
 
+# In[23]:
+
+
+# Let's look at the distribution of adjusted p-value scores for those volcano
+# plots that is completely flat
+simulated_DE_filename = os.path.join(
+    local_dir,
+    "DE_stats",
+    f"DE_stats_simulated_data_{project_id}_3.txt"
+)
+
+flat_simulated_DE = pd.read_csv(
+    simulated_DE_filename, 
+    sep="\t", 
+    header=0, 
+    index_col=0
+)
+
+
+# In[24]:
+
+
+sns.distplot(flat_simulated_DE[pval_name])
+
+
+# In[25]:
+
+
+sns.distplot(simulated_DE[pval_name])
+
+
+# In[26]:
+
+
+# Get genes in peak of distribution (flat)
+gene_ids = list(flat_simulated_DE.index)
+print(flat_simulated_DE.head(20))
+
+flat_simulated_expression_filename = os.path.join(
+    local_dir,
+    "pseudo_experiment",
+    f"selected_simulated_data_{project_id}_3.txt"
+)
+
+flat_simulated_expression = pd.read_csv(
+    flat_simulated_expression_filename, 
+    sep="\t", 
+    header=0, 
+    index_col=0
+)
+sns.heatmap(flat_simulated_expression[gene_ids[0:20]])
+
+
 # Looks like there is a peak of adjusted p-values at the minimum range of the distribution which is causing the leveling out (i.e. there are many genes with a similar low adjusted p-value). I am guessing this is also a result of the VAE shrinkage, where instead of genes having varying logFC, genes are compressed such that there are groups of genes with similar logFC and therefore similar adjusted p-values.
 # 
 # The first heatmap shows the expression in the simulated experiment with flat top (blue) for those genes with low adjusted p-values (i.e. in the peak of the distribution). The second heatmap shows the expression of the simulated experiment with a more V-shape (orange) for those genes with low adjusted p-values (i.e. those with adjusted p-values = 0-0.4). For the more V-shaped experiment, it looks there was more consistency amongst samples within the group (i.e. WT vs mutant). Depending on the simulation experiment generated, there might be some noise created by the VAE.
+# 
+# A similar trend is seen for the volcano plot that is completely flat as well. There is more noise in the gene expression data.
 
 # ## Expression of template experiment
 # 
 # Do the samples have a clear separation in gene space (WT vs mutant)?
 
-# In[24]:
+# In[27]:
 
 
 normalized_compendium_data = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
 template_data = pd.read_csv(template_filename, sep="\t", index_col=0, header=0)
 
 
-# In[25]:
+# In[28]:
 
 
 print(template_data.shape)
 template_data
 
 
-# In[26]:
+# In[29]:
 
 
 # If template experiment included in training compendium
@@ -509,7 +564,7 @@ print(normalized_template_data.shape)
 normalized_template_data.head()
 
 
-# In[27]:
+# In[30]:
 
 
 # Label samples 
@@ -520,7 +575,7 @@ normalized_template_data.loc[wt_sample_ids, 'sample group'] = "template_WT"
 normalized_template_data.loc[mutant_sample_ids, 'sample group'] = "template_mutant"
 
 
-# In[28]:
+# In[31]:
 
 
 normalized_all_data = pd.concat([normalized_template_data,
@@ -528,7 +583,7 @@ normalized_all_data = pd.concat([normalized_template_data,
 ])
 
 
-# In[29]:
+# In[ ]:
 
 
 # Plot
