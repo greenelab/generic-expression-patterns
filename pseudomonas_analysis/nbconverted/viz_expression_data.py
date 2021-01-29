@@ -83,25 +83,27 @@ print(selected.shape)
 # In[6]:
 
 
-plot.make_volcano_plot_template(
+plot.make_volcano_template_highlight_DEG(
     template_DE_stats_filename,
     project_id,
     pval_name,
-    logFC_name
+    logFC_name,
+    os.path.join(local_dir,f"template_volcano_DEG_{project_id}.svg")
 )
 
 
 # In[7]:
 
 
-plot.make_volcano_plot_template_highlight(
+plot.make_volcano_template_highlight_generic_specific(
     gene_summary_filename,
     4500,
+    50,
     template_DE_stats_filename,
     project_id,
     pval_name,
     logFC_name,
-    os.path.join(local_dir,f"template_volcano_{project_id}.svg")
+    os.path.join(local_dir,f"template_volcano_generic_specific_{project_id}.svg")
 )
 
 
@@ -110,9 +112,10 @@ plot.make_volcano_plot_template_highlight(
 
 simulated_DE_stats_dir = os.path.join(local_dir, "DE_stats")
 
-plot.make_volcano_plot_simulated_highlight(
+plot.make_volcano_simulated_highlight_generic_specific(
     gene_summary_filename,
     4500,
+    50,
     simulated_DE_stats_dir,
     project_id,
     pval_name,
@@ -122,10 +125,12 @@ plot.make_volcano_plot_simulated_highlight(
     5,
     20,
     15,
-    os.path.join(local_dir,f"simulated_volcano_{project_id}.svg")
+    os.path.join(local_dir,f"simulated_volcano_generic_specific_{project_id}.svg")
 )
 
 
 # **Takeaway:**
 # 
-# These highlighted volcano plots demonstrate that the generic genes are found to be highly DE (based on logFC, generic genes tend to be toward the tails of the plot) across all simulated experiments. 
+# In the template experiment, the generic (blue) and specific (red) genes are both found to be highly DE (i.e. the genes tend to be towards the tails of the plot). However in the simulated experiments, the generic genes (blue) are found to be highly DE across all simulated experiments whereas the specific genes (red) are found to be highly DE sometimes depending on the experiment.
+# 
+# These plots demonstrate that generic genes are consistently DE across multiple simulated experiments while specific genes depend on the context of the experiment.
