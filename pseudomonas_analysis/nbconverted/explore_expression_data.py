@@ -291,8 +291,8 @@ def make_volcano_plot_simulated_notransform(
             simulated_DE_stats_filename, sep="\t", index_col=0, header=0
         )
 
-        # Take -log10 of adjusted p-value
-        simulated_DE_stats_df["padj_log10"] = -(simulated_DE_stats_df[pval_name])
+        # Take negative of adjusted p-value
+        simulated_DE_stats_df["padj_neg"] = -(simulated_DE_stats_df[pval_name])
 
         # Label DEGs by traditional criteria
         # log2FC > 1
@@ -311,7 +311,7 @@ def make_volcano_plot_simulated_notransform(
             f = sns.scatterplot(
                 data=simulated_DE_stats_df,
                 x=logFC_name,
-                y="padj_log10",
+                y="padj_neg",
                 hue="gene group",
                 hue_order=["none", "DEG"],
                 style="gene group",
@@ -333,7 +333,7 @@ def make_volcano_plot_simulated_notransform(
             f = sns.scatterplot(
                 data=simulated_DE_stats_df,
                 x=logFC_name,
-                y="padj_log10",
+                y="padj_neg",
                 hue="gene group",
                 hue_order=["none", "DEG"],
                 style="gene group",
@@ -583,7 +583,7 @@ normalized_all_data = pd.concat([normalized_template_data,
 ])
 
 
-# In[ ]:
+# In[32]:
 
 
 # Plot

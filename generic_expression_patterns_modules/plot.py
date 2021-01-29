@@ -366,46 +366,27 @@ def make_volcano_plot_simulated_highlight(
         # Plot
         colors = ["lightgrey", "#2c7fb8"]
 
-        if i == 0:
-            f = sns.scatterplot(
-                data=simulated_DE_stats_df,
-                x=logFC_name,
-                y="padj_log10",
-                hue="gene group",
-                hue_order=["none", "generic"],
-                style="gene group",
-                markers={"none": ".", "generic": ".",},
-                palette=colors,
-                linewidth=0,
-                alpha=0.5,
-                legend="full",
-                ax=axes[i],
-            )
+        f = sns.scatterplot(
+            data=simulated_DE_stats_df,
+            x=logFC_name,
+            y="padj_log10",
+            hue="gene group",
+            hue_order=["none", "generic"],
+            style="gene group",
+            markers={"none": ".", "generic": ".",},
+            palette=colors,
+            linewidth=0,
+            alpha=0.5,
+            legend=("full" if i == 0 else False),
+            ax=axes[i],
+        )
 
-            axes[i].set_ylabel("")
-            axes[i].set_xlabel("")
+        axes[i].set_ylabel("")
+        axes[i].set_xlabel("")
+        if i == 0:
             handles, labels = f.get_legend_handles_labels()
             fig.legend(handles, labels, loc="center right")
             f.legend_.remove()
-
-        else:
-            f = sns.scatterplot(
-                data=simulated_DE_stats_df,
-                x=logFC_name,
-                y="padj_log10",
-                hue="gene group",
-                hue_order=["none", "generic"],
-                style="gene group",
-                markers={"none": ".", "generic": ".",},
-                palette=colors,
-                linewidth=0,
-                alpha=0.5,
-                legend=False,
-                ax=axes[i],
-            )
-
-            axes[i].set_ylabel("")
-            axes[i].set_xlabel("")
 
     fig.text(0.5, 0.0, "log2 Fold Change", ha="center", fontsize=14, fontname="Verdana")
     fig.text(

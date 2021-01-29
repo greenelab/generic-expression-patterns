@@ -128,4 +128,4 @@ plot.make_volcano_plot_simulated_highlight(
 
 # **Takeaway:**
 # 
-# These highlighted volcano plots demonstrate that the generic gense are found to be highly DE (based on logFC) across all simulated experiments. 
+# These highlighted volcano plots demonstrate that the generic genes are found to be highly DE (based on logFC, generic genes tend to be toward the tails of the plot) across all simulated experiments. 
