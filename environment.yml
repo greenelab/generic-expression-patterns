@@ -17,6 +17,7 @@ dependencies:
 - bioconda::bioconductor-clusterprofiler
 - conda-forge::python=3.7
 - conda-forge::scikit-learn
+- conda-forge::numpy=1.19.5
 - conda-forge::pandas=0.23.4
 - conda-forge::seaborn=0.10
 - conda-forge::umap-learn
