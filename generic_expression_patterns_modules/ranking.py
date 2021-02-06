@@ -155,6 +155,8 @@ def generate_summary_table(
         simulated_ranking_summary, left_index=True, right_index=True
     )
     shared_genes = list(template_simulated_summary_stats.index)
+
+    print(template_simulated_summary_stats.head())
     # Parse columns
     if "adj.P.Val" in template_simulated_summary_stats.columns:
         median_pval_simulated = template_simulated_summary_stats[
@@ -174,6 +176,7 @@ def generate_summary_table(
     std_test_simulated = template_simulated_summary_stats[(col_to_rank, "std")]
     count_simulated = template_simulated_summary_stats[(col_to_rank, "count")]
     rank_simulated = template_simulated_summary_stats[("ranking", "")]
+    percentile_simulated = template_simulated_summary_stats[("Percentile (simulated)", "")]
 
     # Get raw values for test statistic if we took the abs
     # for ranking.
@@ -211,6 +214,7 @@ def generate_summary_table(
                         shared_genes, test_statistic
                     ],
                     "Rank (simulated)": rank_simulated,
+                    "Percentile (simulated)": percentile_simulated,
                     f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
                     "Std deviation (simulated)": std_test_simulated,
                     "Number of experiments (simulated)": count_simulated,
@@ -230,6 +234,7 @@ def generate_summary_table(
                     ],
                     "Median adj p-value (simulated)": median_pval_simulated,
                     "Rank (simulated)": rank_simulated,
+                    "Percentile (simulated)": percentile_simulated,
                     f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
                     "Std deviation (simulated)": std_test_simulated,
                     "Number of experiments (simulated)": count_simulated,
@@ -250,6 +255,7 @@ def generate_summary_table(
                 ],
                 "Median adj p-value (simulated)": median_pval_simulated,
                 "Rank (simulated)": rank_simulated,
+                "Percentile (simulated)": percentile_simulated,
                 f"Mean {test_statistic} (simulated)": mean_test_simulated,
                 "Std deviation (simulated)": std_test_simulated,
                 "Number of experiments (simulated)": count_simulated,
@@ -315,7 +321,7 @@ def merge_ranks_to_compare(
     # still be preserved and Spearman correlation will perform
     # its own ranking so there is no need to rerank
     your_rank_df = pd.DataFrame(
-        your_summary_ranks_df.loc[shared_genes_or_pathways, "Rank (simulated)"]
+        your_summary_ranks_df.loc[shared_genes_or_pathways, "Percentile (simulated)"]
     )
 
     # Merge published ranking
@@ -339,13 +345,12 @@ def merge_ranks_to_compare(
 
 def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
     """
-    In the case where the reference ranking and simulation-based ranking are not
-    in the same range, this function scales the reference ranking
-    to be in the range as your ranking.
+    This function scales the reference ranking
+    to be in the range as your percentile.
 
-    For example, if reference ranking ranged from (0,1) and your
-    ranking ranged from (0,100). This function would scale the
-    reference ranking to also be between 0 and 100.
+    For example, if reference ranking ranged from (0,1) 
+    this function would scale the
+    reference ranking to be between 0 and 100.
 
     Note: This function is assuming that the reference ranking range
     is smaller than yours
@@ -363,10 +368,7 @@ def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
     """
     # Scale published ranking to our range
     scaler = MinMaxScaler(
-        feature_range=(
-            min(merged_gene_ranks_df["Rank (simulated)"]),
-            max(merged_gene_ranks_df["Rank (simulated)"]),
-        )
+        feature_range=(0, 100)
     )
 
     merged_gene_ranks_df[reference_rank_col] = scaler.fit_transform(
@@ -407,8 +409,9 @@ def get_shared_rank_scaled(
     shared_rank_df = merge_ranks_to_compare(
         summary_df, reference_filename, ref_gene_col, ref_rank_col
     )
+    print(shared_rank_df)
 
-    if max(shared_rank_df["Rank (simulated)"]) != max(shared_rank_df[ref_rank_col]):
+    if max(shared_rank_df["Percentile (simulated)"]) != max(shared_rank_df[ref_rank_col]):
         shared_rank_scaled_df = scale_reference_ranking(shared_rank_df, ref_rank_col)
     else:
         shared_rank_scaled_df = shared_rank_df
@@ -419,7 +422,7 @@ def get_shared_rank_scaled(
     # However, it doesn't really effect the outcome because these genes have almost no power for
     # detecting differential expression. Effects runtime though.
     shared_rank_scaled_df = shared_rank_scaled_df[
-        ~shared_rank_scaled_df["Rank (simulated)"].isna()
+        ~shared_rank_scaled_df["Percentile (simulated)"].isna()
     ]
 
     # Get correlation
@@ -464,7 +467,7 @@ def compare_gene_ranking(
 
     fig = sns.jointplot(
         data=shared_gene_rank_scaled_df,
-        x="Rank (simulated)",
+        x="Percentile (simulated)",
         y=ref_rank_col,
         kind="hex",
         marginal_kws={"color": "white"},
@@ -517,7 +520,7 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
 
     fig = sns.scatterplot(
         data=shared_pathway_rank_scaled_df,
-        x="Rank (simulated)",
+        x="Percentile (simulated)",
         y=ref_rank_col,
         color="#15527d",
         s=50,
@@ -536,6 +539,7 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
         pad_inches=0,
         dpi=300,
     )
+    plt.colorbar()
 
     return correlations
 
@@ -612,11 +616,11 @@ def spearman_ci(ci, gene_rank_df, num_permutations, ref_rank_col, data_type):
     """
     if data_type.lower() == "de":
         r, p = stats.spearmanr(
-            gene_rank_df["Rank (simulated)"], gene_rank_df[ref_rank_col]
+            gene_rank_df["Percentile (simulated)"], gene_rank_df[ref_rank_col]
         )
     elif data_type.lower() == "gsa":
         r, p = stats.spearmanr(
-            gene_rank_df["Rank (simulated)"], gene_rank_df["Powers Rank"]
+            gene_rank_df["Percentile (simulated)"], gene_rank_df["Powers Rank"]
         )
 
     r_perm_values = []
@@ -626,11 +630,11 @@ def spearman_ci(ci, gene_rank_df, num_permutations, ref_rank_col, data_type):
 
         if data_type.lower() == "de":
             r_perm, p_perm = stats.spearmanr(
-                sample["Rank (simulated)"], sample[ref_rank_col]
+                sample["Percentile (simulated)"], sample[ref_rank_col]
             )
         elif data_type.lower() == "gsa":
             r_perm, p_perm = stats.spearmanr(
-                sample["Rank (simulated)"], sample["Powers Rank"]
+                sample["Percentile (simulated)"], sample["Powers Rank"]
             )
         r_perm_values.append(r_perm)
 
@@ -715,7 +719,8 @@ def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
                         "padj": ["median"],
                     }
                 )
-
+    ## PRINT
+    #print(simulated_summary_stats.head(10))
     return simulated_summary_stats
 
 
@@ -850,6 +855,7 @@ def process_and_rank_genes_pathways(
     # Rank genes in template experiment
     template_stats = rank_genes_or_pathways(col_to_rank_by, template_stats, True)
 
+
     # For simulated experiments
 
     # Concatenate simulated experiments
@@ -871,6 +877,11 @@ def process_and_rank_genes_pathways(
     simulated_summary_stats = rank_genes_or_pathways(
         col_to_rank_by, simulated_summary_stats, False
     )
+
+    # Scale ranking to percentile
+    simulated_summary_stats = rank_to_percentile(simulated_summary_stats)
+
+    print(simulated_summary_stats)
 
     return template_stats, simulated_summary_stats
 
@@ -1017,3 +1028,22 @@ def format_enrichment_output(
 
             # Save formatted simulated experiment
             simulated_EA_data.to_csv(simulated_EA_filename, sep="\t")
+
+
+def rank_to_percentile(summary_stats_df):
+    """
+    Returns the input dataframe (`summary_stats_df`) that has been modified
+    to add a column that scales gene ranks to percentile.
+
+    Arguments
+    ---------
+    summary_stats_df: df
+        dataframe containing gene ranking for either template or simulated experiments
+    """
+    scaler = MinMaxScaler(feature_range=(0, 100))
+
+    summary_stats_df["Percentile (simulated)"] = scaler.fit_transform(np.array(summary_stats_df["ranking"]).reshape(-1, 1))
+
+    return summary_stats_df
+    
+
