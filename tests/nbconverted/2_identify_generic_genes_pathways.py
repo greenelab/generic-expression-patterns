@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Test: Identify generic human genes on test set
@@ -68,6 +68,8 @@ col_to_rank_genes = params['rank_genes_by']
 col_to_rank_pathways = params['rank_pathways_by']
 statistic = params['gsea_statistic']
 count_threshold = params['count_threshold']
+logFC_name = params['DE_logFC_name']
+pvalue_name = params['DE_pvalue_name']
 
 # Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(

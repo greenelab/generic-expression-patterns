@@ -156,7 +156,6 @@ def generate_summary_table(
     )
     shared_genes = list(template_simulated_summary_stats.index)
 
-    print(template_simulated_summary_stats.head())
     # Parse columns
     if "adj.P.Val" in template_simulated_summary_stats.columns:
         median_pval_simulated = template_simulated_summary_stats[
@@ -449,7 +448,6 @@ def get_shared_rank_scaled(
     shared_rank_df = merge_ranks_to_compare(
         summary_df, reference_filename, ref_gene_col, ref_rank_col
     )
-    print(shared_rank_df)
 
     if max(shared_rank_df["Percentile (simulated)"]) != max(shared_rank_df[ref_rank_col]):
         shared_rank_scaled_df = scale_reference_ranking(shared_rank_df, ref_rank_col)
@@ -759,8 +757,7 @@ def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
                         "padj": ["median"],
                     }
                 )
-    ## PRINT
-    #print(simulated_summary_stats.head(10))
+
     return simulated_summary_stats
 
 
@@ -844,6 +841,8 @@ def process_and_rank_genes_pathways(
     project_id,
     analysis_type,
     col_to_rank_by,
+    logFC_name,
+    pvalue_name,
     enrichment_method=None,
 ):
     """
@@ -878,6 +877,8 @@ def process_and_rank_genes_pathways(
     analysis_type: 'DE' or 'GSA'
     col_to_rank_by: str
         Statistic to use to rank genes or pathways by
+    logFC_name: 'logFC' (array), 'log2FC' (RNA-seq)
+    pvalue_name: 'adj.P.Val' (array), 'padj' (RNA-seq)
     enrichment_mdethod: "GSEA", GSVA", "ROAST", "CAMERA", "ORA"
         None if DE analysis
 
@@ -925,7 +926,7 @@ def process_and_rank_genes_pathways(
     # simulated experiments
     # Only run if analysis_type == "DE"
     if analysis_type.lower() == "de":
-        freq_DE = get_freq_gene_DE(simulated_stats_all, "logFC", "adj.P.Val")
+        freq_DE = get_freq_gene_DE(simulated_stats_all, logFC_name, pvalue_name)
 
         # Merge frequency data into simulated dataframe
         simulated_summary_stats = pd.merge(
@@ -934,9 +935,6 @@ def process_and_rank_genes_pathways(
             left_index=True,
             right_index=True
         )
-
-    print("here")
-    print(simulated_summary_stats)
 
     return template_stats, simulated_summary_stats
 
@@ -1120,8 +1118,6 @@ def get_freq_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
     simulated_stats_concat_logFC = simulated_stats_concat_df.groupby(["index"])[log_name].apply(list)
     simulated_stats_concat_pval = simulated_stats_concat_df.groupby(["index"])[pvalue_name].apply(list)
 
-    print(simulated_stats_concat_logFC)
-    print(simulated_stats_concat_pval)
     # For each gene count the number of times it is found to be DE
     # abs(logFC) > 1 and adjusted p-value < 0.05
     # This frequency is out of a total of 
@@ -1139,7 +1135,6 @@ def get_freq_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
         for logFC_i, pvalue_i in merged_list:
             if abs(logFC_i) > 1 and pvalue_i < 0.05:
                 num_times_DE += 1
-        print(num_times_DE)
         frequency_DE.append(float(num_times_DE)/float(25))
 
     
@@ -1148,6 +1143,5 @@ def get_freq_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
     index=gene_ids,
     columns=["Percent DE"]
     )
-    print(freq_DE_df)
     return freq_DE_df
 
