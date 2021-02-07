@@ -206,7 +206,10 @@ def generate_summary_table(
         for gene_id in list(template_simulated_summary_stats.index):
             num_times_DE = template_simulated_summary_stats.loc[gene_id, "Percent DE"]
             num_experiments = count_simulated[gene_id]
-            freq_DE = float(num_times_DE)/float(num_experiments)
+            if np.isna(num_experiments) or num_experiments == 0:
+                freq_DE = 0.0
+            else:
+                freq_DE = float(num_times_DE)/float(num_experiments)
             freq_DE_list.append(freq_DE)
 
     if test_statistic in abs_stats_terms:
