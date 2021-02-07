@@ -286,6 +286,8 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
     project_id,
     analysis_type,
     col_to_rank_genes,
+    logFC_name,
+    pvalue_name,
 )
 
 
@@ -454,6 +456,8 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
     project_id,
     analysis_type,
     col_to_rank_pathways,
+    logFC_name,
+    pvalue_name,
     "GSEA"
 )
 

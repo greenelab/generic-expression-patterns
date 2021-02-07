@@ -200,6 +200,15 @@ def generate_summary_table(
 
     # Create summary table
 
+    # Get frequency of gene DE
+    if pathway_or_gene.lower() == "gene":
+        freq_DE_list = []
+        for gene_id in list(template_simulated_summary_stats.index):
+            num_times_DE = template_simulated_summary_stats.loc[gene_id, "Percent DE"]
+            num_experiments = count_simulated[gene_id]
+            freq_DE = float(num_times_DE)/float(num_experiments)
+            freq_DE_list.append(freq_DE)
+
     if test_statistic in abs_stats_terms:
         if test_statistic == "ES":
             summary = pd.DataFrame(
@@ -234,7 +243,7 @@ def generate_summary_table(
                     "Median adj p-value (simulated)": median_pval_simulated,
                     "Rank (simulated)": rank_simulated,
                     "Percentile (simulated)": percentile_simulated,
-                    "Percent DE (simulated)": template_simulated_summary_stats["Percent DE"],
+                    "Percent DE (simulated)": freq_DE_list,
                     f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
                     "Std deviation (simulated)": std_test_simulated,
                     "Number of experiments (simulated)": count_simulated,
@@ -277,7 +286,7 @@ def generate_summary_table(
                     "Median adj p-value (simulated)": median_pval_simulated,
                     "Rank (simulated)": rank_simulated,
                     "Percentile (simulated)": percentile_simulated,
-                    "Percent DE (simulated)": template_simulated_summary_stats["Percent DE"],
+                    "Percent DE (simulated)": freq_DE_list,
                     f"Mean {test_statistic} (simulated)": mean_test_simulated,
                     "Std deviation (simulated)": std_test_simulated,
                     "Number of experiments (simulated)": count_simulated,
@@ -907,6 +916,7 @@ def process_and_rank_genes_pathways(
         analysis_type,
         enrichment_method,
     )
+
     # Take absolute value of logFC and t statistic
     simulated_stats_all = abs_value_stats(simulated_stats_all)
 
@@ -926,7 +936,7 @@ def process_and_rank_genes_pathways(
     # simulated experiments
     # Only run if analysis_type == "DE"
     if analysis_type.lower() == "de":
-        freq_DE = get_freq_gene_DE(simulated_stats_all, logFC_name, pvalue_name)
+        freq_DE = get_num_gene_DE(simulated_stats_all, logFC_name, pvalue_name)
 
         # Merge frequency data into simulated dataframe
         simulated_summary_stats = pd.merge(
@@ -1100,18 +1110,19 @@ def rank_to_percentile(summary_stats_df):
     return summary_stats_df
 
 
-def get_freq_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
+def get_num_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
     """
-    This function calculates how frequently a gene is found
-    to be DE across the simulated experiments
+    This function calculates how many times a gene is found
+    to be DE across the simulated experiments. Returns dataframe
+    containing counts per gene.
 
     Arguments
     ----------
     simulated_stats_concat_df: df
         dataframe containing the DE stats for all simulated
         experiments concatenated
-    col_to_rank_by: str
-        Statistic to use to rank genes by
+    logFC_name: 'logFC' (array), 'log2FC' (RNA-seq)
+    pvalue_name: 'adj.P.Val' (array), 'padj' (RNA-seq)
 
     """
     # Get list of logFC and p-values per gene
@@ -1123,25 +1134,26 @@ def get_freq_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
     # This frequency is out of a total of 
 
     gene_ids = list(simulated_stats_concat_logFC.index)
-    frequency_DE = []
+    count_DE = []
     for gene_id in gene_ids:
         logFC_list = simulated_stats_concat_logFC[gene_id]
         pvalue_list = simulated_stats_concat_pval[gene_id]
 
         # Merge lists to be pair (logFC, pvalue)
         merged_list = [(logFC_list[i], pvalue_list[i]) for i in range(0, len(logFC_list))] 
-
         num_times_DE = 0
         for logFC_i, pvalue_i in merged_list:
-            if abs(logFC_i) > 1 and pvalue_i < 0.05:
-                num_times_DE += 1
-        frequency_DE.append(float(num_times_DE)/float(25))
+            if (abs(logFC_i) > 1) & (pvalue_i < 0.05):
+                num_times_DE += 1.0
+        count_DE.append(float(num_times_DE))
 
     
     # Make dataframe
-    freq_DE_df = pd.DataFrame(data=frequency_DE,
-    index=gene_ids,
-    columns=["Percent DE"]
+    freq_DE_df = pd.DataFrame(
+        data=count_DE,
+        index=gene_ids,
+        columns=["Percent DE"]
     )
+
     return freq_DE_df
 
