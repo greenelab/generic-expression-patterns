@@ -81,6 +81,8 @@ col_to_rank_genes = params['rank_genes_by']
 col_to_rank_pathways = params['rank_pathways_by']
 statistic = params['gsea_statistic']
 count_threshold = params['count_threshold']
+logFC_name = params['DE_logFC_name']
+pvalue_name = params['DE_pvalue_name']
 
 # Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(
@@ -135,7 +137,7 @@ pathway_summary_filename = os.path.join(
 # In[5]:
 
 
-# Simulate multiple experiments
+"""# Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:           
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -153,7 +155,7 @@ for run_id in range(num_runs):
         local_dir,
         base_dir,
         run_id
-    )
+    )"""
 
 
 # ## Process template and simulated experiments
@@ -166,7 +168,7 @@ for run_id in range(num_runs):
 # In[6]:
 
 
-if not os.path.exists(sample_id_metadata_filename):
+"""if not os.path.exists(sample_id_metadata_filename):
     sample_id_metadata_filename = None
     
 stats.process_samples_for_DESeq(
@@ -194,7 +196,7 @@ for i in range(num_runs):
         out_simulated_filename,
         count_threshold,
         sample_id_metadata_filename,
-)
+)"""
 
 
 # ### Differential expression analysis
@@ -259,6 +261,8 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
     project_id,
     analysis_type,
     col_to_rank_genes,
+    logFC_name,
+    pvalue_name,
 )
 
 
@@ -380,6 +384,8 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
     project_id,
     analysis_type,
     col_to_rank_pathways,
+    logFC_name,
+    pvalue_name,
     "GSEA"
 )
 
