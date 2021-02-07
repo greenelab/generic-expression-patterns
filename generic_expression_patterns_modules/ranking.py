@@ -206,7 +206,7 @@ def generate_summary_table(
         for gene_id in list(template_simulated_summary_stats.index):
             num_times_DE = template_simulated_summary_stats.loc[gene_id, "Percent DE"]
             num_experiments = count_simulated[gene_id]
-            if np.isna(num_experiments) or num_experiments == 0:
+            if (num_times_DE == 0) & (num_experiments == 0):
                 freq_DE = 0.0
             else:
                 freq_DE = float(num_times_DE)/float(num_experiments)
@@ -589,7 +589,6 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
         pad_inches=0,
         dpi=300,
     )
-    plt.colorbar()
 
     return correlations
 

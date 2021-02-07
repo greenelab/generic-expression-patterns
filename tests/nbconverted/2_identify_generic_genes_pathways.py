@@ -585,7 +585,7 @@ powers_rank_processed_filename = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_filename, sep="\t", )
 
 
-# In[41]:
+# In[42]:
 
 
 figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"
