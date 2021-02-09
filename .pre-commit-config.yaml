@@ -1,0 +1,17 @@
+repos:
+
+- repo: https://github.com/mwouts/jupytext
+  rev: 41b7e9c93b50da1d6feb486aceb2c4d534374090
+  hooks:
+  - id: jupytext
+    args: [--from, ipynb, --pipe, black, --to, py:light, --sync]
+
+- repo: https://gitlab.com/pycqa/flake8
+  rev: 6de8252c035844f1e679f509b5f37340b44d5c39
+  hooks:
+  - id: flake8
+
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 43f5ffaeab549e15168317892bf217dd450aa41b
+    hooks:
+    - id: trailing-whitespace
