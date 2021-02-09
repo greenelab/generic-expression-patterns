@@ -43,7 +43,7 @@ base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 # Read in config variables
 config_filename = os.path.abspath(
-    os.path.join(base_dir, "configs", "config_pseudomonas_pao1.tsv")
+    os.path.join(base_dir, "configs", "config_pseudomonas_33245.tsv")
 )
 
 params = utils.read_config(config_filename)
@@ -98,7 +98,7 @@ process.process_raw_compendium_pseudomonas(
 
 # ## Get raw pseudomonas template experiment
 
-# In[7]:
+# In[5]:
 
 
 process.process_raw_template_pseudomonas(
@@ -120,7 +120,7 @@ process.process_raw_template_pseudomonas(
 
 # ### Train VAE 
 
-# In[5]:
+# In[6]:
 
 
 # Create VAE directories if needed
@@ -137,7 +137,7 @@ for each_dir in output_dirs:
     os.makedirs(sub_dir, exist_ok=True)
 
 
-# In[6]:
+# In[7]:
 
 
 # Train VAE on new compendium data

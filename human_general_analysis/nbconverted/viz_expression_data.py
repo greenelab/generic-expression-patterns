@@ -172,7 +172,7 @@ plot.make_volcano_template_highlight_DEG(
     project_id, 
     pval_name,
     logFC_name,
-    os.join.path(local_dir, f"template_volcano_DEG_{project_id}.svg"))
+    os.path.join(local_dir, f"template_volcano_DEG_{project_id}.svg"))
 
 
 # In[6]:

@@ -12,9 +12,11 @@ reference_gene_filename	"https://raw.githubusercontent.com/maggiecrow/DEprior/ma
 reference_gene_name_col	"Gene_Name"
 reference_rank_col	"DE_Prior_Rank"
 rank_genes_by	"log2FoldChange"
+DE_logFC_name	"log2FoldChange"
+DE_pvalue_name	"padj"
 pathway_DB_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/hallmark_DB.gmt"
 gsea_statistic	'log2FoldChange'
-rank_pathways_by	"FDR"
+rank_pathways_by	"padj"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10

@@ -90,23 +90,23 @@ selected = template_DE_stats[(template_DE_stats[pval_name]<0.01) & (abs(template
 print(selected.shape)
 
 
-# In[6]:
+# In[9]:
 
 
-plot.make_volcano_plot_template(
+plot.make_volcano_template_highlight_DEG(
     template_DE_stats_filename,
     project_id,
     pval_name,
-    logFC_name
+    logFC_name,
+    os.path.join(local_dir,f"Pa_template_{project_id}.svg"
 )
 
 
-# In[7]:
+# In[10]:
 
 
 simulated_DE_stats_dir = os.path.join(local_dir, "DE_stats")
-
-plot.make_volcano_plot_simulated(
+plot.make_volcano_simulated_highlight_DEG(
     simulated_DE_stats_dir,
     project_id,
     pval_name,
@@ -115,7 +115,8 @@ plot.make_volcano_plot_simulated(
     5,
     5,
     20,
-    15
+    15,
+    os.path.join(local_dir,f"Pa_simulated_{project_id}.svg"
 )
 
 

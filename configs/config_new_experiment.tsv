@@ -12,3 +12,5 @@ num_simulated	25
 count_threshold	None
 latent_dim	30
 rank_genes_by	"log2FoldChange"
+DE_logFC_name	"log2FoldChange"
+DE_pvalue_name	"padj"

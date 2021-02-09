@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Application: new experiment
@@ -95,6 +95,10 @@ col_to_rank_genes = params['rank_genes_by']
 
 # Minimum mean count per gene
 count_threshold = params['count_threshold']
+
+# Column headers to use to make summary statistic table
+logFC_name = params['DE_logFC_name']
+pvalue_name = params['DE_pvalue_name']
 
 
 # In[5]:
@@ -292,6 +296,8 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
     project_id,
     analysis_type,
     col_to_rank_genes,
+    logFC_name,
+    pvalue_name,
 )
 
 
@@ -347,4 +353,10 @@ summary_gene_ranks[summary_gene_ranks.isna().any(axis=1)]
 
 # Save
 summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
+
+
+# In[ ]:
+
+
+
 

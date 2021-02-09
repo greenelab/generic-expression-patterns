@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Test: Identify generic human genes on test set
@@ -68,6 +68,8 @@ col_to_rank_genes = params['rank_genes_by']
 col_to_rank_pathways = params['rank_pathways_by']
 statistic = params['gsea_statistic']
 count_threshold = params['count_threshold']
+logFC_name = params['DE_logFC_name']
+pvalue_name = params['DE_pvalue_name']
 
 # Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(
@@ -284,6 +286,8 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
     project_id,
     analysis_type,
     col_to_rank_genes,
+    logFC_name,
+    pvalue_name,
 )
 
 
@@ -452,6 +456,8 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
     project_id,
     analysis_type,
     col_to_rank_pathways,
+    logFC_name,
+    pvalue_name,
     "GSEA"
 )
 
@@ -579,7 +585,7 @@ powers_rank_processed_filename = os.path.join(
 powers_rank_stats_df.to_csv(powers_rank_processed_filename, sep="\t", )
 
 
-# In[41]:
+# In[42]:
 
 
 figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"

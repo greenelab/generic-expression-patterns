@@ -77,6 +77,8 @@ scaler_filename = params['scaler_filename']
 col_to_rank_genes = params['rank_genes_by']
 col_to_rank_pathways = params['rank_pathways_by']
 statistic = params['gsea_statistic']
+logFC_name = params['DE_logFC_name']
+pvalue_name = params['DE_pvalue_name']
 
 # Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(
@@ -232,6 +234,8 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
     project_id,
     analysis_type,
     col_to_rank_genes,
+    logFC_name,
+    pvalue_name,
 )
 
 
@@ -264,11 +268,23 @@ summary_gene_ranks.sort_values(by="Z score", ascending=False).head()
 # In[14]:
 
 
+summary_gene_ranks.sort_values(by="Percentile (simulated)", ascending=False).head()
+
+
+# In[15]:
+
+
+summary_gene_ranks[(summary_gene_ranks["Percent DE (simulated)"]>0).values]
+
+
+# In[16]:
+
+
 # Check if there is an NaN values, there should not be
 summary_gene_ranks.isna().any()
 
 
-# In[15]:
+# In[17]:
 
 
 # Create `gene_summary_filename`
@@ -277,7 +293,7 @@ summary_gene_ranks.to_csv(gene_summary_filename, sep='\t')
 
 # ## Compare gene ranking
 
-# In[16]:
+# In[18]:
 
 
 # Get generic genes identified by Crow et. al.
@@ -296,19 +312,19 @@ corr, shared_ranking = ranking.compare_gene_ranking(
 )
 
 
-# In[17]:
+# In[19]:
 
 
 # Get genes that are highly generic in both
-generic_both = shared_ranking[(shared_ranking["Rank (simulated)"]>4500) & (shared_ranking["prop DEGs"]>3500)]
+generic_both = shared_ranking[(shared_ranking["Percentile (simulated)"]>80) & (shared_ranking["prop DEGs"]>60)]
 generic_both.to_csv(os.path.join(local_dir, "SOPHIE_GAPE_generic.tsv"), sep="\t")
 
 
-# In[18]:
+# In[20]:
 
 
 # Get genes that are highly generic by SOPHIE but not by GAPE
-generic_SOPHIE_only = shared_ranking[(shared_ranking["Rank (simulated)"]>4500) & (shared_ranking["prop DEGs"]<2000)]
+generic_SOPHIE_only = shared_ranking[(shared_ranking["Percentile (simulated)"]>80) & (shared_ranking["prop DEGs"]<40)]
 generic_SOPHIE_only.to_csv(os.path.join(local_dir, "SOPHIE_generic_only.tsv"), sep="\t")
 
 
@@ -330,21 +346,21 @@ generic_SOPHIE_only.to_csv(os.path.join(local_dir, "SOPHIE_generic_only.tsv"), s
 # 2. An enrichment score (ES) is defined as the maximum distance from the middle of the ranked list. Thus, the enrichment score indicates whether the genes contained in a gene set are clustered towards the beginning or the end of the ranked list (indicating a correlation with change in expression). 
 # 3. Estimate the statistical significance of the ES by a phenotypic-based permutation test in order to produce a null distribution for the ES( i.e. scores based on permuted phenotype)
 
-# In[19]:
+# In[21]:
 
 
 # Create "<local_dir>/GSEA_stats/" subdirectory
 os.makedirs(os.path.join(local_dir, "GSA_stats"), exist_ok=True)
 
 
-# In[20]:
+# In[22]:
 
 
 # Load pathway data
 adage_kegg_DB_filename = params['pathway_DB_filename']
 
 
-# In[21]:
+# In[23]:
 
 
 # Need to format data into tab-delimited matrix
@@ -360,20 +376,20 @@ adage_kegg_DB_processed_filename = os.path.join(
 stats.format_pseudomonas_pathway_DB(adage_kegg_DB_filename, local_dir, adage_kegg_DB_processed_filename)
 
 
-# In[22]:
+# In[24]:
 
 
 get_ipython().run_cell_magic('R', '-i base_dir -i template_DE_stats_filename -i adage_kegg_DB_processed_filename -i statistic -o template_enriched_pathways', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\nout_filename <- paste(local_dir, \n                     "GSA_stats/GSEA_stats_template_data_",\n                     project_id,\n                     "_real.txt", \n                     sep = "")\n\ntemplate_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, adage_kegg_DB_processed_filename, statistic)\nwrite.table(as.data.frame(template_enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")')
 
 
-# In[23]:
+# In[25]:
 
 
 print(template_enriched_pathways.shape)
 template_enriched_pathways[template_enriched_pathways['padj'] < 0.05].sort_values(by='padj').head()
 
 
-# In[24]:
+# In[26]:
 
 
 get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_processed_filename -i num_runs -i statistic', '\nsource(paste0(base_dir, \'/generic_expression_patterns_modules/GSEA_analysis.R\'))\n\n# New files created: "<local_dir>/GSEA_stats/GSEA_stats_simulated_data_<project_id>_<n>.txt"\nfor (i in 0:(num_runs-1)) {\n    simulated_DE_stats_filename <- paste(local_dir, \n                                     "DE_stats/DE_stats_simulated_data_", \n                                     project_id,\n                                     "_", \n                                     i,\n                                     ".txt",\n                                     sep = "")\n    \n    out_filename <- paste(local_dir, \n                     "GSA_stats/GSEA_stats_simulated_data_",\n                     project_id,\n                     "_",\n                     i,\n                     ".txt", \n                     sep = "")\n    \n    enriched_pathways <- find_enriched_pathways(simulated_DE_stats_filename, adage_kegg_DB_processed_filename, statistic) \n    \n    # Remove column with leading edge since its causing parsing issues\n    write.table(as.data.frame(enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\\t")\n}')
@@ -381,7 +397,7 @@ get_ipython().run_cell_magic('R', '-i project_id -i local_dir -i adage_kegg_DB_p
 
 # ### Rank pathways 
 
-# In[25]:
+# In[27]:
 
 
 analysis_type = "GSA"
@@ -397,13 +413,15 @@ template_GSEA_stats, simulated_GSEA_summary_stats = ranking.process_and_rank_gen
     project_id,
     analysis_type,
     col_to_rank_pathways,
+    logFC_name,
+    pvalue_name,
     "GSEA"
 )
 
 
 # ### Pathway summary table
 
-# In[26]:
+# In[28]:
 
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
@@ -420,7 +438,7 @@ summary_pathway_ranks = ranking.generate_summary_table(
 summary_pathway_ranks.sort_values(by='Rank (simulated)', ascending=False).head()
 
 
-# In[27]:
+# In[29]:
 
 
 # Create `pathway_summary_filename`

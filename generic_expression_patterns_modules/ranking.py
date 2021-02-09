@@ -155,6 +155,7 @@ def generate_summary_table(
         simulated_ranking_summary, left_index=True, right_index=True
     )
     shared_genes = list(template_simulated_summary_stats.index)
+
     # Parse columns
     if "adj.P.Val" in template_simulated_summary_stats.columns:
         median_pval_simulated = template_simulated_summary_stats[
@@ -174,6 +175,7 @@ def generate_summary_table(
     std_test_simulated = template_simulated_summary_stats[(col_to_rank, "std")]
     count_simulated = template_simulated_summary_stats[(col_to_rank, "count")]
     rank_simulated = template_simulated_summary_stats[("ranking", "")]
+    percentile_simulated = template_simulated_summary_stats[("Percentile (simulated)", "")]
 
     # Get raw values for test statistic if we took the abs
     # for ranking.
@@ -198,6 +200,18 @@ def generate_summary_table(
 
     # Create summary table
 
+    # Get frequency of gene DE
+    if pathway_or_gene.lower() == "gene":
+        freq_DE_list = []
+        for gene_id in list(template_simulated_summary_stats.index):
+            num_times_DE = template_simulated_summary_stats.loc[gene_id, "Percent DE"]
+            num_experiments = count_simulated[gene_id]
+            if (num_times_DE == 0) & (num_experiments == 0):
+                freq_DE = 0.0
+            else:
+                freq_DE = float(num_times_DE)/float(num_experiments)
+            freq_DE_list.append(freq_DE)
+
     if test_statistic in abs_stats_terms:
         if test_statistic == "ES":
             summary = pd.DataFrame(
@@ -211,6 +225,28 @@ def generate_summary_table(
                         shared_genes, test_statistic
                     ],
                     "Rank (simulated)": rank_simulated,
+                    "Percentile (simulated)": percentile_simulated,
+                    f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
+                    "Std deviation (simulated)": std_test_simulated,
+                    "Number of experiments (simulated)": count_simulated,
+                }
+            )
+        elif pathway_or_gene.lower() == "gene":
+            summary = pd.DataFrame(
+                data={
+                    index_header: template_simulated_summary_stats.index,
+                    "Adj P-value (Real)": template_simulated_summary_stats[col_name],
+                    "Rank (Real)": template_simulated_summary_stats["ranking"],
+                    f"{test_statistic_label} (Real)": template_simulated_summary_stats[
+                        col_to_rank
+                    ],
+                    f"{test_statistic} (Real)": template_stats.loc[
+                        shared_genes, test_statistic
+                    ],
+                    "Median adj p-value (simulated)": median_pval_simulated,
+                    "Rank (simulated)": rank_simulated,
+                    "Percentile (simulated)": percentile_simulated,
+                    "Percent DE (simulated)": freq_DE_list,
                     f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
                     "Std deviation (simulated)": std_test_simulated,
                     "Number of experiments (simulated)": count_simulated,
@@ -230,6 +266,7 @@ def generate_summary_table(
                     ],
                     "Median adj p-value (simulated)": median_pval_simulated,
                     "Rank (simulated)": rank_simulated,
+                    "Percentile (simulated)": percentile_simulated,
                     f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
                     "Std deviation (simulated)": std_test_simulated,
                     "Number of experiments (simulated)": count_simulated,
@@ -240,21 +277,41 @@ def generate_summary_table(
             - summary[f"Mean {test_statistic_label} (simulated)"]
         ) / summary["Std deviation (simulated)"]
     else:
-        summary = pd.DataFrame(
-            data={
-                index_header: template_simulated_summary_stats.index,
-                "Adj P-value (Real)": template_simulated_summary_stats[col_name],
-                "Rank (Real)": template_simulated_summary_stats["ranking"],
-                f"{test_statistic} (Real)": template_stats.loc[
-                    shared_genes, test_statistic
-                ],
-                "Median adj p-value (simulated)": median_pval_simulated,
-                "Rank (simulated)": rank_simulated,
-                f"Mean {test_statistic} (simulated)": mean_test_simulated,
-                "Std deviation (simulated)": std_test_simulated,
-                "Number of experiments (simulated)": count_simulated,
-            }
-        )
+        if pathway_or_gene.lower() == "gene":
+            summary = pd.DataFrame(
+                data={
+                    index_header: template_simulated_summary_stats.index,
+                    "Adj P-value (Real)": template_simulated_summary_stats[col_name],
+                    "Rank (Real)": template_simulated_summary_stats["ranking"],
+                    f"{test_statistic} (Real)": template_stats.loc[
+                        shared_genes, test_statistic
+                    ],
+                    "Median adj p-value (simulated)": median_pval_simulated,
+                    "Rank (simulated)": rank_simulated,
+                    "Percentile (simulated)": percentile_simulated,
+                    "Percent DE (simulated)": freq_DE_list,
+                    f"Mean {test_statistic} (simulated)": mean_test_simulated,
+                    "Std deviation (simulated)": std_test_simulated,
+                    "Number of experiments (simulated)": count_simulated,
+                }
+            )
+        else:
+            summary = pd.DataFrame(
+                data={
+                    index_header: template_simulated_summary_stats.index,
+                    "Adj P-value (Real)": template_simulated_summary_stats[col_name],
+                    "Rank (Real)": template_simulated_summary_stats["ranking"],
+                    f"{test_statistic} (Real)": template_stats.loc[
+                        shared_genes, test_statistic
+                    ],
+                    "Median adj p-value (simulated)": median_pval_simulated,
+                    "Rank (simulated)": rank_simulated,
+                    "Percentile (simulated)": percentile_simulated,
+                    f"Mean {test_statistic} (simulated)": mean_test_simulated,
+                    "Std deviation (simulated)": std_test_simulated,
+                    "Number of experiments (simulated)": count_simulated,
+                }
+            )
         summary["Z score"] = (
             summary[f"{test_statistic} (Real)"]
             - summary[f"Mean {test_statistic} (simulated)"]
@@ -315,7 +372,7 @@ def merge_ranks_to_compare(
     # still be preserved and Spearman correlation will perform
     # its own ranking so there is no need to rerank
     your_rank_df = pd.DataFrame(
-        your_summary_ranks_df.loc[shared_genes_or_pathways, "Rank (simulated)"]
+        your_summary_ranks_df.loc[shared_genes_or_pathways, "Percentile (simulated)"]
     )
 
     # Merge published ranking
@@ -339,13 +396,12 @@ def merge_ranks_to_compare(
 
 def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
     """
-    In the case where the reference ranking and simulation-based ranking are not
-    in the same range, this function scales the reference ranking
-    to be in the range as your ranking.
+    This function scales the reference ranking
+    to be in the range as your percentile.
 
-    For example, if reference ranking ranged from (0,1) and your
-    ranking ranged from (0,100). This function would scale the
-    reference ranking to also be between 0 and 100.
+    For example, if reference ranking ranged from (0,1) 
+    this function would scale the
+    reference ranking to be between 0 and 100.
 
     Note: This function is assuming that the reference ranking range
     is smaller than yours
@@ -363,10 +419,7 @@ def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
     """
     # Scale published ranking to our range
     scaler = MinMaxScaler(
-        feature_range=(
-            min(merged_gene_ranks_df["Rank (simulated)"]),
-            max(merged_gene_ranks_df["Rank (simulated)"]),
-        )
+        feature_range=(0, 100)
     )
 
     merged_gene_ranks_df[reference_rank_col] = scaler.fit_transform(
@@ -408,7 +461,7 @@ def get_shared_rank_scaled(
         summary_df, reference_filename, ref_gene_col, ref_rank_col
     )
 
-    if max(shared_rank_df["Rank (simulated)"]) != max(shared_rank_df[ref_rank_col]):
+    if max(shared_rank_df["Percentile (simulated)"]) != max(shared_rank_df[ref_rank_col]):
         shared_rank_scaled_df = scale_reference_ranking(shared_rank_df, ref_rank_col)
     else:
         shared_rank_scaled_df = shared_rank_df
@@ -419,7 +472,7 @@ def get_shared_rank_scaled(
     # However, it doesn't really effect the outcome because these genes have almost no power for
     # detecting differential expression. Effects runtime though.
     shared_rank_scaled_df = shared_rank_scaled_df[
-        ~shared_rank_scaled_df["Rank (simulated)"].isna()
+        ~shared_rank_scaled_df["Percentile (simulated)"].isna()
     ]
 
     # Get correlation
@@ -464,7 +517,7 @@ def compare_gene_ranking(
 
     fig = sns.jointplot(
         data=shared_gene_rank_scaled_df,
-        x="Rank (simulated)",
+        x="Percentile (simulated)",
         y=ref_rank_col,
         kind="hex",
         marginal_kws={"color": "white"},
@@ -517,7 +570,7 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
 
     fig = sns.scatterplot(
         data=shared_pathway_rank_scaled_df,
-        x="Rank (simulated)",
+        x="Percentile (simulated)",
         y=ref_rank_col,
         color="#15527d",
         s=50,
@@ -612,11 +665,11 @@ def spearman_ci(ci, gene_rank_df, num_permutations, ref_rank_col, data_type):
     """
     if data_type.lower() == "de":
         r, p = stats.spearmanr(
-            gene_rank_df["Rank (simulated)"], gene_rank_df[ref_rank_col]
+            gene_rank_df["Percentile (simulated)"], gene_rank_df[ref_rank_col]
         )
     elif data_type.lower() == "gsa":
         r, p = stats.spearmanr(
-            gene_rank_df["Rank (simulated)"], gene_rank_df["Powers Rank"]
+            gene_rank_df["Percentile (simulated)"], gene_rank_df["Powers Rank"]
         )
 
     r_perm_values = []
@@ -626,11 +679,11 @@ def spearman_ci(ci, gene_rank_df, num_permutations, ref_rank_col, data_type):
 
         if data_type.lower() == "de":
             r_perm, p_perm = stats.spearmanr(
-                sample["Rank (simulated)"], sample[ref_rank_col]
+                sample["Percentile (simulated)"], sample[ref_rank_col]
             )
         elif data_type.lower() == "gsa":
             r_perm, p_perm = stats.spearmanr(
-                sample["Rank (simulated)"], sample["Powers Rank"]
+                sample["Percentile (simulated)"], sample["Powers Rank"]
             )
         r_perm_values.append(r_perm)
 
@@ -799,6 +852,8 @@ def process_and_rank_genes_pathways(
     project_id,
     analysis_type,
     col_to_rank_by,
+    logFC_name,
+    pvalue_name,
     enrichment_method=None,
 ):
     """
@@ -833,6 +888,8 @@ def process_and_rank_genes_pathways(
     analysis_type: 'DE' or 'GSA'
     col_to_rank_by: str
         Statistic to use to rank genes or pathways by
+    logFC_name: 'logFC' (array), 'log2FC' (RNA-seq)
+    pvalue_name: 'adj.P.Val' (array), 'padj' (RNA-seq)
     enrichment_mdethod: "GSEA", GSVA", "ROAST", "CAMERA", "ORA"
         None if DE analysis
 
@@ -850,6 +907,7 @@ def process_and_rank_genes_pathways(
     # Rank genes in template experiment
     template_stats = rank_genes_or_pathways(col_to_rank_by, template_stats, True)
 
+
     # For simulated experiments
 
     # Concatenate simulated experiments
@@ -860,6 +918,7 @@ def process_and_rank_genes_pathways(
         analysis_type,
         enrichment_method,
     )
+
     # Take absolute value of logFC and t statistic
     simulated_stats_all = abs_value_stats(simulated_stats_all)
 
@@ -871,6 +930,23 @@ def process_and_rank_genes_pathways(
     simulated_summary_stats = rank_genes_or_pathways(
         col_to_rank_by, simulated_summary_stats, False
     )
+
+    # Scale ranking to percentile
+    simulated_summary_stats = rank_to_percentile(simulated_summary_stats)
+
+    # Calculate the frequency gene is DE across
+    # simulated experiments
+    # Only run if analysis_type == "DE"
+    if analysis_type.lower() == "de":
+        freq_DE = get_num_gene_DE(simulated_stats_all, logFC_name, pvalue_name)
+
+        # Merge frequency data into simulated dataframe
+        simulated_summary_stats = pd.merge(
+            simulated_summary_stats,
+            freq_DE,
+            left_index=True,
+            right_index=True
+        )
 
     return template_stats, simulated_summary_stats
 
@@ -1017,3 +1093,69 @@ def format_enrichment_output(
 
             # Save formatted simulated experiment
             simulated_EA_data.to_csv(simulated_EA_filename, sep="\t")
+
+
+def rank_to_percentile(summary_stats_df):
+    """
+    Returns the input dataframe (`summary_stats_df`) that has been modified
+    to add a column that scales gene ranks to percentile.
+
+    Arguments
+    ---------
+    summary_stats_df: df
+        dataframe containing gene ranking for either template or simulated experiments
+    """
+    scaler = MinMaxScaler(feature_range=(0, 100))
+
+    summary_stats_df["Percentile (simulated)"] = scaler.fit_transform(np.array(summary_stats_df["ranking"]).reshape(-1, 1))
+
+    return summary_stats_df
+
+
+def get_num_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
+    """
+    This function calculates how many times a gene is found
+    to be DE across the simulated experiments. Returns dataframe
+    containing counts per gene.
+
+    Arguments
+    ----------
+    simulated_stats_concat_df: df
+        dataframe containing the DE stats for all simulated
+        experiments concatenated
+    logFC_name: 'logFC' (array), 'log2FC' (RNA-seq)
+    pvalue_name: 'adj.P.Val' (array), 'padj' (RNA-seq)
+
+    """
+    # Get list of logFC and p-values per gene
+    simulated_stats_concat_logFC = simulated_stats_concat_df.groupby(["index"])[log_name].apply(list)
+    simulated_stats_concat_pval = simulated_stats_concat_df.groupby(["index"])[pvalue_name].apply(list)
+
+    # For each gene count the number of times it is found to be DE
+    # abs(logFC) > 1 and adjusted p-value < 0.05
+    # This frequency is out of a total of 
+
+    gene_ids = list(simulated_stats_concat_logFC.index)
+    count_DE = []
+    for gene_id in gene_ids:
+        logFC_list = simulated_stats_concat_logFC[gene_id]
+        pvalue_list = simulated_stats_concat_pval[gene_id]
+
+        # Merge lists to be pair (logFC, pvalue)
+        merged_list = [(logFC_list[i], pvalue_list[i]) for i in range(0, len(logFC_list))] 
+        num_times_DE = 0
+        for logFC_i, pvalue_i in merged_list:
+            if (abs(logFC_i) > 1) & (pvalue_i < 0.05):
+                num_times_DE += 1.0
+        count_DE.append(float(num_times_DE))
+
+    
+    # Make dataframe
+    freq_DE_df = pd.DataFrame(
+        data=count_DE,
+        index=gene_ids,
+        columns=["Percent DE"]
+    )
+
+    return freq_DE_df
+
