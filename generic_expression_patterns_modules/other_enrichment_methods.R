@@ -2,7 +2,7 @@
 # These are methods were implemented, expecting
 # RNA-seq input. These will need to be adjusted if
 # using microarray data
-  
+
 # Load libraries
 library("fgsea")
 library("limma")
@@ -12,77 +12,27 @@ library("edgeR")
 library("DESeq2")
 library("clusterProfiler")
 
-find_enriched_pathways_ROAST <- function(expression_filename,
-                                         metadata_filename,
-                                         pathway_DB_filename) {
-
-  # ---------------------------------------------------------
-  # ROAST (rotation gene set tests) performs a focused gene set 
-  # testing, in which interest focuses on a few gene sets as opposed
-  # to a large dataset. (available in limma).
-  # * Self contained gene set test
-  # * Instead of permutations they use rotations 
-  # (i.e. fractional permutation) in order to allow for more 
-  # complex experimental designs than binary experiments 
-  # (i.e. time-course, more than 2 groups)
-  # * Also esimates correlation between genes
-  # * Best power to detect modest fold changes with minority of genes changed
-  # (https://pubmed.ncbi.nlm.nih.gov/20610611/)
-  # ---------------------------------------------------------
-
-  # Read data
-  expression_data <- t(as.matrix(read.csv(expression_filename, sep="\t", header=TRUE, row.names=1)))
-  metadata <- as.matrix(read.csv(metadata_filename, sep="\t", header=TRUE, row.names=1))
-  pathway_DB_data <- gmtPathways(pathway_DB_filename)
-
-  group <- interaction(metadata[,1])
-
-  # Create DEGList based on counts
-  #dge = DGEList(expression_data, group=group)
-
-  # Design matrix
-  design <- model.matrix(~0 + group)
-
-  expression_data_voom <- voom(expression_data, design)
-  #print(expression_data_voom)
-
-  # Estimate dispersions
-  #y <- estimateDisp(dge, design)
-  
-  # Format index
-  gene_ids <- row.names(expression_data_voom)
-  pathway_ind <- ids2indices(pathway_DB_data, gene_ids)
-
-  print("Checking sample ordering...")
-  print(all.equal(colnames(expression_data_voom), rownames(metadata)))
-
-  # Call ROAST
-  enrich_pathways <- mroast(expression_data_voom, index=pathway_ind, design, contrast=ncol(design), nrot=10000, adjust.method="BH")                       
-
-  return(as.data.frame(enrich_pathways))
-}
-
 find_enriched_pathways_CAMERA <- function(expression_filename,
                                           metadata_filename,
                                           pathway_DB_filename) {
 
   # ---------------------------------------------------------
-  # CAMERA (Correlation Adjusted MEan RAnk gene set test) 
+  # CAMERA (Correlation Adjusted MEan RAnk gene set test)
   # is based on the idea of estimating the variance inflation
-  # factor associated with inter-gene correlation, and 
-  # incorporating this into parametric or rank-based 
-  # test procedures. (available in limma) 
+  # factor associated with inter-gene correlation, and
+  # incorporating this into parametric or rank-based
+  # test procedures. (available in limma)
   # * Competitive gene set test
-  # * Performs the same rank-based test procedure as GSEA, 
-  # but also estimates the correlation between genes, 
+  # * Performs the same rank-based test procedure as GSEA,
+  # but also estimates the correlation between genes,
   # instead of treating genes as independent
   # * Recall GSEA: 1) Rank all genes using DE association statistics.
   # 2) An enrichment score (ES) is defined as the maximum distance
-  # from the middle of the ranked list. Thus, the enrichment score 
+  # from the middle of the ranked list. Thus, the enrichment score
   # indicates whether the genes contained in a gene set are clustered
-  # towards the beginning or the end of the ranked list 
-  # (indicating a correlation with change in expression). 
-  # 3) Estimate the statistical significance of the ES by a 
+  # towards the beginning or the end of the ranked list
+  # (indicating a correlation with change in expression).
+  # 3) Estimate the statistical significance of the ES by a
   # phenotypic-based permutation (permute samples assigned to label)
   # test in order to produce a null distribution for the ES
   # (i.e. scores based on permuted phenotype)
@@ -110,7 +60,7 @@ find_enriched_pathways_CAMERA <- function(expression_filename,
   y <- estimateDisp(dge, design)
 
   # Call CAMERA
-  enrich_pathways <- camera(y, pathway_DB_data, design, contrast=ncol(design), nrot=10000)                       
+  enrich_pathways <- camera(y, pathway_DB_data, design, contrast=ncol(design), nrot=10000)
 
   return(as.data.frame(enrich_pathways))
 }
@@ -120,14 +70,14 @@ find_enriched_pathways_GSVA <- function(expression_filename,
 
   # ---------------------------------------------------------
   # GSVA(Gene Set Variation Analysis) calculates sample-wise
-  # gene set enrichment scores as a function of genes inside 
+  # gene set enrichment scores as a function of genes inside
   # and outside the gene set. This method is well-suited for
   # assessing gene set variation across a dichotomous phenotype.
-  # (biocontuctor package GSVA) 
+  # (biocontuctor package GSVA)
   # * Competitive gene set test
-  # * Estimates variation of gene set enrichment over the samples 
+  # * Estimates variation of gene set enrichment over the samples
   # independently of any class label
-  # (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3618321/) 
+  # (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3618321/)
   # ---------------------------------------------------------
 
   # Read in expression data
@@ -143,7 +93,7 @@ find_enriched_pathways_GSVA <- function(expression_filename,
                           kcdf="Poisson",
                           parallel.sz=1,
                           verbose=TRUE
-  )                       
+  )
   return(as.data.frame(enrich_pathways))
 }
 
@@ -152,13 +102,13 @@ find_enriched_pathways_ORA <- function(expression_filename,
                                       pathway_DB_filename
                                       ) {
   # ---------------------------------------------------------
-  # ORA (over-representation analysis) uses the hypergeometric 
+  # ORA (over-representation analysis) uses the hypergeometric
   # test to determine if there a significant over-representation
-  # of pathway in the selected set of DEGs. Here we're using 
-  # clusterProfiler library but there are multiple options for this analysis. 
+  # of pathway in the selected set of DEGs. Here we're using
+  # clusterProfiler library but there are multiple options for this analysis.
   # (https://www.rdocumentation.org/packages/clusterProfiler/versions/3.0.4/topics/enricher)
   # ---------------------------------------------------------
-  
+
   # Read data
   expression_data <- t(as.matrix(read.csv(expression_filename, sep="\t", header=TRUE, row.names=1)))
   metadata <- as.matrix(read.csv(metadata_filename, sep="\t", header=TRUE, row.names=1))
@@ -176,10 +126,10 @@ find_enriched_pathways_ORA <- function(expression_filename,
 
   # Note parameter settings:
   # `independentFilter=False`: We have turned off the automatic filtering, which
-  # filter filter out those tests from the procedure that have no, or little 
+  # filter filter out those tests from the procedure that have no, or little
   # chance of showing significant evidence, without even looking at their test statistic.
-  # Typically, this results in increased detection power at the same experiment-wide 
-  # type I error, as measured in terms of the false discovery rate. 
+  # Typically, this results in increased detection power at the same experiment-wide
+  # type I error, as measured in terms of the false discovery rate.
   # cooksCutoff=True (default): Cook's distance as a diagnostic to tell if a single sample
   # has a count which has a disproportionate impact on the log fold change and p-values.
   # These genes are flagged with an NA in the pvalue and padj columns
@@ -201,6 +151,6 @@ find_enriched_pathways_ORA <- function(expression_filename,
                               pvalueCutoff=0.05,
                               pAdjustMethod="BH",
                               TERM2GENE=pathway_DB_data[, c("ont", "gene")]
-  )                     
+  )
   return(as.data.frame(summary(enrich_pathways)))
 }
