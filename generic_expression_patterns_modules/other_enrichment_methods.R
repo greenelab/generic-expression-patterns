@@ -148,8 +148,9 @@ find_enriched_pathways_ORA <- function(expression_filename,
 
   enrich_pathways <- enricher(degs_name,
                               universe=backgrd_genes,
-                              pvalueCutoff=0.05,
+                              pvalueCutoff=1.0,
                               pAdjustMethod="BH",
+                              qvalueCutoff = 1.0,
                               TERM2GENE=pathway_DB_data[, c("ont", "gene")]
   )
   return(as.data.frame(summary(enrich_pathways)))

@@ -4,7 +4,7 @@ Date Created: 16 June 2020
 
 This script provide supporting functions to run analysis notebooks.
 
-This script includes functions to format intermediate data files 
+This script includes functions to format intermediate data files
 to prepare to compare gene/pathway ranking:
 
 * function to calculate Spearman correlation
@@ -171,6 +171,9 @@ def generate_summary_table(
     elif "p.adjust" in template_simulated_summary_stats.columns:
         median_pval_simulated = template_simulated_summary_stats[("p.adjust", "median")]
         col_name = "p.adjust"
+    elif "ES" in template_simulated_summary_stats.columns:
+        median_pval_simulated = template_simulated_summary_stats[("ES", "median")]
+        col_name = "ES"
     mean_test_simulated = template_simulated_summary_stats[(col_to_rank, "mean")]
     std_test_simulated = template_simulated_summary_stats[(col_to_rank, "std")]
     count_simulated = template_simulated_summary_stats[(col_to_rank, "count")]
@@ -209,7 +212,7 @@ def generate_summary_table(
             if (num_times_DE == 0) & (num_experiments == 0):
                 freq_DE = 0.0
             else:
-                freq_DE = float(num_times_DE)/float(num_experiments)
+                freq_DE = float(num_times_DE) / float(num_experiments)
             freq_DE_list.append(freq_DE)
 
     if test_statistic in abs_stats_terms:
@@ -224,6 +227,7 @@ def generate_summary_table(
                     f"{test_statistic} (Real)": template_stats.loc[
                         shared_genes, test_statistic
                     ],
+                    "Median ES (simulated)": median_pval_simulated,
                     "Rank (simulated)": rank_simulated,
                     "Percentile (simulated)": percentile_simulated,
                     f"Mean {test_statistic_label} (simulated)": mean_test_simulated,
@@ -399,7 +403,7 @@ def scale_reference_ranking(merged_gene_ranks_df, reference_rank_col):
     This function scales the reference ranking
     to be in the range as your percentile.
 
-    For example, if reference ranking ranged from (0,1) 
+    For example, if reference ranking ranged from (0,1)
     this function would scale the
     reference ranking to be between 0 and 100.
 
@@ -650,7 +654,7 @@ def add_pseudomonas_gene_name_col(summary_gene_ranks, base_dir):
 def spearman_ci(ci, gene_rank_df, num_permutations, ref_rank_col, data_type):
     """
     Returns spearman correlation score and confidence interval
-    
+
     Arguments
     ---------
     ci: float in range (0-1)
@@ -775,7 +779,7 @@ def aggregate_stats(col_to_rank, simulated_stats_all, data_type):
 def rank_genes_or_pathways(col_to_rank, DE_summary_stats, is_template):
     """
     Returns the input dataframe (`DE_summary_stats`) that has been modified such that
-    genes are ranked by the selected statistic, `col_to_rank` (if the input is the 
+    genes are ranked by the selected statistic, `col_to_rank` (if the input is the
     template experiment) or the median of the selected statistic
     (if the input is the simulated experiments).
     The ordering of the ranking depends on the statistic selected.
@@ -909,7 +913,6 @@ def process_and_rank_genes_pathways(
 
 
     # For simulated experiments
-
     # Concatenate simulated experiments
     simulated_stats_all = concat_simulated_data(
         local_dir,
@@ -1133,7 +1136,7 @@ def get_num_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
 
     # For each gene count the number of times it is found to be DE
     # abs(logFC) > 1 and adjusted p-value < 0.05
-    # This frequency is out of a total of 
+    # This frequency is out of a total of
 
     gene_ids = list(simulated_stats_concat_logFC.index)
     count_DE = []
@@ -1142,14 +1145,14 @@ def get_num_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
         pvalue_list = simulated_stats_concat_pval[gene_id]
 
         # Merge lists to be pair (logFC, pvalue)
-        merged_list = [(logFC_list[i], pvalue_list[i]) for i in range(0, len(logFC_list))] 
+        merged_list = [(logFC_list[i], pvalue_list[i]) for i in range(0, len(logFC_list))]
         num_times_DE = 0
         for logFC_i, pvalue_i in merged_list:
             if (abs(logFC_i) > 1) & (pvalue_i < 0.05):
                 num_times_DE += 1.0
         count_DE.append(float(num_times_DE))
 
-    
+
     # Make dataframe
     freq_DE_df = pd.DataFrame(
         data=count_DE,
