@@ -4,7 +4,8 @@ repos:
   rev: 41b7e9c93b50da1d6feb486aceb2c4d534374090
   hooks:
   - id: jupytext
-    args: [--from, ipynb, --pipe, black, --to, py:light, --sync]
+    name: jupytext_auto_linter
+    args: [--set-formats, 'ipynb,py', --from, ipynb, --pipe, black, --to, py:light, --sync]
 
 - repo: https://gitlab.com/pycqa/flake8
   rev: 6de8252c035844f1e679f509b5f37340b44d5c39
