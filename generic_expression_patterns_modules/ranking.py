@@ -1036,7 +1036,7 @@ def format_enrichment_output(
             # Save formatted simulated experiment
             simulated_EA_data_processed.to_csv(simulated_EA_filename, sep="\t")
 
-    elif enrichment_method == "ROAST" or enrichment_method == "CAMERA":
+    elif enrichment_method == "CAMERA":
         # Read template file
         template_EA_data = pd.read_csv(
             template_EA_filename, sep="\t", index_col=0, header=0
