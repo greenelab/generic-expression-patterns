@@ -6,7 +6,7 @@ raw_compendium_filename	"https://raw.githubusercontent.com/greenelab/adage/maste
 processed_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/processed_pseudomonas_compendium_data.tsv"
 normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/normalized_pseudomonas_compendium_data.tsv"
 shared_genes_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/shared_genes_pseudomonas.pickle"
-scaler_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/scaler_transform_pseudomonas.pickle"
+scaler_filename	"data/scaler_transform_pseudomonas.pickle"
 rank_genes_by	"logFC"
 reference_gene_filename	"GAPE_proportions.txt"
 reference_gene_name_col	"gene id"

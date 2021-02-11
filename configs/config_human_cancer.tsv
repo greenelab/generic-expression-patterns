@@ -7,7 +7,7 @@ raw_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patte
 mapped_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_Rani/mapped_rani_compendium.tsv"
 normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_Rani/normalized_rani_compendium_filename.tsv"
 shared_genes_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_Rani/shared_genes_human_rani.pickle"
-scaler_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_Rani/scaler_transform_human_rani.pickle"
+scaler_filename	"data/scaler_transform_human_rani.pickle"
 reference_gene_filename	"https://raw.githubusercontent.com/maggiecrow/DEprior/master/DE_Prior.txt"
 reference_gene_name_col	"Gene_Name"
 reference_rank_col	"DE_Prior_Rank"
