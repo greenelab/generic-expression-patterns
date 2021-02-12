@@ -6,7 +6,7 @@ raw_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patte
 processed_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_pao1/processed_pseudomonas_compendium_data.tsv"
 normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_pao1/normalized_pseudomonas_compendium_data.tsv"
 shared_genes_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_pao1/shared_genes_pseudomonas.pickle"
-scaler_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns_pao1/scaler_transform_pseudomonas.pickle"
+scaler_filename	"data/scaler_transform_pseudomonas.pickle"
 rank_genes_by	"logFC"
 reference_gene_filename	"GAPE_proportions.txt"
 reference_gene_name_col	"gene id"
