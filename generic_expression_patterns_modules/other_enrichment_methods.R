@@ -64,6 +64,7 @@ find_enriched_pathways_CAMERA <- function(expression_filename,
     # Call CAMERA
     enrich_pathways <- camera(y, pathway_DB_data, design, contrast=ncol(design), nrot=10000)
   }
+  # else if data used microarray
   else{
     # Call CAMERA
     enrich_pathways <- camera(expression_data, pathway_DB_data, design, contrast=ncol(design), nrot=10000)
@@ -87,6 +88,11 @@ find_enriched_pathways_GSVA <- function(expression_filename,
   # * Estimates variation of gene set enrichment over the samples
   # independently of any class label
   # (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3618321/)
+  #
+  # Note: Gaussian CDF is suitable for continuous expression
+  # values in microarrays, and a Poisson CDF is better for
+  # counts in RNA-seq data).
+  # https://www.bioconductor.org/packages/release/bioc/manuals/GSVA/man/GSVA.pdf
   # ---------------------------------------------------------
 
   # Read in expression data
@@ -105,6 +111,7 @@ find_enriched_pathways_GSVA <- function(expression_filename,
                           verbose=TRUE
   )
   }
+  # else if data used microarray
   else{
     enrich_pathways <- gsva(expression_data,
                           pathway_DB_data,
@@ -165,6 +172,7 @@ find_enriched_pathways_ORA <- function(expression_filename,
     degs <- deseq_results_df[deseq_results_df[,'padj']<threshold & abs(deseq_results_df[,'log2FoldChange'])>1,]
     degs_name <- row.names(degs)
   }
+  # else if data used microarray
   else{
     ## DEGs of simulated data
     # lmFit expects input array to have structure: gene x sample
