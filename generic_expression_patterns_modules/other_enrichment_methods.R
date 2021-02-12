@@ -55,7 +55,7 @@ find_enriched_pathways_CAMERA <- function(expression_filename,
   design <- model.matrix(~0 + group)
 
   if (platform == "rnaseq"){
-    # Create DEGList based on counts
+    # Create DGEList based on counts
     dge = DGEList(expression_data, group=group)
 
     # Estimate dispersions
