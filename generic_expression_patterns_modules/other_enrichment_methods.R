@@ -82,7 +82,7 @@ find_enriched_pathways_GSVA <- function(expression_filename,
   # gene set enrichment scores as a function of genes inside
   # and outside the gene set. This method is well-suited for
   # assessing gene set variation across a dichotomous phenotype.
-  # (biocontuctor package GSVA)
+  # (bioconductor package GSVA)
   # * Competitive gene set test
   # * Estimates variation of gene set enrichment over the samples
   # independently of any class label
