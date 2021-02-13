@@ -19,17 +19,21 @@ PLIERNewData <- function(exprs.mat, seed = 12345) {
 
   set.seed(seed)
 
-  # load PLIER pathway and cell type data
-  data(bloodCellMarkersIRISDMAP)
-  data(svmMarkers)
-  data(canonicalPathways)
+  # load Pa pathway data generated from
+  # 0_process_Pa_KEGG_pathways.ipynb
 
-  # combine the pathway data from PLIER
-  all.paths <- PLIER::combinePaths(bloodCellMarkersIRISDMAP, svmMarkers,
-                                   canonicalPathways)
-  print(all.paths)
+  pa_paths_filename <- "..LV_analysis/pa_kegg_pathway_processed.tsv"
+  pa.paths <- as.matrix(
+    read.table(
+      pa_pathway_filename,
+      sep = "\t",
+      header = TRUE,
+      row.names = 1
+      )
+    )
+
   # what genes are common to the pathway data and the expression matrix
-  cm.genes <- PLIER::commonRows(all.paths, exprs.mat)
+  cm.genes <- PLIER::commonRows(pa.paths, exprs.mat)
 
   # row normalize
   exprs.norm <- PLIER::rowNorm(exprs.mat)
@@ -39,7 +43,7 @@ PLIERNewData <- function(exprs.mat, seed = 12345) {
   set.k <- PLIER::num.pc(exprs.norm[cm.genes, ])
 
   # PLIER main function + return results
-  plier.res <- PLIER::PLIER(exprs.norm[cm.genes, ], all.paths[cm.genes, ],
+  plier.res <- PLIER::PLIER(exprs.norm[cm.genes, ], pa.paths[cm.genes, ],
                             k = round((set.k + set.k * 0.3), 0), trace = TRUE)
 
   return(plier.res)
