@@ -42,3 +42,4 @@ dependencies:
   - flake8==3.8.4
   - pre_commit==2.9.3
   - jupytext==1.9.1
+  - rpy2 == 3.0.1
