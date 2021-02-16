@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.9.1
+#       jupytext_version: 1.9.1+dev
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
