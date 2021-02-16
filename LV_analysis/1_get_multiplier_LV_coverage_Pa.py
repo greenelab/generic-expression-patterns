@@ -61,7 +61,7 @@ params = utils.read_config(config_filename)
 local_dir = params["local_dir"]
 
 project_id = params["project_id"]
-quantile_threshold = 0.90
+quantile_threshold = 0.97
 # -
 
 # Output file
@@ -294,7 +294,7 @@ lv.create_LV_df(
 )
 
 # Plot distribution of weights for these nodes
-node = "LV9"
+node = "LV30"
 lv.plot_dist_weights(
     node,
     multiplier_model_z,
@@ -328,11 +328,8 @@ highweight_fig.figure.savefig(
 )
 # -
 
-# # TO DO
 # **Takeaway:**
 # * In the first nonzero boxplot, generic and other genes are present in a similar number of LVs. This isn't surprising since the number of genes that contribute to each LV is <1000.
-# * In the second highweight boxplot, other genes are highly weighted in more LVs compared to generic genes. This would indicate that generic genes contribute alot to few LVs.
+# * In the second highweight boxplot, other genes and generic genes are highly weighted in a similar number of LVs, but overall generic genes contribute a lot to very few LVs. The only associated LV is related to type IV secretion system, which is a complex responsible for a broad range of functions: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3070162/
 #
-# This is the opposite trend found using [_P. aeruginosa_ data](1_get_eADAGE_LV_coverage.ipynb). Perhaps this indicates that generic genes have different behavior/roles depending on the organism. In humans, perhaps these generic genes are related to a few hyper-responsive pathways, whereas in _P. aeruginosa_ perhaps generic genes are associated with many pathways, acting as *gene hubs*.
-#
-# * There are a number of LVs that contain a high proportion of generic genes can be found in [table](Generic_LV_summary_table.tsv). By quick visual inspection, it looks like many LVs are associated with immune response, signaling and metabolism. Which are consistent with the hypothesis that these generic genes are related to hyper-responsive pathways.
+# Compared to the trend found using [human data](1_get_multiplier_LV_coverage.ipynb), perhaps this indicates that generic genes have similar behavior/roles across organisms.
