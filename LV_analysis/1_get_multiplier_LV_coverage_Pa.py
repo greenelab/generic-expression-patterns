@@ -13,7 +13,7 @@
 #     name: conda-env-generic_expression-py
 # ---
 
-# # Coverage of MultiPLIER LV
+# # Coverage of MultiPLIER LV using _P. aeruginosa_ data
 #
 # The goal of this notebook is to examine why genes were found to be generic. Specifically, this notebook is trying to answer the question: Are generic genes found in more multiplier latent variables compared to specific genes?
 #
@@ -25,6 +25,8 @@
 # * Generic genes: Are genes that are consistently differentially expressed across multiple simulated experiments.
 #
 # * Other genes: These are all other non-generic genes. These genes include those that are not consistently differentially expressed across simulated experiments - i.e. the genes are specifically changed in an experiment. It could also indicate genes that are consistently unchanged (i.e. housekeeping genes)
+#
+# Note: This notebook is perfoming the same analysis found in [1_get_multiplier_LV_coverage.ipynb](1_get_multiplier_LV_coverage.ipynb), which used human data. Here we're using _P. aeruginosa_ data.
 
 # +
 # %load_ext autoreload
@@ -330,6 +332,7 @@ highweight_fig.figure.savefig(
 
 # **Takeaway:**
 # * In the first nonzero boxplot, generic and other genes are present in a similar number of LVs. This isn't surprising since the number of genes that contribute to each LV is <1000.
-# * In the second highweight boxplot, other genes and generic genes are highly weighted in a similar number of LVs, but overall generic genes contribute a lot to very few LVs. The only associated LV is related to type IV secretion system, which is a complex responsible for a broad range of functions: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3070162/
+# * In the second highweight boxplot, other genes and generic genes are highly weighted in a similar number of LVs, but overall generic genes contribute a lot to very few LVs. Despite the t-test returning a significant p-value for the difference, the distribution looks very similar.
+# * The only associated LV is related to type IV secretion system, which is a complex responsible for a broad range of functions: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3070162/
 #
 # Compared to the trend found using [human data](1_get_multiplier_LV_coverage.ipynb), perhaps this indicates that generic genes have similar behavior/roles across organisms.

@@ -22,8 +22,8 @@
 import pandas as pd
 
 # Load data
-expression_filename = "https://raw.githubusercontent.com/greenelab/adage/master/Data_collection_processing/Pa_compendium_02.22.2014.pcl"
-pa_kegg_pathway_filename = "https://raw.githubusercontent.com/greenelab/adage/master/Node_interpretation/pseudomonas_KEGG_terms.txt"
+expression_filename = "https://github.com/greenelab/adage/blob/2575a60804218db7f91402b955371bb60e5b00d6/Data_collection_processing/Pa_compendium_02.22.2014.pcl"
+pa_kegg_pathway_filename = "https://github.com/greenelab/adage/blob/7a4eda39d360b224268921dc1f2c14b32788ab16/Node_interpretation/pseudomonas_KEGG_terms.txt"
 
 # Load expression data to get gene ids
 expression_data = pd.read_csv(expression_filename, sep="\t", index_col=0, header=0)

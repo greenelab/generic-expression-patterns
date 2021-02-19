@@ -1,8 +1,8 @@
 # Imported from https://github.com/greenelab/multi-plier/blob/master/util/plier_util.R
 PLIERNewData <- function(exprs.mat, seed = 12345) {
-  # A wrapper function for applying PLIER to a data set. We use the following
-  # genesets that come with PLIER: bloodCellMarkersIRISDMAP, svmMarkers,
-  # and canonicalPathways. We set the k parameter for the PLIER model by
+  # A function for applying PLIER to a exprs.mat. We use
+  # P. aeruginosa genesets from KEGG.
+  # We set the k parameter for the PLIER model by
   # identifying the number of "significant PCs" with PLIER::num.pc and then
   # using sig PCs * 0.3. This is consistent with recommendations from the
   # PLIER authors.

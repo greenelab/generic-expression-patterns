@@ -52,6 +52,6 @@ source("../generic_expression_patterns/plier_util.R")
 # run PLIER model
 plier.result <- PLIERNewData(expression_data)
 
-# TO DO: Save locally
+# Save locally
 model.file <- file.path("C:/Users/alexj/Documents/UPenn/CGreene/Remote/generic_expression_patterns/Pa_compendium_PLIER_model.RDS")
 saveRDS(plier.result, file = model.file)
