@@ -55,7 +55,7 @@ for pathway_i in pathway_names:
     # Remove "." from gene ids
     gene_ids_contained = [gene_id.split(".")[0] for gene_id in gene_ids_contained]
 
-    # Check that gene ids are contained within expression index
+    # Filter to gene ids that are contained within expression index
     gene_ids_contained = [
         gene_id for gene_id in gene_ids_contained if gene_id in gene_ids
     ]
