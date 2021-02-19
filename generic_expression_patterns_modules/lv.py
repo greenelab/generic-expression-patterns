@@ -30,15 +30,16 @@ def get_generic_specific_genes(summary_data, generic_threshold):
     summary_data: df
         Dataframe containing gene summary statistics
 
-    generic_threshold: int
-        Threshold to use to define generic genes
+    generic_threshold: int (0,100)
+        Threshold to use to define generic genes. Based on
+        Percentile (simulated) column
     """
     print(summary_data.shape)
 
     # Generic genes
     ls_generic_genes = list(
         (
-            summary_data[summary_data["Rank (simulated)"] >= generic_threshold]
+            summary_data[summary_data["Percentile (simulated)"] >= generic_threshold]
             .set_index("Gene ID")
             .index
         )
@@ -48,7 +49,7 @@ def get_generic_specific_genes(summary_data, generic_threshold):
     # Other (non-generic) genes
     ls_other_genes = list(
         (
-            summary_data[summary_data["Rank (simulated)"] < generic_threshold]
+            summary_data[summary_data["Percentile (simulated)"] < generic_threshold]
             .set_index("Gene ID")
             .index
         )
@@ -164,8 +165,8 @@ def get_highweight_LV_coverage_pseudomonas(dict_genes, LV_matrix):
     weight contribution).
 
     The high weight genes are determined based on the eADAGE paper
-    (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5532071/). 
-    Though the method is described in an earlier paper 
+    (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5532071/).
+    Though the method is described in an earlier paper
     (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5700673/).
     In this paper genes are considered high weight if their weight
     is at least 2.5 standard deviations from the mean since weights
@@ -379,7 +380,7 @@ def create_LV_df(
     ---------
     prop_highweight_generic_dict: dict
         Dictionary mapping LV_id: proportion of generic genes that are high weight
-    
+
     multiplier_model_summary: df
         Dataframe containing summary statistics for which pathways LV are significantly associated
 
