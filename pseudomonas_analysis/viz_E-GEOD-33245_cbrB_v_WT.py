@@ -15,7 +15,7 @@
 
 # # Plot for E-GEOD-33245 (cbrB vs WT)
 #
-# This notebook is creating volcano plots that correspond to the wet lab experiments conducted by the Hogan Lab.
+# This notebook is creating volcano plots that highlight the ArgR regulon, which are the genes selected based on the SOPHIE analysis to be specific. These plots will correspond to the wet lab experiments conducted by the Hogan Lab.
 
 # +
 # %load_ext autoreload

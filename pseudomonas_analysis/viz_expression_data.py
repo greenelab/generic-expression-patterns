@@ -15,7 +15,7 @@
 
 # # Visualize gene expression
 #
-# This notebook visualizes the trends in gene expression data for the template and simulated experiments
+# This notebook visualizes the trends in gene expression data for the template and simulated experiments. Specifically this notebook highlights DEGs, generic and specific genes in the context of a volcano plot (log2 fold change and p-value scores).
 
 # %load_ext autoreload
 # %load_ext rpy2.ipython
