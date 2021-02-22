@@ -4,8 +4,9 @@
 # from https://github.com/greenelab/ADAGEpath/blob/master/data/
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
-BiocManager::install("impute")
-BiocManager::install("greenelab/ADAGEpath")
+
+if (!require("impute")) install.packages("impute")
+if (!require("greenelab/ADAGEpath")) install.packages("greenelab/ADAGEpath")
 
 # Get eADAGE model
 eADAGEmodel <- ADAGEpath::eADAGEmodel
@@ -28,11 +29,18 @@ annot <- as.data.frame(
 names(annot) <- c("geneID", "other")
 
 # Plot G-G network
-ADAGEpath::visualize_gene_network(
-  selected_signatures = subset_signatures,
-  model = eADAGEmodel,
-  gene_color_value = annot
-)
+# In this network nodes = genes and edges = similar weight profiles for
+# how much that gene contributes to the eADAGE (denoising autoencoder) latent variable.
+# This network is showing all 5,549 measured genes.
+# The clustering is using pearson correlation with a default cutoff of 0.5.
+
+# Code below is in case we decide to only show edges based on a subset
+# of LVs instead of all of them.
+#ADAGEpath::visualize_gene_network(
+#  selected_signatures = subset_signatures,
+#  model = eADAGEmodel,
+#  gene_color_value = annot
+#)
 
 ADAGEpath::visualize_gene_network(
   selected_signatures = names(all_signatures),
