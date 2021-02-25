@@ -24,6 +24,7 @@
 import os
 import seaborn as sns
 import pandas as pd
+import matplotlib.pyplot as plt
 from ponyo import utils
 
 # +
@@ -107,6 +108,7 @@ fig.set_axis_labels(
     fontsize=14,
     fontname="Verdana",
 )
+plt.colorbar()
 
 output_figure_filename = "concordance_between_same_recount2_templates.svg"
 fig.savefig(
@@ -164,6 +166,8 @@ fig.set_axis_labels(
     fontsize=14,
     fontname="Verdana",
 )
+
+plt.colorbar()
 
 output_figure_filename = "concordance_between_diff_recount2_templates.svg"
 fig.savefig(
