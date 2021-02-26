@@ -65,19 +65,27 @@ def sample_degree_matched(nodes, degrees, is_generic, num_bins=10):
 
     return (sampled_nodes, sampled_degrees, bin_ixs)
 
+
+def sort_by_degree(nodes, degrees, is_generic):
+    """Sort node info together, by ascending degree."""
+    nodes, degrees, is_generic = zip(*sorted(
+        zip(nodes, degrees, is_generic),
+        key=lambda x: x[1]
+    ))
+    assert np.all(np.diff(degrees) >= 0)
+    return (np.array(nodes),
+            np.array(degrees),
+            np.array(is_generic))
+
+
 if __name__ == '__main__':
     np.random.seed(1)
     size=50
     degrees = np.random.geometric(p=0.2, size=size)
     nodes = np.array(list(string.printable)[:size])
-    # sort nodes and degrees by degree
-    nodes, degrees = zip(*sorted(
-        zip(nodes, degrees),
-        key=lambda x: x[1]
-    ))
-    nodes = np.array(nodes)
-    degrees = np.array(degrees)
     is_generic = np.random.choice([0, 1], size=size, p=[0.8, 0.2])
+    # sort nodes and degrees by degree
+    nodes, degrees, is_generic = sort_by_degree(nodes, degrees, is_generic)
     print(nodes[is_generic.astype('bool')])
     print(degrees[is_generic.astype('bool')])
     s_nodes, s_degrees, _ = sample_degree_matched(nodes, degrees, is_generic)
