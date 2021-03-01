@@ -12,5 +12,5 @@ The environment dependencies are specified in the `environment.yml` file in this
 
 ```bash
 conda env create --file environment.yml
-conda activate generic-network
+conda activate generic_network
 ```
