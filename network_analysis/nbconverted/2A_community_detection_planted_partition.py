@@ -107,7 +107,7 @@ for it in range(NUM_NODE_SAMPLES):
     sampled = [1 if gene in s_nodes else 0 for gene in labels_df.gene]
     labels_df['sampled_{}'.format(it)] = sampled
 
-labels_df.sort_values(by='degree', ascending=False).iloc[:5, :5]
+labels_df.sort_values(by='degree', ascending=True).iloc[:5, :5]
 
 
 # In[9]:
