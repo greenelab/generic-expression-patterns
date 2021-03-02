@@ -76,6 +76,9 @@ annot_df.head()
 # In[7]:
 
 
+# read generic genes from tsv into a graph vertex attribute
+# the list comprehension gets gene annotations in the same order as they are
+# stored in the graph data structure
 is_generic = [int(annot_df.loc[v['name'], 'label']) for v in G.vs]
 G.vs['is_generic'] = is_generic
 
@@ -85,7 +88,6 @@ G.vs['is_generic'] = is_generic
 
 # community detection using Louvain modularity optimization
 partition = G.community_multilevel(weights=G.es['weight'], return_levels=False)
-# plot?
 
 
 # In[9]:
@@ -128,6 +130,8 @@ labels_df.sort_values(by='degree', ascending=True).iloc[:5, :5]
 # In[11]:
 
 
+# group by label (community) and count number of generic genes, or random
+# sampled genes, in each community
 generic_count_df = (
     labels_df.groupby('label').sum()
              .drop(columns=['degree'])
@@ -139,6 +143,8 @@ generic_count_df.sort_values(by='is_generic', ascending=False).iloc[:5, :5]
 # In[12]:
 
 
+# get number of "nonzero communities" for each sampling run; i.e. communities
+# containing at least 1 generic or sampled gene
 nonzero_counts_df = pd.DataFrame(
     [np.count_nonzero(generic_count_df, axis=0)],
     columns=generic_count_df.columns

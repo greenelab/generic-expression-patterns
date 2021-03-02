@@ -101,6 +101,8 @@ nodes, degrees, is_generic = sort_by_degree(labels_df.gene.values,
                                             labels_df.is_generic.values)
 
 # sample a few times and add results to df
+# "sampled_{number}" columns are 1 if that gene was sampled in that iteration,
+# 0 otherwise
 for it in range(NUM_NODE_SAMPLES):
     s_nodes, s_degrees, __ = sample_degree_matched(nodes, degrees, is_generic,
                                                    num_bins=NUM_BINS)
@@ -113,6 +115,8 @@ labels_df.sort_values(by='degree', ascending=True).iloc[:5, :5]
 # In[9]:
 
 
+# group by label (community) and count number of generic genes, or random
+# sampled genes, in each community
 generic_count_df = (
     labels_df.groupby('label').sum()
              .drop(columns=['degree'])
@@ -124,6 +128,8 @@ generic_count_df.sort_values(by='is_generic', ascending=False).iloc[:5, :5]
 # In[10]:
 
 
+# get number of "nonzero communities" for each sampling run; i.e. communities
+# containing at least 1 generic or sampled gene
 nonzero_counts_df = pd.DataFrame(
     [np.count_nonzero(generic_count_df, axis=0)],
     columns=generic_count_df.columns
