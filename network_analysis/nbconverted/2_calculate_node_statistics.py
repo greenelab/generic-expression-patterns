@@ -43,10 +43,11 @@ print(list(G.vp.keys()))
 print(list(G.ep.keys()))
 
 
+# ### Plot degree distribution + look at degrees of generic genes
+
 # In[4]:
 
 
-# plot degree distribution + look at degrees of generic genes
 vs = G.get_vertices()
 names = [G.vp['name'][v] for v in vs]
 is_generic = [G.vp['is_generic'][v] for v in vs]
@@ -71,6 +72,15 @@ axarr[0].set_title('Degree distribution of generic/non-generic genes')
 sns.boxplot(data=degree_df, y='degree', x='is_generic', ax=axarr[1])
 axarr[1].set_title('Degree distribution of generic/non-generic genes')
 
+
+# ### Plot weight distribution + look at weights of edges connecting generic genes
+# 
+# There are 3 possible types of edges:
+# * an edge connects 2 generic genes
+# * an edge connects 2 non-generic genes
+# * an edge connects a generic gene with a non-generic gene
+# 
+# We'll look separately at the edge weight distribution for each of these edge types.
 
 # In[6]:
 
@@ -104,6 +114,12 @@ sns.boxplot(data=weight_df, y='weight', x='is_generic', ax=axarr[1])
 axarr[1].set_title('Weight distribution of generic/non-generic edges')
 
 
+# ### Plot distributions for centrality measures (betweenness + PageRank)
+# 
+# Note that the weighted betweenness centrality calculation interprets edge weights as "costs" (lower = better), so we need to change our correlation-based edge weights to a weight representing dissimilarity or distancs.
+# 
+# PageRank interprets edge weights as "importance scores", so our correlations work fine without any additional transformation.
+
 # In[8]:
 
 
@@ -113,7 +129,8 @@ axarr[1].set_title('Weight distribution of generic/non-generic edges')
 # but since our edge weights represent similarity, we need to convert them to
 # a distance/cost measure
 # 
-# taking distance = (1 - similarity) is a simple way to do this
+# taking distance = (1 - similarity) is a simple way to do this:
+# a high similarity between genes will have a short distance
 eprop_distance = G.new_edge_property('float')
 for e in G.edges():
     eprop_distance[e] = 1 - G.ep['weight'][e]
@@ -148,7 +165,6 @@ sns.histplot(data=bw_df, x='betweenness', hue='is_generic', element='step',
              stat='probability', common_norm=False, ax=axarr[0])
 axarr[0].set_title('Betweenness centrality of generic/non-generic genes')
 axarr[0].set_xscale('log')
-# axarr[0].set_yscale('log')
 sns.boxplot(data=bw_df, y='betweenness', x='is_generic', ax=axarr[1])
 axarr[1].set_title('Betweenness centrality of generic/non-generic genes')
 axarr[1].set_yscale('log')
