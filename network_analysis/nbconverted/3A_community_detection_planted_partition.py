@@ -79,7 +79,7 @@ def graph_state_to_df(G, state):
     vs = G.get_vertices()
     names = [G.vp['name'][v] for v in vs]
     degrees = G.get_total_degrees(vs)
-    is_generic = [G.vp['generic'][v] for v in vs]
+    is_generic = [G.vp['is_generic'][v] for v in vs]
     return pd.DataFrame({
         'gene': names,
         'label': labels,

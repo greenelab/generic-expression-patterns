@@ -91,7 +91,7 @@ for ix, v in enumerate(G.vertices()):
     v_label = annot_df.loc[v_name, 'label']
     vprop_generic[v] = v_label
 
-G.vertex_properties['generic'] = vprop_generic
+G.vertex_properties['is_generic'] = vprop_generic
 
 
 # In[7]:
@@ -127,6 +127,6 @@ G.save(processed_graph, fmt='gt')
 red_blue_map = {0: (1, 0, 0, 1), 1: (0, 0, 1, 1)}
 plot_color = G.new_vertex_property('vector<double>')
 for v in G.vertices():
-    plot_color[v] = red_blue_map[G.vp['generic'][v]]
+    plot_color[v] = red_blue_map[G.vp['is_generic'][v]]
 gt.graph_draw(G, vertex_fill_color=plot_color)
 
