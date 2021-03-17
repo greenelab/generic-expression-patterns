@@ -145,12 +145,10 @@ select_ribo_expression = ribo_matrix_df[select_ribo_ids].T
 
 # ## Format data matrix
 #
-# * include only those genes that were used in our analysis --> take intersection with our compendium
+# * Include only those genes that were used in our analysis
 #     - Note: gene ENSEMBL ids already mapped to HGNC ids: https://github.com/AlexsLemonade/OpenPBTA-analysis/tree/master/analyses/collapse-rnaseq
-#
-# * Create metadata dataframe with grouping information for DE analysis. Make sure the samples are ordered by pairs
-#
-# - Do we need to do anything with expression values to run DE????
+# * Select only those samples with measurements from both polyA-selection and ribo-depleted protocols
+# * Create metadata dataframe with grouping information for DE analysis.
 
 # Read template file
 template_SOPHIE = pd.read_csv(
@@ -209,7 +207,6 @@ sample_grouping_metadata
 # -
 
 # ## Save
-# - Save metadata df and expression data df
 
 # +
 expression_data_filename = "polya_ribo_expression.tsv"
