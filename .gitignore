@@ -4,6 +4,8 @@
 *.~lock*
 *.log
 *.egg-info/
+*.RData
+*.Rhistory
 
 network_analysis/data/edge_list_processed*.csv
 network_analysis/data/*.gt
