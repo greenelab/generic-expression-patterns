@@ -6,6 +6,7 @@
 *.egg-info/
 *.RData
 *.Rhistory
+*.RDataTmp
 
 network_analysis/data/edge_list_processed*.csv
 network_analysis/data/*.gt
