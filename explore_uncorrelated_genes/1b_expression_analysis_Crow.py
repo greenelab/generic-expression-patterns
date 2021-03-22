@@ -21,6 +21,8 @@
 
 # %load_ext autoreload
 import os
+import random
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -41,26 +43,28 @@ dataset_name = params["dataset_name"]
 project_id = params["project_id"]
 col_to_rank_genes = params["rank_genes_by"]
 mapped_compendium_filename = params["mapped_compendium_filename"]
+
+if_single_experiment = False
 # -
 
-# ## Format data
+# Read in recount2 expression compendium
+recount2_expression = pd.read_csv(
+    mapped_compendium_filename, sep="\t", index_col=0, header=0
+).T
+
+# ## Format Crow expression data
 #
-# * Drop extra rows so that the data frame only includes gene samples x gene symbol
 # * Include only genes that were used in our original analysis
 
-# Read in combined expression data
-crow_expression_filename = os.path.join(local_dir, "Crow_expression_data.tsv")
+# Read in Crow expression data
+crow_expression_filename = os.path.join(local_dir, "Crow_expression_data_union.tsv")
 crow_expression_data = pd.read_csv(
     crow_expression_filename, sep="\t", index_col=0, header=0
-)
+).T
 
 crow_expression_data.shape
 
-crow_expression_data.head(20)
-
-# +
-# TO DO
-# Drop extra rows
+crow_expression_data.head()
 
 # +
 # Load gene_summary_filename
@@ -71,14 +75,82 @@ gene_summary_filename = os.path.join(
 summary_gene_ranks = pd.read_csv(gene_summary_filename, sep="\t", index_col=0, header=0)
 # -
 
-# TO DO
+summary_gene_ranks.head()
+
+# +
 # Subset genes
-"""our_gene_ids = list(summary_gene_ranks.index())
-crow_gene_ids = list(crow_expression_data.columns)
+our_gene_ids = list(summary_gene_ranks.index)
+crow_gene_ids = list(crow_expression_data.index)
 
 shared_gene_ids = set(crow_gene_ids).intersection(our_gene_ids)
 
-expression_data = crow_expression_data.loc[shared_gene_ids]"""
+expression_data = crow_expression_data.loc[shared_gene_ids]
+# -
+
+print(expression_data.shape)
+expression_data.head()
+
+# ## (optional) Select gene subset of samples
+#
+# Select samples from a specific experiment to examine local gene expression behavior within a single experiment (local) in addition to across all samples (global)
+#
+# We would actually like to do this for crow data but, we do not have metadata mapping experiment ids to sample ids. So this analysis option is only available for recount2 for now
+
+recount2_metadata_filename = os.path.join(
+    base_dir, dataset_name, "data", "metadata", "recount2_metadata.tsv"
+)
+
+
+# Function scraped from ponyo since we're already using a different version of ponyo in this repo
+def get_sample_ids_random_experiment(
+    metadata_filename, delimiter, experiment_colname, sample_id_colname
+):
+    """
+    Returns sample ids (found in gene expression df) associated with
+    a given list of experiment ids (found in the metadata)
+
+    Arguments
+    ----------
+    metadata_filename: str
+        Metadata file path. An example metadata file can be found
+        here: https://github.com/greenelab/ponyo/blob/master/human_tests/data/metadata/recount2_metadata.tsv
+
+    delimiter: str
+        Delimiter for metadata file
+
+    experiment_colname: str
+        Column header that contains the experiment ids
+
+    sample_id_colname: str
+        Column header that contains sample id that maps expression data
+        and metadata
+
+    """
+
+    # Read in metadata
+    metadata = pd.read_csv(metadata_filename, header=0, sep=delimiter, index_col=None)
+
+    # Set index column to experiment id column
+    metadata.set_index(experiment_colname, inplace=True)
+
+    # Select random experiment
+    rn_experiment_id = random.choice(list(np.unique(metadata.index)))
+
+    # Select samples associated with experiment id
+    selected_metadata = metadata.loc[rn_experiment_id]
+    sample_ids = list(selected_metadata[sample_id_colname])
+
+    return sample_ids
+
+
+if if_single_experiment:
+    # Get sample ids for random experiment
+    recount2_sample_ids = get_sample_ids_random_experiment(
+        recount2_metadata_filename, "\t", "project", "run"
+    )
+
+    # Subset expression data
+    recount2_expression = recount2_expression.loc[recount2_sample_ids]
 
 # ## Get uncorrelated genes
 
@@ -110,40 +182,87 @@ uncorrelated_ranking = shared_ranking[
 
 uncorrelated_genes = uncorrelated_ranking["Gene_Name"]
 print(len(uncorrelated_genes))
-# -
-
-# ## Get average expression data
 
 # +
+# Get correlated gene ids
+correlated_ranking = shared_ranking[
+    (shared_ranking["Percentile (simulated)"] > 80)
+    & (shared_ranking["DE_Prior_Rank"] > 80)
+]
+
+correlated_genes = correlated_ranking["Gene_Name"]
+print(len(correlated_genes))
+# -
+
+# Save uncorrelated genes
+uncorrelated_genes.to_csv("uncorrelated_genes.tsv", sep="\t")
+
+# ## Plot average expression
+
 # Get average expression of SOPHIE trained recount2 dataset
-recount2_expression = pd.read_csv(
-    mapped_compendium_filename, sep="\t", index_col=0, header=0
-)
+recount2_expression_mean = recount2_expression.mean(axis=1)
 
-recount2_expression_mean = recount2_expression.mean()
+recount2_expression_mean.head()
 
-# +
 # Get average expression of Crow dataset
-# crow_expression_mean = crow_expression_data.mean()
+crow_expression_mean = crow_expression_data.mean(axis=1)
 
-# +
-# TO DO
-# Normalize or scale data?
-# Coloring
-# -
+crow_expression_mean.head()
+
+# Check that we selecting the correct genes
+uncorrelated_genes = list(uncorrelated_genes.values)
+uncorrelated_genes[0:5]
+
+recount2_expression_mean[uncorrelated_genes].head()
+
+crow_expression_mean.reindex(uncorrelated_genes).head()
 
 # Violin plot of average recount2 expression highlighing uncorrelated genes
-f = sns.violinplot(recount2_expression_mean)
-f = sns.swarmplot(recount2_expression_mean.loc[uncorrelated_genes], color="red")
-plt.xscale("log")
+print(
+    f"Number of uncorrelated gene data available: {len(recount2_expression_mean[uncorrelated_genes])}"
+)
+f = sns.violinplot(np.log10(recount2_expression_mean), color="lightgrey")
+f = sns.stripplot(
+    np.log10(recount2_expression_mean[correlated_genes]), color="blue", alpha=0.3
+)
+f = sns.stripplot(
+    np.log10(recount2_expression_mean[uncorrelated_genes]), color="red", alpha=0.3
+)
 f.set_title("Average recount2 expression with uncorrelated genes highlighted")
+f.set_xlabel("log10(average expression)")
 
 # Violin plot of average array expression highlighing uncorrelated genes
-"""g = sns.violinplot(crow_expression_mean)
-g = sns.stripplot(crow_expression_mean.loc[uncorrelated_genes], color="red")
-plt.xscale("log")
-g.set_title("Average array expression with uncorrelated genes highlighted")"""
+print(
+    f"Number of uncorrelated gene data available: {len(crow_expression_mean.reindex(uncorrelated_genes))}"
+)
+g = sns.violinplot(np.log10(crow_expression_mean), color="lightgrey")
+g = sns.stripplot(
+    np.log10(crow_expression_mean[correlated_genes]), color="blue", alpha=0.3
+)
+g = sns.stripplot(
+    np.log10(crow_expression_mean.reindex(uncorrelated_genes)), color="red", alpha=0.3
+)
+g.set_title(
+    "Average array (Crow et. al.) expression with uncorrelated genes highlighted"
+)
+g.set_xlabel("log10(average expression)")
 
-# Distribution plot with distribution of Crow vs uncorrelated genes
-sns.distplot(recount2_expression_mean)
-sns.distplot(recount2_expression_mean.loc[uncorrelated_genes])
+g.get_figure().savefig(
+    "array_expression_dist_uncorr_genes_highlight.svg",
+    format="svg",
+    bbox_inches="tight",
+    transparent=True,
+    pad_inches=0,
+    dpi=300,
+)
+
+# **Takeaway:**
+# * Our hypothesis is that these uncorrelated genes are those that are not well captured on microarray technology.
+# * Based on the distribution of the array data, it looks like these genes are fairly lowly expressed, but based on the density of the violin plot there appear to be many genes that have a similar range of expression. So these uncorrelated genes are as well captured as correlated genes.
+# * This hypothesis does not seem to hold
+
+# **Other thoughts:**
+#
+# Looking to characterize _who_ these uncorrelated genes are, we used https://academic.oup.com/nar/article/48/D1/D174/5588346 to lookup the uncorrelated genes to determine if they have 3' end processing (i.e. polyadenylation sites)
+#
+# Manually looking up individual genessd (since there doesn't seem to be a way to do this in batch), we found that most genes have at least one polyadenylated site.
