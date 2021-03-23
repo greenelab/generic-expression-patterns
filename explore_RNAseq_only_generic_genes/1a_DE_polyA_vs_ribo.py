@@ -17,7 +17,7 @@
 #
 # This notebook tests the hypothesis that these uncorrelated genes are due to difference in platforms. Specifically, we believe that these genes are those that are differentially expressed using ribo-depleted vs polyA-selection. There may exist some genes that are frequently found to be differentially expressed using polyA-selection and some genes that are frequently found to be differentially expressed using the ribo-depletion strategy. Since our training compendium is recount2, which includes many different types of experiments therefore different selection strategies, its possible that these gene biases that result from differences in processing are found by SOPHIE but not found by Crow et. al. which uses array technology.
 #
-# This notebook compares 6 matched samples generated using both polyA-selected and ribo-depleted strategies. Then highlights the DEGs on the correlation plot to determine if the uncorrelated genes are those that are due to differences in protocol.
+# This notebook compares 6 matched samples generated using both polyA-selected and ribo-depleted strategies. Then highlights the DEGs on the correlation plot to determine if the genes that are generic in RNA-seq only are those that are due to differences in protocol.
 
 # +
 # %load_ext autoreload
