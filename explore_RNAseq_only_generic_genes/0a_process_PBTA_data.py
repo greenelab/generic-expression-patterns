@@ -126,9 +126,7 @@ patient_to_ribo_id
 
 # +
 # Select patient sample ids with both polyA-selected and ribo-depleted measurements
-shared_patient_ids = list(
-    set(patient_to_polya_id.keys()).intersection(patient_to_ribo_id.keys())
-)
+shared_patient_ids = list(patient_to_polya_id.keys() & patient_to_ribo_id.keys())
 
 # Check that these patient ids were consistent with previous analysis comparing TP53 status across platform:
 # https://github.com/AlexsLemonade/OpenPBTA-analysis/pull/930
