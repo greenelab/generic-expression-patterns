@@ -196,7 +196,7 @@ polya_ids = list(select_polya_expression.index)
 ribo_ids = list(select_ribo_expression.index)
 
 sample_ids = polya_ids + ribo_ids
-labels = [1] * 6 + [2] * 6
+labels = [1] * len(polya_ids) + [2] * len(ribo_ids)
 
 sample_grouping_metadata = pd.DataFrame(data={"Sample": sample_ids, "group": labels})
 
