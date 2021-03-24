@@ -353,7 +353,6 @@ def merge_ranks_to_compare(
     reference_ranks_df = pd.read_csv(
         reference_ranks_file, header=0, index_col=0, sep="\t"
     )
-
     # Get list of our genes or pathways
     gene_or_pathway_ids = list(your_summary_ranks_df.index)
 
@@ -368,7 +367,6 @@ def merge_ranks_to_compare(
     shared_genes_or_pathways = set(gene_or_pathway_ids).intersection(
         published_generic_genes_or_pathways
     )
-
     # Get your rank of shared genes
     # Note: ranking was performed before intersection
     # So there will be some jumps in the ranking due to
@@ -464,7 +462,6 @@ def get_shared_rank_scaled(
     shared_rank_df = merge_ranks_to_compare(
         summary_df, reference_filename, ref_gene_col, ref_rank_col
     )
-
     if max(shared_rank_df["Percentile (simulated)"]) != max(shared_rank_df[ref_rank_col]):
         shared_rank_scaled_df = scale_reference_ranking(shared_rank_df, ref_rank_col)
     else:
@@ -549,6 +546,74 @@ def compare_gene_ranking(
     return correlations, shared_gene_rank_scaled_df
 
 
+def compare_gene_ranking_highlight(
+    summary_df, reference_filename, ref_gene_col, ref_rank_col, genes_to_highlight, output_figure_filename
+):
+    """
+    Compare gene ranking and generate a SVG figure.
+    Returns correlations to make debugging easier.
+
+    Arguments
+    ------------
+    summary_df: dataframe
+        Dataframe containing our ranking per gene along with other statistics
+        associated with that gene.
+    reference_filename: str
+        File containing gene ranks from reference publication (Crow et. al.)
+    ref_gene_col: str
+        Name of column header containing reference gene symbols
+    ref_rank_col: str
+        Name of column header containing reference ranks of genes
+    genes_to_highlight: list
+        List of genes to highlight on correlation plot
+    output_figure_filename: str
+        Filename of output figure
+    """
+
+    shared_gene_rank_scaled_df, correlations = get_shared_rank_scaled(
+        summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type="DE"
+    )
+    # Set index to Gene_Name to highlight specific genes
+    shared_gene_rank_scaled_df.set_index("Gene_Name", inplace=True)
+
+    # Add label to color by
+    shared_gene_rank_scaled_df["gene label"] = "other genes"
+    mappable_gene_ids = [gene_id for gene_id in genes_to_highlight if gene_id in list(shared_gene_rank_scaled_df.index)]
+    shared_gene_rank_scaled_df.loc[mappable_gene_ids, "gene label"] = "polyA_vs_ribo"
+
+    fig = sns.jointplot(
+        data=shared_gene_rank_scaled_df,
+        x="Percentile (simulated)",
+        y=ref_rank_col,
+        kind='hex',
+        marginal_kws={"color": "white"},
+    )
+    highlight_data = shared_gene_rank_scaled_df[shared_gene_rank_scaled_df["gene label"] == "polyA_vs_ribo"]
+
+    plt.scatter(highlight_data["Percentile (simulated)"], highlight_data[ref_rank_col], c="red", alpha=0.7)
+
+    if ref_rank_col == "DE_Prior_Rank":
+        fig.set_axis_labels(
+            "SOPHIE", "DE prior (Crow et. al. 2019)", fontsize=14, fontname="Verdana"
+        )
+    elif ref_rank_col == "prop DEGs":
+        fig.set_axis_labels(
+            "SOPHIE", "GAPE (Stanton lab, 2020)", fontsize=14, fontname="Verdana"
+        )
+    # plt.colorbar()
+
+    fig.savefig(
+        output_figure_filename,
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )
+
+    return correlations, shared_gene_rank_scaled_df
+
+
 def compare_pathway_ranking(summary_df, reference_filename, output_figure_filename):
     """
     Compare pathway ranking.
@@ -576,10 +641,8 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
         data=shared_pathway_rank_scaled_df,
         x="Percentile (simulated)",
         y=ref_rank_col,
-        color="#15527d",
-        s=50,
+        palette="#15527d",
         alpha=0.7,
-        edgecolors="face",
     )
 
     fig.set_xlabel("SOPHIE", fontsize=14, fontname="Verdana")
@@ -911,7 +974,6 @@ def process_and_rank_genes_pathways(
     # Rank genes in template experiment
     template_stats = rank_genes_or_pathways(col_to_rank_by, template_stats, True)
 
-
     # For simulated experiments
     # Concatenate simulated experiments
     simulated_stats_all = concat_simulated_data(
@@ -1151,7 +1213,6 @@ def get_num_gene_DE(simulated_stats_concat_df, log_name, pvalue_name):
             if (abs(logFC_i) > 1) & (pvalue_i < 0.05):
                 num_times_DE += 1.0
         count_DE.append(float(num_times_DE))
-
 
     # Make dataframe
     freq_DE_df = pd.DataFrame(
