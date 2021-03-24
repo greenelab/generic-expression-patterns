@@ -344,7 +344,6 @@ hallmark_DB_filename = os.path.join(
 )
 
 # + magic_args="-i base_dir -i template_DE_stats_filename -i hallmark_DB_filename -i statistic -o template_enriched_pathways" language="R"
-#
 # source(paste0(base_dir, '/generic_expression_patterns_modules/GSEA_analysis.R'))
 #
 # out_file <- paste(local_dir,
@@ -355,7 +354,9 @@ hallmark_DB_filename = os.path.join(
 #
 # template_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)
 #
-# write.table(as.data.frame(template_enriched_pathways[1:7]), file = out_file, row.names = F, sep = "\t")
+# template_enriched_pathways <- as.data.frame(template_enriched_pathways[1:7])
+#
+# write.table(template_enriched_pathways, file = out_file, row.names = F, sep = "\t")
 
 # + magic_args="-i project_id -i local_dir -i hallmark_DB_filename -i num_runs -i statistic -i base_dir" language="R"
 #
@@ -403,7 +404,7 @@ assert os.path.getsize(GSEA_output1) > 0 and os.path.getsize(GSEA_output2) > 0
 # +
 analysis_type = "GSA"
 template_GSEA_stats_filename = os.path.join(
-    local_dir, "GSA_stats", f"GSEA_stats_template_data_{project_id}_real.txt"
+    local_dir, "GSA_stats", f"GSEA_stats_template_data_{project_id}_test.txt"
 )
 
 (
