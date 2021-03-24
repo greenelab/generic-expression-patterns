@@ -85,7 +85,7 @@ for (i in 1:length(gse_ids)){
 }
 
 # Save
-write.table(all_data, "/home/alexandra/Documents/Data/Generic_expression_patterns/Crow_expression_data_union.tsv", sep="\t", row.names=TRUE, col.names=TRUE)
+write.table(all_data, "/home/alexandra/Documents/Data/Generic_expression_patterns/Crow_expression_data_union.tsv", sep="\t")
 
 # tmp call
 #result_pt1_filename <- "/home/alexandra/Documents/Data/Generic_expression_patterns/Crow_expression_data_part1.tsv"

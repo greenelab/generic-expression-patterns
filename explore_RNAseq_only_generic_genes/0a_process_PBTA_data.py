@@ -128,7 +128,7 @@ patient_to_ribo_id
 # Select patient sample ids with both polyA-selected and ribo-depleted measurements
 shared_patient_ids = list(patient_to_polya_id.keys() & patient_to_ribo_id.keys())
 
-# Check that these patient ids were consistent with previous analysis comparing TP53 status across platform:
+# Manually checked that these patient ids were consistent with previous analysis comparing TP53 status across platform:
 # https://github.com/AlexsLemonade/OpenPBTA-analysis/pull/930
 shared_patient_ids
 # -
@@ -163,7 +163,7 @@ SOPHIE_gene_ids = list(template_SOPHIE.columns)
 
 # +
 # Get shared gene ids between polyA and ribo
-shared_platform_gene_ids = set(select_polya_expression.columns).intersection(
+shared_platform_gene_ids = select_polya_expression.columns.intersection(
     select_ribo_expression.columns
 )
 print(len(shared_platform_gene_ids))

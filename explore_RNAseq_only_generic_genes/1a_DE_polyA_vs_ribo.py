@@ -117,6 +117,10 @@ project_id = params["project_id"]
 # In general, the recommendation to use `tximport` might be necessary for the case where we have transcript-level data.
 
 # +
+# Process data to be input into DESeq
+# This processing includes:
+# * checking and reordering samples ids according to metadata grouping
+# * rounding estimated counts to integers
 mapped_expression_filename = "polya_ribo_expression.tsv"
 processed_expression_filename = "polya_ribo_expression_processed.tsv"
 metadata_filename = "polya_ribo_sample_grouping.tsv"

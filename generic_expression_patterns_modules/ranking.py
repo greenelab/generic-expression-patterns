@@ -581,8 +581,6 @@ def compare_gene_ranking_highlight(
     mappable_gene_ids = [gene_id for gene_id in genes_to_highlight if gene_id in list(shared_gene_rank_scaled_df.index)]
     shared_gene_rank_scaled_df.loc[mappable_gene_ids, "gene label"] = "polyA_vs_ribo"
 
-    # print(shared_gene_rank_scaled_df)
-
     fig = sns.jointplot(
         data=shared_gene_rank_scaled_df,
         x="Percentile (simulated)",
@@ -592,18 +590,7 @@ def compare_gene_ranking_highlight(
     )
     highlight_data = shared_gene_rank_scaled_df[shared_gene_rank_scaled_df["gene label"] == "polyA_vs_ribo"]
 
-    # print(highlight_data)
-
     plt.scatter(highlight_data["Percentile (simulated)"], highlight_data[ref_rank_col], c="red", alpha=0.7)
-
-    # fig = sns.jointplot(
-    #    data=shared_gene_rank_scaled_df,
-    #    x="Percentile (simulated)",
-    #    y=ref_rank_col,
-    #    marginal_kws={"color": "white"},
-    #    joint_kws={'alpha':0.1},
-    #    hue="gene label"
-    # )
 
     if ref_rank_col == "DE_Prior_Rank":
         fig.set_axis_labels(
@@ -654,10 +641,8 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
         data=shared_pathway_rank_scaled_df,
         x="Percentile (simulated)",
         y=ref_rank_col,
-        color="#15527d",
-        s=50,
+        palette="#15527d",
         alpha=0.7,
-        edgecolors="face",
     )
 
     fig.set_xlabel("SOPHIE", fontsize=14, fontname="Verdana")

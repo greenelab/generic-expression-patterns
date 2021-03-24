@@ -103,7 +103,7 @@ recount2_metadata_filename = os.path.join(
 
 # Function scraped from ponyo since we're already using a different version of ponyo in this repo
 def get_sample_ids_random_experiment(
-    metadata_filename, delimiter, experiment_colname, sample_id_colname
+    metadata_filename, delimiter, experiment_colname, sample_id_colname, rn_seed
 ):
     """
     Returns sample ids (found in gene expression df) associated with
@@ -126,6 +126,7 @@ def get_sample_ids_random_experiment(
         and metadata
 
     """
+    random.seed(rn_seed)
 
     # Read in metadata
     metadata = pd.read_csv(metadata_filename, header=0, sep=delimiter, index_col=None)
@@ -146,7 +147,7 @@ def get_sample_ids_random_experiment(
 if if_single_experiment:
     # Get sample ids for random experiment
     recount2_sample_ids = get_sample_ids_random_experiment(
-        recount2_metadata_filename, "\t", "project", "run"
+        recount2_metadata_filename, "\t", "project", "run", 1
     )
 
     # Subset expression data
