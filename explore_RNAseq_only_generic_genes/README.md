@@ -36,7 +36,7 @@ sudo docker run --mount type=bind,target=/home/rstudio/kitematic,source=$PWD -e 
 
 7. In the R terminal run:
 ```
-`bash download-data.sh`
+bash download-data.sh
 ```
 Data files in data/
 
