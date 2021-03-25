@@ -56,39 +56,39 @@ def make_figure_panel(filename, scale_x_input, scale_y_input, x_loc, y_loc):
 
 # Create panels for figure 1
 panel_1a = make_figure_panel(
-    "fig1A.svg", scale_x_input=2.5, scale_y_input=2.5, x_loc=30, y_loc=10
+    "fig1A.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
 panel_1b = make_figure_panel(
-    "../human_general_analysis/logs/NN_2500_30/tybalt_2layer_30latent_hist.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=600,
+    os.path.join(local_directory, "tybalt_2layer_30latent_hist.svg"),
+    scale_x_input=1,
+    scale_y_input=1,
+    x_loc=900,
     y_loc=10,
 )
 panel_1c = make_figure_panel(
-    "fig1C.svg", scale_x_input=4.2, scale_y_input=4.2, x_loc=30, y_loc=250
+    "fig1C.svg", scale_x_input=5.5, scale_y_input=5.5, x_loc=30, y_loc=300
 )
 panel_1dleft = make_figure_panel(
     os.path.join(local_directory, "template_volcano_DEG_SRP061689.svg"),
-    scale_x_input=0.6,
-    scale_y_input=0.6,
+    scale_x_input=0.9,
+    scale_y_input=0.9,
     x_loc=30,
-    y_loc=700,
+    y_loc=900,
 )
 panel_1dright = make_figure_panel(
     os.path.join(local_directory, "simulated_volcano_DEG_SRP061689.svg"),
-    scale_x_input=0.65,
-    scale_y_input=0.65,
-    x_loc=300,
-    y_loc=685,
+    scale_x_input=0.95,
+    scale_y_input=0.95,
+    x_loc=400,
+    y_loc=885,
 )
 
 panel_1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_1b_label = sg.TextElement(580, 20, "B", size=18, weight="bold", font="Verdana")
-panel_1c_label = sg.TextElement(10, 260, "C", size=18, weight="bold", font="Verdana")
-panel_1d_label = sg.TextElement(10, 710, "D", size=18, weight="bold", font="Verdana")
+panel_1b_label = sg.TextElement(900, 20, "B", size=18, weight="bold", font="Verdana")
+panel_1c_label = sg.TextElement(10, 300, "C", size=18, weight="bold", font="Verdana")
+panel_1d_label = sg.TextElement(10, 900, "D", size=18, weight="bold", font="Verdana")
 
-figure_1 = sg.SVGFigure("1000", "1000")
+figure_1 = sg.SVGFigure("1500", "1200")
 figure_1.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -112,52 +112,52 @@ figure_1.save("output/figure_1.svg")
 
 # Create panels for figure 2
 panel_2a = make_figure_panel(
-    "fig2A.svg", scale_x_input=2, scale_y_input=2, x_loc=30, y_loc=10
+    "fig2A.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
 panel_2b = make_figure_panel(
     "../human_cancer_analysis/gene_ranking_logFC.svg",
-    scale_x_input=0.6,
-    scale_y_input=0.6,
+    scale_x_input=0.8,
+    scale_y_input=0.8,
     x_loc=30,
-    y_loc=300,
+    y_loc=550,
 )
 panel_2c = make_figure_panel(
     "../human_general_analysis/gene_ranking_log2FoldChange.svg",
-    scale_x_input=0.6,
-    scale_y_input=0.6,
-    x_loc=300,
-    y_loc=300,
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=400,
+    y_loc=550,
 )
 panel_2d = make_figure_panel(
     "../pseudomonas_analysis/gene_ranking_logFC.svg",
-    scale_x_input=0.6,
-    scale_y_input=0.6,
-    x_loc=600,
-    y_loc=300,
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=800,
+    y_loc=550,
 )
 panel_2e = make_figure_panel(
     "../compare_experiments/concordance_between_same_recount2_templates.svg",
-    scale_x_input=0.57,
-    scale_y_input=0.57,
+    scale_x_input=0.77,
+    scale_y_input=0.77,
     x_loc=30,
-    y_loc=600,
+    y_loc=900,
 )
 panel_2f = make_figure_panel(
     "../compare_experiments/concordance_between_diff_recount2_templates.svg",
-    scale_x_input=0.57,
-    scale_y_input=0.57,
-    x_loc=300,
-    y_loc=600,
+    scale_x_input=0.77,
+    scale_y_input=0.77,
+    x_loc=400,
+    y_loc=900,
 )
 
 panel_2a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_2b_label = sg.TextElement(10, 300, "B", size=18, weight="bold", font="Verdana")
-panel_2c_label = sg.TextElement(300, 300, "C", size=18, weight="bold", font="Verdana")
-panel_2d_label = sg.TextElement(600, 300, "D", size=18, weight="bold", font="Verdana")
-panel_2e_label = sg.TextElement(10, 600, "E", size=18, weight="bold", font="Verdana")
-panel_2f_label = sg.TextElement(300, 600, "F", size=18, weight="bold", font="Verdana")
+panel_2b_label = sg.TextElement(10, 550, "B", size=18, weight="bold", font="Verdana")
+panel_2c_label = sg.TextElement(400, 550, "C", size=18, weight="bold", font="Verdana")
+panel_2d_label = sg.TextElement(800, 550, "D", size=18, weight="bold", font="Verdana")
+panel_2e_label = sg.TextElement(10, 900, "E", size=18, weight="bold", font="Verdana")
+panel_2f_label = sg.TextElement(400, 900, "F", size=18, weight="bold", font="Verdana")
 
-figure_2 = sg.SVGFigure("1000", "1000")
+figure_2 = sg.SVGFigure("1200", "1300")
 figure_2.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -184,45 +184,37 @@ figure_2.save("output/figure_2.svg")
 
 # Create panels for figure 3
 panel_3a = make_figure_panel(
-    "fig2D.svg", scale_x_input=2, scale_y_input=2, x_loc=30, y_loc=10
+    "fig2D.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
 panel_3b = make_figure_panel(
     "../human_cancer_analysis/pathway_ranking_padj.svg",
     scale_x_input=1,
     scale_y_input=1,
-    x_loc=500,
+    x_loc=900,
     y_loc=30,
 )
 panel_3c = make_figure_panel(
     os.path.join(local_directory, "fig3C.svg"),
-    scale_x_input=2,
-    scale_y_input=2,
+    scale_x_input=3,
+    scale_y_input=3,
     x_loc=30,
-    y_loc=300,
+    y_loc=600,
 )
 panel_3d = make_figure_panel(
     "../other_enrichment_methods/enrichment_paired_plot_rnaseq.svg",
-    scale_x_input=0.5,
-    scale_y_input=0.5,
-    x_loc=500,
-    y_loc=320,
-)
-panel_3e = make_figure_panel(
-    "../other_enrichment_methods/enrichment_paired_plot_array.svg",
-    scale_x_input=0.5,
-    scale_y_input=0.5,
-    x_loc=1000,
-    y_loc=320,
+    scale_x_input=2,
+    scale_y_input=2,
+    x_loc=700,
+    y_loc=600,
 )
 
 
 panel_3a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_3b_label = sg.TextElement(500, 20, "B", size=18, weight="bold", font="Verdana")
-panel_3c_label = sg.TextElement(10, 300, "C", size=18, weight="bold", font="Verdana")
-panel_3d_label = sg.TextElement(500, 300, "D", size=18, weight="bold", font="Verdana")
-panel_3e_label = sg.TextElement(1000, 300, "E", size=18, weight="bold", font="Verdana")
+panel_3b_label = sg.TextElement(900, 20, "B", size=18, weight="bold", font="Verdana")
+panel_3c_label = sg.TextElement(10, 600, "C", size=18, weight="bold", font="Verdana")
+panel_3d_label = sg.TextElement(700, 600, "D", size=18, weight="bold", font="Verdana")
 
-figure_3 = sg.SVGFigure("1500", "800")
+figure_3 = sg.SVGFigure("2500", "2500")
 figure_3.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -230,12 +222,10 @@ figure_3.append(
         panel_3b,
         panel_3c,
         panel_3d,
-        panel_3e,
         panel_3a_label,
         panel_3b_label,
         panel_3c_label,
         panel_3d_label,
-        panel_3e_label,
     ]
 )
 display(SVG(figure_3.to_str()))
@@ -267,23 +257,41 @@ panel_4c = make_figure_panel(
     x_loc=700,
     y_loc=10,
 )
-## TO DO
-# Add network results when ready
+panel_4d = make_figure_panel(
+    "../network_analysis/communities_fig.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=30,
+    y_loc=300,
+)
+panel_4e = make_figure_panel(
+    "../network_analysis/centrality_figure.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=700,
+    y_loc=300,
+)
 
 panel_4a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_4b_label = sg.TextElement(350, 20, "B", size=18, weight="bold", font="Verdana")
 panel_4c_label = sg.TextElement(700, 20, "C", size=18, weight="bold", font="Verdana")
+panel_4d_label = sg.TextElement(10, 300, "D", size=18, weight="bold", font="Verdana")
+panel_4e_label = sg.TextElement(700, 300, "E", size=18, weight="bold", font="Verdana")
 
-figure_4 = sg.SVGFigure("1200", "500")
+figure_4 = sg.SVGFigure("1500", "800")
 figure_4.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
         panel_4a,
         panel_4b,
         panel_4c,
+        panel_4d,
+        panel_4e,
         panel_4a_label,
         panel_4b_label,
         panel_4c_label,
+        panel_4d_label,
+        panel_4e_label,
     ]
 )
 display(SVG(figure_4.to_str()))
@@ -316,9 +324,9 @@ panel_5c = make_figure_panel(
     y_loc=10,
 )
 panel_5d = make_figure_panel(
-    os.path.join(local_directory, "2.17.21_arg_growth.svg"),
-    scale_x_input=0.5,
-    scale_y_input=0.5,
+    os.path.join(local_directory, "WT-cbrB-EV-comp_10nM_Arg.svg"),
+    scale_x_input=2,
+    scale_y_input=2,
     x_loc=300,
     y_loc=300,
 )
