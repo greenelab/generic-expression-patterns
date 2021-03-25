@@ -451,7 +451,7 @@ def plot_dist_weights(
         hue="gene type",
         hue_order=["generic", "other"],
         dodge=False,
-        palette=["#2c7fb8", "lightgrey"],
+        palette=["#81448e", "lightgrey"],
     )
 
     fig.set_xlabel("Weight", fontsize=14, fontname="Verdana")
@@ -534,7 +534,7 @@ def plot_dist_weights_pseudomonas(
         hue="gene type",
         hue_order=["generic", "other"],
         dodge=False,
-        palette=["#2c7fb8", "lightgrey"],
+        palette=["#81448e", "lightgrey"],
     )
 
     fig.set_xlabel("Weight", fontsize=14, fontname="Verdana")

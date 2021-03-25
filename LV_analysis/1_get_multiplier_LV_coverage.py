@@ -193,7 +193,7 @@ nonzero_fig = sns.boxplot(
     x="gene type",
     y="nonzero LV coverage",
     notch=True,
-    palette=["#2c7fb8", "lightgrey"],
+    palette=["#81448e", "lightgrey"],
 )
 nonzero_fig.set_xlabel(None)
 nonzero_fig.set_xticklabels(
@@ -213,7 +213,7 @@ highweight_fig = sns.boxplot(
     x="gene type",
     y="highweight LV coverage",
     notch=True,
-    palette=["#2c7fb8", "lightgrey"],
+    palette=["#81448e", "lightgrey"],
 )
 highweight_fig.set_xlabel(None)
 highweight_fig.set_xticklabels(
