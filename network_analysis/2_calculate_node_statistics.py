@@ -73,6 +73,7 @@ axarr[1].set_title("Degree distribution of generic/non-generic genes")
 
 # +
 # Format figure for manuscript
+sns.set({"figure.figsize": (8, 6)})
 sns.set_style("whitegrid")
 centrality_fig = sns.boxplot(
     data=degree_df,

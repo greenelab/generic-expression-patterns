@@ -146,6 +146,7 @@ plt.title(
 
 # +
 # Format figure for manuscript
+sns.set({"figure.figsize": (8, 6)})
 sns.set_style("whitegrid")
 
 communities_fig = sns.histplot(
