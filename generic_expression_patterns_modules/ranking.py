@@ -521,7 +521,7 @@ def compare_gene_ranking(
         x="Percentile (simulated)",
         y=ref_rank_col,
         kind="hex",
-        marginal_kws={"color": "white"},
+        marginal_kws={"color": "white", "edgecolor": "white"},
     )
 
     if ref_rank_col == "DE_Prior_Rank":
@@ -532,7 +532,9 @@ def compare_gene_ranking(
         fig.set_axis_labels(
             "SOPHIE", "GAPE (Stanton lab, 2020)", fontsize=14, fontname="Verdana"
         )
-    plt.colorbar()
+    cbar_ax = fig.fig.add_axes([.9, .25, .05, .4])  # x, y, width, height
+    cb = plt.colorbar(cax=cbar_ax)
+    cb.set_label('Number of genes')
 
     fig.savefig(
         output_figure_filename,
@@ -600,7 +602,6 @@ def compare_gene_ranking_highlight(
         fig.set_axis_labels(
             "SOPHIE", "GAPE (Stanton lab, 2020)", fontsize=14, fontname="Verdana"
         )
-    # plt.colorbar()
 
     fig.savefig(
         output_figure_filename,
@@ -637,13 +638,16 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
         summary_df, reference_filename, ref_gene_col, ref_rank_col, data_type="GSA"
     )
 
-    fig = sns.scatterplot(
+    fig = sns.regplot(
         data=shared_pathway_rank_scaled_df,
         x="Percentile (simulated)",
         y=ref_rank_col,
-        palette="#15527d",
-        alpha=0.7,
+        color="#15527d",
     )
+
+    # add text annotation
+    print(correlations)
+    plt.text(60, 98, "R^2 = " + str(round(correlations['r'], 3)), horizontalalignment='left', size='medium', color='black')
 
     fig.set_xlabel("SOPHIE", fontsize=14, fontname="Verdana")
     fig.set_ylabel("Powers et. al. 2018", fontsize=14, fontname="Verdana")
