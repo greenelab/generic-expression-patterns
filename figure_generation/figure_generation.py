@@ -266,9 +266,9 @@ panel_4d = make_figure_panel(
 )
 panel_4e = make_figure_panel(
     "../network_analysis/centrality_figure.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=700,
+    scale_x_input=0.85,
+    scale_y_input=0.85,
+    x_loc=600,
     y_loc=300,
 )
 
@@ -276,7 +276,7 @@ panel_4a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verda
 panel_4b_label = sg.TextElement(350, 20, "B", size=18, weight="bold", font="Verdana")
 panel_4c_label = sg.TextElement(700, 20, "C", size=18, weight="bold", font="Verdana")
 panel_4d_label = sg.TextElement(10, 300, "D", size=18, weight="bold", font="Verdana")
-panel_4e_label = sg.TextElement(700, 300, "E", size=18, weight="bold", font="Verdana")
+panel_4e_label = sg.TextElement(600, 300, "E", size=18, weight="bold", font="Verdana")
 
 figure_4 = sg.SVGFigure("1500", "800")
 figure_4.append(
