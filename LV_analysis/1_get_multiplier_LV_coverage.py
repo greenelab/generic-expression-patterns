@@ -187,14 +187,24 @@ all_coverage_df = lv.assemble_coverage_df(
 )
 all_coverage_df.head()
 
+# +
 # Plot coverage distribution given list of generic coverage, specific coverage
 nonzero_fig = sns.boxplot(
     data=all_coverage_df,
     x="gene type",
     y="nonzero LV coverage",
     notch=True,
-    palette=["#2c7fb8", "lightgrey"],
+    palette=["#81448e", "lightgrey"],
 )
+# Manually add statistical annotations based on t-tests below
+x1, x2 = 0, 1  # columns 'Sat' and 'Sun' (first column: 0, see plt.xticks())
+y, h, col = all_coverage_df["nonzero LV coverage"].max() + 30, 30, "k"
+plt.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=col)
+plt.text(
+    (x1 + x2) * 0.5, y + h + 10, "p-value = 0.239", ha="center", va="bottom", color=col
+)
+
+nonzero_fig.set(ylim=(0, 800))
 nonzero_fig.set_xlabel(None)
 nonzero_fig.set_xticklabels(
     ["generic genes", "other genes"], fontsize=14, fontname="Verdana"
@@ -207,14 +217,29 @@ nonzero_fig.set_title(
     "Number of LVs genes are present in", fontsize=16, fontname="Verdana"
 )
 
+# +
 # Plot coverage distribution given list of generic coverage, specific coverage
 highweight_fig = sns.boxplot(
     data=all_coverage_df,
     x="gene type",
     y="highweight LV coverage",
     notch=True,
-    palette=["#2c7fb8", "lightgrey"],
+    palette=["#81448e", "lightgrey"],
 )
+# Manually add statistical annotations based on t-tests below
+x1, x2 = 0, 1  # columns 'Sat' and 'Sun' (first column: 0, see plt.xticks())
+y, h, col = all_coverage_df["highweight LV coverage"].max() + 10, 10, "k"
+plt.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=col)
+plt.text(
+    (x1 + x2) * 0.5,
+    y + h + 5,
+    "p-value = 6.31e-119",
+    ha="center",
+    va="bottom",
+    color=col,
+)
+
+highweight_fig.set(ylim=(0, 150))
 highweight_fig.set_xlabel(None)
 highweight_fig.set_xticklabels(
     ["generic genes", "other genes"], fontsize=14, fontname="Verdana"
@@ -226,6 +251,7 @@ highweight_fig.tick_params(labelsize=14)
 highweight_fig.set_title(
     "Number of LVs genes contribute highly to", fontsize=16, fontname="Verdana"
 )
+# -
 
 # ## Calculate statistics
 # * Is the reduction in generic coverage significant?

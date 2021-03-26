@@ -64,11 +64,13 @@ def make_volcano_template_highlight_DEG(
         hue="gene group",
         hue_order=["none", "DEG"],
         style="gene group",
-        markers={"none": ".", "DEG": "o",},
+        markers={"none": ".", "DEG": "o"},
         palette=colors,
         linewidth=0,
         alpha=0.5,
     )
+    handles, labels = f.get_legend_handles_labels()
+    f.legend([handles[1]], [labels[1]], loc="upper right")
 
     f.set_xlabel("log2 Fold Change", fontsize=14, fontname="Verdana")
     f.set_ylabel("-log10(FDR adjusted p-value)", fontsize=14, fontname="Verdana")
@@ -97,7 +99,7 @@ def make_volcano_simulated_highlight_DEG(
     output_figure_filename,
 ):
     """
-	This function makes multiple volcano plots of example simulated experiments
+    This function makes multiple volcano plots of example simulated experiments
     and highlights traditional DEGs
 
     Arguments
@@ -120,8 +122,7 @@ def make_volcano_simulated_highlight_DEG(
         Height of figure
     output_figure_filename: str
         File to save figure to
-
-	"""
+    """
     fig, axes = plt.subplots(ncols=ncols, nrows=nrows, figsize=(fig_width, fig_height))
 
     axes = axes.ravel()
@@ -163,7 +164,7 @@ def make_volcano_simulated_highlight_DEG(
             hue="gene group",
             hue_order=["none", "DEG"],
             style="gene group",
-            markers={"none": ".", "DEG": "o",},
+            markers={"none": ".", "DEG": "o"},
             palette=colors,
             linewidth=0,
             alpha=0.5,
@@ -343,8 +344,9 @@ def make_volcano_simulated_highlight_generic_specific(
     fig_height,
     output_figure_filename,
 ):
+
     """
-	This function makes multiple volcano plots of example simulated experiments
+    This function makes multiple volcano plots of example simulated experiments
     and highlights generic and specific genes on all volcano plots
 
     Arguments
@@ -374,8 +376,7 @@ def make_volcano_simulated_highlight_generic_specific(
         Height of figure
     output_figure_filename: str
         File to save figure to
-
-	"""
+    """
     # Get generic gene ids
     generic_gene_ids = get_generic_genes(gene_summary_filename, generic_threshold)
 

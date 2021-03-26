@@ -525,8 +525,9 @@ hallmark_DB_filename = params["pathway_DB_filename"]
 #                      sep = "")
 #
 # template_enriched_pathways <- find_enriched_pathways(template_DE_stats_filename, hallmark_DB_filename, statistic)
+# template_enriched_pathways <- as.data.frame(template_enriched_pathways[1:7])
 #
-# write.table(as.data.frame(template_enriched_pathways[1:7]), file = out_filename, row.names = F, sep = "\t")
+# write.table(template_enriched_pathways, file = out_filename, row.names = F, sep = "\t")
 # -
 
 print(template_enriched_pathways.shape)
