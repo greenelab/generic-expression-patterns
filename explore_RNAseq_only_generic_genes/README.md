@@ -71,3 +71,12 @@ Expression dataset from Crow et. al. downloaded from https://github.com/Pavlidis
 ![hypothesis_2](https://github.com/greenelab/generic-expression-patterns/blob/master/explore_RNAseq_only_generic_genes/array_expression_dist_gene_groups_highlight.svg)
 
 Looks like the RNA-seq generic genes (light blue) are lowly expressed, but not more than other RNA-seq and array generic genes (dark blue) captured on the array.
+
+## VAE compression
+
+Based on experiment for hypothesis 2, we noticed that the RNA-seq generic genes are low compared to RNA-seq/array generic genes in RNA-seq data.
+
+**Hypothesis 3:** The VAE isn’t adequately accounting for low read counts.
+Say we have an experiment with low read depth where a set of genes have 0 expression (i.e. not detectable).
+After going through the VAE shifting process, the gene counts might get compressed (i.e. very low gene counts are increased and very high gene counts are decreased) so that the new simulated counts for these originally 0-expressed genes, which should have a high error rate and therefore not found to be DE by DESeq, can be found as DE by DESeq with the artificial shift in values.
+If this is the case, we will need a way to re-scale values to account for the read depth differences.
