@@ -80,3 +80,14 @@ Based on experiment for hypothesis 2, we noticed that the RNA-seq generic genes 
 Say we have an experiment with low read depth where a set of genes have 0 expression (i.e. not detectable).
 After going through the VAE shifting process, the gene counts might get compressed (i.e. very low gene counts are increased and very high gene counts are decreased) so that the new simulated counts for these originally 0-expressed genes, which should have a high error rate and therefore not found to be DE by DESeq, can be found as DE by DESeq with the artificial shift in values.
 If this is the case, we will need a way to re-scale values to account for the read depth differences.
+
+**Results:**
+* For about half of the cases, here is a horizontal trend that indicates that the variance in the actual total counts is lower compared to the simulated total counts. In other words the sequencing coverage of the actual experiment is consistent while the sequencing coverage of the simulated samples is variable.
+* Overall, there are cases where most/all samples have a lower total read count in the simulated experiments compared to the actual experiment (when samples are all on one side of the diagonal). There are also cases where some samples have increased counts in the simulated experiment and some have decreased counts in the simulated experiment (i.e. when sample cross the diagonal).
+
+**Takeaway:**
+* These observations are consistent with our hypothesis that the total counts in the simulated experiment are different compared to the actual experiment and creating the opportunity for genes that to be DE that should not be.
+
+* For example, say our actual experiment has some low sequencing coverage (i.e. total read counts) where a set of genes are not detectable (i.e. these genes have 0 read counts). After going through the VAE shifting process, some samples seem to have increased or decreased sequencing coverage compared to the actual sample. This will result in the same gene artificially having a change in read count due to the differences in sequencing coverage between samples.
+
+* To correct for this we can try to re-scale the decoded counts per sample so that the sum of the simulated counts is equal to the sum of the actual total counts.

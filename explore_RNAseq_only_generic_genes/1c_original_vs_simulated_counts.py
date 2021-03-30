@@ -135,6 +135,8 @@ def scatter_plot_original_vs_simulated(
             # Gene id | total counts across samples original (template)| total counts across samples after VAE (simulated)
             template_gene_counts = template.sum()
             simulated_gene_counts = simulated.sum()
+            # template_gene_counts = template.iloc[1]
+            # simulated_gene_counts = simulated.iloc[1]
 
             gene_counts = template_gene_counts.to_frame("Original counts").merge(
                 simulated_gene_counts.to_frame("Simulated counts"),
@@ -147,13 +149,20 @@ def scatter_plot_original_vs_simulated(
                 data=gene_counts,
                 x="Simulated counts",
                 y="Original counts",
-                alpha=0.8,
+                alpha=0.3,
                 ax=axes[i],
             )
+            # axes[i].hexbin(x=gene_counts["Simulated counts"],
+            #               y=gene_counts["Original counts"],
+            #               gridsize=100
+            #              )
+            # axes[i].set_ylim([0, 0.1e7])
+            # axes[i].set_xlim([0, 0.1e7])
 
             min_ = gene_counts.min().min()
             max_ = gene_counts.max().max()
             g.plot([min_, max_], [min_, max_], "k--")
+            g.plot([0, 0.1e7], [0, 0.1e7], "k--")
             axes[i].set_ylabel("")
             axes[i].set_xlabel("")
 
@@ -191,6 +200,17 @@ scatter_plot_original_vs_simulated(
     by_sample_or_gene="sample",
 )
 
+# **Observations:**
+# * For about half of the cases, here is a horizontal trend that indicates that the variance in the actual total counts is lower compared to the simulated total counts. In other words the sequencing coverage of the actual experiment is consistent while the sequencing coverage of the simulated samples is variable.
+# * Overall, there are cases where most/all samples have a lower total read count in the simulated experiments compared to the actual experiment (when samples are all on one side of the diagonal). There are also cases where some samples have increased counts in the simulated experiment and some have decreased counts in the simulated experiment (i.e. when sample cross the diagonal).
+#
+# **Takeaway:**
+# * These observations are consistent with our hypothesis that the total counts in the simulated experiment are different compared to the actual experiment and creating the opportunity for genes that to be DE that should not be.
+#
+# * For example, say our actual experiment has some low sequencing coverage (i.e. total read counts) where a set of genes are not detectable (i.e. these genes have 0 read counts). After going through the VAE shifting process, some samples seem to have increased or decreased sequencing coverage compared to the actual sample. This will result in the same gene artificially having a change in read count due to the differences in sequencing coverage between samples.
+#
+# * To correct for this we can try to re-scale the decoded counts per sample so that the sum of the simulated counts is equal to the sum of the actual total counts.
+
 # Compare per gene
 scatter_plot_original_vs_simulated(
     ncols=5,
@@ -201,5 +221,7 @@ scatter_plot_original_vs_simulated(
     by_sample_or_gene="gene",
 )
 
-# **Takeaway"**
-# ...
+# **Observations:**
+# * Since simulations are intended to produce different experiments, we don't expect the gene counts (activity) to be consistent between the actual vs simulated experiment which is what we see.
+#
+# * Some genes that have high actual counts are reduced or increased in the simulated experiment
