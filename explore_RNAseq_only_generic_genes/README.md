@@ -84,10 +84,15 @@ If this is the case, we will need a way to re-scale values to account for the re
 **Results:**
 * For about half of the cases, here is a horizontal trend that indicates that the variance in the actual total counts is lower compared to the simulated total counts. In other words the sequencing coverage of the actual experiment is consistent while the sequencing coverage of the simulated samples is variable.
 * Overall, there are cases where most/all samples have a lower total read count in the simulated experiments compared to the actual experiment (when samples are all on one side of the diagonal). There are also cases where some samples have increased counts in the simulated experiment and some have decreased counts in the simulated experiment (i.e. when sample cross the diagonal).
+* Ideally I would expect that the sequencing coverage of samples within a simulated experiment to be very tight (so not much spread horizontally. I would also expected that the sequencing coverage of the simulated experiment to be similar to the actual experiment, so the samples should cluster along the diagonal.
 
-**Takeaway:**
-* These observations are consistent with our hypothesis that the total counts in the simulated experiment are different compared to the actual experiment and creating the opportunity for genes that to be DE that should not be.
 
-* For example, say our actual experiment has some low sequencing coverage (i.e. total read counts) where a set of genes are not detectable (i.e. these genes have 0 read counts). After going through the VAE shifting process, some samples seem to have increased or decreased sequencing coverage compared to the actual sample. This will result in the same gene artificially having a change in read count due to the differences in sequencing coverage between samples.
+After going through the VAE shifting process, some samples seem to have increased or decreased sequencing coverage/depth (i.e. total read count) compared to the actual sample.
+DESeq will scale count estimates and give a higher prob of error for genes with a low sequence coverage/depth.
+If different simulated samples have different sequencing depth, then a gene can be found to be artificially DE due to the differences in sequencing coverage between samples as opposed to the condition tested.
 
-* To correct for this we can try to re-scale the decoded counts per sample so that the sum of the simulated counts is equal to the sum of the actual total counts.
+
+To correct for this we can try to re-scale the decoded counts per sample so that the sum of the simulated counts is equal to the sum of the actual total counts.
+
+
+Our expectation is that once we correct the simulated samples to have the same sequencing coverage as the actual samples, some of the DE genes in the simulated experiment will go away and we believe those are the ones that were specific to RNA-seq.

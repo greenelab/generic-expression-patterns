@@ -84,12 +84,8 @@ def scatter_plot_original_vs_simulated(
             # 2. Total counts across genes original (template)
             # 3. Total counts across genes after VAE (simulated)
             # Note the total counts is using all genes
-            if gene_list is not None:
-                template_sample_counts = template[gene_list].sum(axis=1)
-                simulated_sample_counts = simulated[gene_list].sum(axis=1)
-            else:
-                template_sample_counts = template.sum(axis=1)
-                simulated_sample_counts = simulated.sum(axis=1)
+            template_sample_counts = template.sum(axis=1)
+            simulated_sample_counts = simulated.sum(axis=1)
 
             sample_counts = template_sample_counts.to_frame("Original counts").merge(
                 simulated_sample_counts.to_frame("Simulated counts"),
@@ -149,8 +145,12 @@ def scatter_plot_original_vs_simulated(
             # 1. Gene id
             # 2. Total counts across samples original (template)
             # 3. Total counts across samples after VAE (simulated)
-            template_gene_counts = template.sum()
-            simulated_gene_counts = simulated.sum()
+            if gene_list is not None:
+                template_gene_counts = template[gene_list].sum()
+                simulated_gene_counts = simulated[gene_list].sum()
+            else:
+                template_gene_counts = template.sum()
+                simulated_gene_counts = simulated.sum()
 
             gene_counts = template_gene_counts.to_frame("Original counts").merge(
                 simulated_gene_counts.to_frame("Simulated counts"),
@@ -228,11 +228,12 @@ scatter_plot_original_vs_simulated(
 # * Ideally I would expect that the sequencing coverage of samples within a simulated experiment to be very tight (so not much spread horizontally. I would also expected that the sequencing coverage of the simulated experiment to be similar to the actual experiment, so the samples should cluster along the diagonal.
 #
 # **Takeaway:**
-# * These observations are consistent with our hypothesis that the total counts in the simulated experiment are different compared to the actual experiment and creating the opportunity for genes that to be DE that should not be.
 #
-# * For example, say our actual experiment has some low sequencing coverage (i.e. total read counts) where a set of genes are not detectable (i.e. these genes have 0 read counts). After going through the VAE shifting process, some samples seem to have increased or decreased sequencing coverage compared to the actual sample. This will result in the same gene artificially having a change in read count due to the differences in sequencing coverage between samples.
+#  After going through the VAE shifting process, some samples seem to have increased or decreased sequencing coverage/depth (i.e. total read count) compared to the actual sample. DESeq will scale count estimates and give a higher prob of error for genes with a low sequence coverage/depth. If different simulated samples have different sequencing depth, then a gene can be found to be artificially DE due to the differences in sequencing coverage between samples as opposed to the condition tested.
 #
-# * To correct for this we can try to re-scale the decoded counts per sample so that the sum of the simulated counts is equal to the sum of the actual total counts.
+# To correct for this we can try to re-scale the decoded counts per sample so that the sum of the simulated counts is equal to the sum of the actual total counts.
+#
+# Our expectation is that once we correct the simulated samples to have the same sequencing coverage as the actual samples, some of the DE genes in the simulated experiment will go away and we believe those are the ones that were specific to RNA-seq.
 
 # ## Examine per sample counts for subsets of genes
 
@@ -281,14 +282,14 @@ correlated_genes = correlated_ranking["Gene_Name"]
 print(len(correlated_genes))
 # -
 
-# Compare per sample for RNA-seq/array generic genes
+# Compare per gene for RNA-seq/array generic genes
 scatter_plot_original_vs_simulated(
     ncols=5,
     nrows=5,
     fig_width=20,
     fig_height=20,
     num_simulated=25,
-    by_sample_or_gene="sample",
+    by_sample_or_gene="gene",
     gene_list=correlated_genes,
 )
 
@@ -299,7 +300,7 @@ scatter_plot_original_vs_simulated(
     fig_width=20,
     fig_height=20,
     num_simulated=25,
-    by_sample_or_gene="sample",
+    by_sample_or_gene="gene",
     gene_list=uncorrelated_genes,
 )
 
