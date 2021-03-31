@@ -71,3 +71,28 @@ Expression dataset from Crow et. al. downloaded from https://github.com/Pavlidis
 ![hypothesis_2](https://github.com/greenelab/generic-expression-patterns/blob/master/explore_RNAseq_only_generic_genes/array_expression_dist_gene_groups_highlight.svg)
 
 Looks like the RNA-seq generic genes (light blue) are lowly expressed, but not more than other RNA-seq and array generic genes (dark blue) captured on the array.
+
+## VAE compression
+
+Based on experiment for hypothesis 2, we noticed that the RNA-seq generic genes tend to have lower read counts compared to RNA-seq/array generic genes in RNA-seq data.
+
+**Hypothesis 3:** The VAE isn’t adequately accounting for low read counts.
+Say we have an experiment with low read depth where a set of genes have 0 expression (i.e. not detectable).
+After going through the VAE shifting process, the gene counts might get compressed (i.e. very low gene counts are increased and very high gene counts are decreased) so that the new simulated counts for these originally 0-expressed genes, which should have a high error rate and therefore not found to be DE by DESeq, can be found as DE by DESeq with the artificial shift in values.
+If this is the case, we will need a way to re-scale values to account for the read depth differences.
+
+**Results:**
+* For about half of the cases, here is a horizontal trend that indicates that the variance in the actual total counts is lower compared to the simulated total counts. In other words the sequencing coverage of the actual experiment is consistent while the sequencing coverage of the simulated samples is variable.
+* Overall, there are cases where most/all samples have a lower total read count in the simulated experiments compared to the actual experiment (when samples are all on one side of the diagonal). There are also cases where some samples have increased counts in the simulated experiment and some have decreased counts in the simulated experiment (i.e. when sample cross the diagonal).
+* Ideally I would expect that the sequencing coverage of samples within a simulated experiment to be very tight (so not much spread horizontally. I would also expected that the sequencing coverage of the simulated experiment to be similar to the actual experiment, so the samples should cluster along the diagonal.
+
+
+After going through the VAE shifting process, some samples seem to have increased or decreased sequencing coverage/depth (i.e. total read count) compared to the actual sample.
+DESeq will scale count estimates and give a higher prob of error for genes with a low sequence coverage/depth.
+If different simulated samples have different sequencing depth, then a gene can be found to be artificially DE due to the differences in sequencing coverage between samples as opposed to the condition tested.
+
+
+To correct for this we can try to re-scale the decoded counts per sample so that the sum of the simulated counts is equal to the sum of the actual total counts.
+
+
+Our expectation is that once we correct the simulated samples to have the same sequencing coverage as the actual samples, some of the DE genes in the simulated experiment will go away and we believe those are the ones that were specific to RNA-seq.
