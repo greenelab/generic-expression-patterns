@@ -74,7 +74,7 @@ Looks like the RNA-seq generic genes (light blue) are lowly expressed, but not m
 
 ## VAE compression
 
-Based on experiment for hypothesis 2, we noticed that the RNA-seq generic genes are low compared to RNA-seq/array generic genes in RNA-seq data.
+Based on experiment for hypothesis 2, we noticed that the RNA-seq generic genes tend to have lower read counts compared to RNA-seq/array generic genes in RNA-seq data.
 
 **Hypothesis 3:** The VAE isn’t adequately accounting for low read counts.
 Say we have an experiment with low read depth where a set of genes have 0 expression (i.e. not detectable).
