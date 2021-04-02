@@ -1,39 +1,57 @@
-# Detecting generic gene expression signals
+# Generic transcriptional responses revealed using _SOPHIE_: Specific cOntext Pattern Highlighting In Expression data
 
-**Alexandra J. Lee, Rani K. Powers, Dallas L. Mould, Dongbo Hu, Georgia Doing, Jake Crawford, James C. Costello, Deborah A. Hogan, Casey S. Greene**
+**Alexandra J. Lee, Dallas L. Mould, Jake Crawford, Dongbo Hu, Rani K. Powers, Georgia Doing, James C. Costello, Deborah A. Hogan, Casey S. Greene**
 
 **University of Pennsylvania, University of Colorado Anschutz Medical Campus, Dartmouth College**
 
-**Rationale**: People performing differential expression (DE) analysis found that some genes and subsequent pathways are more likely to be differentially expressed even across a wide range of experimental designs ([Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793 ); [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491)). 
+<!--- [![PDF Manuscript](https://img.shields.io/badge/manuscript-PDF-blue.svg)](https://academic.oup.com/gigascience/article/9/11/giaa117/5952607) --->
 
-Given that there exist these commonly DE genes and subsequent pathways, it is important to be able to distinguish between genes that are generic versus experiment or condition-specific. These specific genes may point to, say, those genes that are disease-specific and may reveal new insights into pathogenic mechanisms that might have gotten overlooked by examining all the DE genes in aggregate. And these disease-specific genes can also help to prioritize DEGs for follow-up wet experiments/functional experiments. For example, [Swindell et. al.](https://www.sciencedirect.com/science/article/pii/S0022202X16312465#fig3) identified IL-17A as an inducer of DEGs most uniquely elevated in psoriasis lesions compared to other skin diseases. Furthermore, clinical data demonstrating efficacy of anti-IL-17A therapy for moderate-to-severe psoriasis. In general being able to distinguish between generic vs context-specific signals is important to learning gene function and revealing insights into mechanism of disease.
-
-
-**Challenge**: 
-Current methods, including Powers et. al. and Crow et. al., to identify generic genes and pathways rely on manual curation. This curation effort included collecting a large set of samples with corresponding metadata, processing data and performing DE analysis to get ranked list of genes.
-
-If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require re-curation. Similarly, using a different statistical method will require re-curation. This curation effort is very time intensive.
+There exist some genes and pathways that are differentially expressed across many gene expression experiments ([Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793 ); [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491)).
+These generic findings can obscure results that are specific to the context or experiment of interest, which are often what we hope to glean when using gene expression to generate mechanistic insights into cellular states and diseases.
+Current methods, including Powers et. al. and Crow et. al., to identify generic signals rely on the manual curation and identical analysis of hundreds or thousands of additional experiments, which is inordinately time consuming and not a practical step in most analytical workflows.
+If you want to perform a new DE analysis in a different biological **context** (i.e. different organism, tissue, media) then you might not have the curated data available. Switching contexts will require re-curation. Similarly, using a different statistical method will require re-curation.
 
 
-**Goal:**
-To develop a method that can automatically distinguish between specific versus generic genes and pathways
+We introduce a new approach to identify generic patterns that uses generative neural networks to produce a null or background set of transcriptomic experiments.
+Analyzing a target experiment against this automatically generated background set makes it straightforward to separate generic and specific results.
+This approach, called SOPHIE for Specific cOntext Pattern Highlighting In Expression data, can be applied to any new platform or species for which there is a large collection of unlabeled gene expression data.
+Here, we apply SOPHIE to the analysis of both human and bacterial datasets, and use this method to highlight the ability to detect highly specific but low magnitude transcriptional signals that are biologically relevant.
+The reusable notebooks for training neural networks and for the use of pre-trained generative models for the analysis of differential expression experiments may be broadly useful for the prioritization of specific findings in complex datasets.
 
-**Results:**
-We introduce a method based on latent space transformation in multi-layer neural networks that makes it possible to automate the analysis of generic genes, termed Specific cOntext Pattern Highlighting In Expression (SOPHIE). We validated that SOPHIE could recapitulate previously identified generic genes and pathways found using manual curation. These generic genes appear to act as gene hubs, which are associated with many biological processes. We applied SOPHIE to identify specific genes using a new experiment ---<TBD>
+**Citation:**
+For more details about the analysis, see our paper published in GigaScience. The paper should be cited as:
+<!--- >> Alexandra J Lee, YoSon Park, Georgia Doing, Deborah A Hogan, Casey S Greene, Correcting for experiment-specific variability in expression compendia can remove underlying signals, GigaScience, Volume 9, Issue 11, November 2020, giaa117, https://doi.org/10.1093/gigascience/giaa117 --->
 
-**Conclusions:**
-We developed a method to automatically identify generic genes and pathways using public data without the need for curation. The generic signals identified from this method can be used to interpret study results and direct follow-up experiments.
+## SOPHIE
+
+This method was named after one of the main characters from Hayao Miyazaki's animated film [Howl’s moving castle](https://en.wikipedia.org/wiki/Howl%27s_Moving_Castle_(film)).
+Sophie’s outwardly appearance as an old woman despite being a young woman that has been cursed, demonstrates that the most obvious thing you see isn't always the truth.
+This is the idea behind our approach, which allows users to identify specific gene expression signatures that can be masked by generic background patterns.
+
+SOPHIE trains a a multi-layer variational autoencoder (VAE) on gene expression compendium.
+Then new experiments are simulated by linearly shifting the selected template experiment (i.e. real experiment selected from the training compendium or externally) to a new location in the latent space.
+This new location is a randomly sampled from the distribution of the low dimensional representation of the trained gene expression compendium.
+The vector that connects the template experiment and the new location is added to the template experiment to create a new simulated experiment.
+This process is repeated multile times to created multiple simulated experiments based on the single template experiment.
+
 
 ## Directory Structure
-| Folder/file | Description |
-| --- | --- | 
+| Folder | Description |
+| --- | --- |
+| [LV_analysis](LV_analysis) | This folder contains analysis notebooks to examine the potential role of generic genes by looking at the coverage of generic genes across [PLIER latent variables](https://www.cell.com/cell-systems/pdfExtended/S2405-4712\(19\)30119-X)) or [eADAGE latent variables](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5532071/), which are associated with known biological pathways.|
+| [compare_experiments](compare_experiments) | This folder analysis notebooks to compare multiple SOPHIE results using the same template experiment and different template experiments. This analysis tests the robustness of SOPHIE results. |
 | [configs](configs) | This folder contains configuration files used to set hyperparameters for the different experiments |
-| [generic_expression_patterns_modules](generic_expression_patterns_modules) | This folder contains supporting functions that other notebooks in this repository will use |
-| [human_cancer_analysis](human_cancer_analysis) | This folder contains analysis notebooks to validate generic signals using Powers et. al. dataset, which is composed of experiments testing the response of small molecule treatments in cancer cell lines, to train VAE |
-| [human_general_analysis](human_general_analysis) | This folder contains analysis notebooks to validate generic signals using [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset, which contains a heterogeneous set of experiments, to train VAE |
-| [multiplier_analysis](multiplier_analysis) | This folder contains analysis notebooks to coverage of generic genes across [MultiPLIER latent variables](https://www.cell.com/cell-systems/pdfExtended/S2405-4712\(19\)30119-X)) |
-| [pseudomonas_analysis](pseudomonas_analysis) |  This folder contains analysis notebooks to identify specific and generic signals using *P. aeruginosa* dataset to train VAE |
+| [explore_RNAseq_only_generic_genes](explore_RNAseq_only_generic_genes) | This folder contains analysis notebooks testing different hypotheses to explain the subset of genes found to be generic by SOPHIE trained on RNA-seq data but not found to be generic in the manually curated array dataset. |
+| [explore_data](explore_data) | This folder contains an analysis notebook visualizing the [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset to get a sense for the variation contained.|
+| [figure_generation](figure_generation) | This folder contains a notebook toi generate figures seen in the manuscript. |
+| [generic_expression_patterns_modules](generic_expression_patterns_modules) | This folder contains supporting functions that other notebooks in this repository will use. |
+| [human_cancer_analysis](human_cancer_analysis) | This folder contains analysis notebooks to validate generic signals using [Powers et. al. dataset](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793), which is composed of experiments testing the response of small molecule treatments in cancer cell lines, to train VAE. |
+| [human_general_analysis](human_general_analysis) | This folder contains analysis notebooks to validate generic signals using [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset, which contains a heterogeneous set of experiments, to train VAE. |
+| [network_analysis](network_analysis) |  This folder contains analysis notebooks to examine the potential role of generic genes by looking at the clustering of generic genes within network communities.|
 | [new_experiment](new_experiment) |  This folder contains analysis notebooks to identify specific and generic signals using a new experiment and an existing VAE model|
+| [other_enrichment_methods](other_enrichment_methods) |  This folder contains analysis notebooks to apply different gene set enrichment methods. The default method used is GSEA.|
+| [pseudomonas_analysis](pseudomonas_analysis) |  This folder contains analysis notebooks to identify specific and generic signals using *P. aeruginosa* dataset to train VAE |
+| [tests](tests) |  This folder contains notebooks to test the code in this repository. These notebooks run a small dataset across the analysis notebooks found in the `human_general_analysis` directory. |
 
 
 ## Usage
@@ -44,7 +62,7 @@ We developed a method to automatically identify generic genes and pathways using
 
 In order to run this simulation on your own gene expression data the following steps should be performed:
 
-First you need to set up your local repository: 
+First you need to set up your local repository:
 1. Download and install [github's large file tracker](https://git-lfs.github.com/).
 2. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
 3. Clone the `generic-expression-patterns` repository by running the following command in the terminal:
@@ -58,26 +76,21 @@ cd generic-expression-patterns
 ```
 5. Set up conda environment by running the following command in the terminal:
 ```bash
-# conda version 4.6.12
-conda env create -f environment.yml
-
-conda activate generic_expression
-
-pip install -e .
+bash install.sh
 ```
 6. Navigate to either the `pseudomonas_analysis`, `human_general_analysis` or `human_cancer_analysis` directories and run the notebooks in order.
 
-*Note:* Running the `human_general_analysis/1_process_recount2_data.ipynb` notebook can take several days to run since the dataset is very large. If you would like to run only the analysis notebook (`human_general_analysis/2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations: 
-* The normalized compendium data used for the analysis in the publication can be found [here](https://storage.googleapis.com/recount2/normalized_recount2_compendium.tsv). 
+*Note:* Running the `human_general_analysis/1_process_recount2_data.ipynb` notebook can take several days to run since the dataset is very large. If you would like to run only the analysis notebook (`human_general_analysis/2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations:
+* The normalized compendium data used for the analysis in the publication can be found [here](https://storage.googleapis.com/recount2/normalized_recount2_compendium.tsv).
 * The Hallmark pathway database can be found [here](human_general_analysis/data/metadata/hallmark_DB.gmt)
 * The processed template file can be found [here](human_general_analysis/data/processed_recount2_template.tsv)
 * The scaler file can be found [here](human_general_analysis/data/scaler_transform_human.pickle)
 
-**How to analyze your own data**
+**How to analyze your own data using existing models**
 
 In order to run this simulation on your own gene expression data the following steps should be performed:
 
-First you need to set up your local repository: 
+First you need to set up your local repository:
 1. Download and install [github's large file tracker](https://git-lfs.github.com/).
 2. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
 3. Clone the `generic-expression-patterns` repository by running the following command in the terminal:
@@ -91,18 +104,19 @@ cd generic-expression-patterns
 ```
 5. Set up conda environment by running the following command in the terminal:
 ```bash
-# conda version 4.6.12
-conda env create -f environment.yml
-
-conda activate generic_expression
-
-pip install -e .
+bash install.sh
 ```
 6.  Navigate to `new_experiment_example/find_specific_genes_in_new_experiment.ipynb` to see an example of how to run you analyze your own dataset using existing models
-6. Create a configuration and metadata files for your analysis following the instructions in the `find_specific_genes_in_new_experiment.ipynb` notebook and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`). Here are the links to the compendium data needed:
+7. Create a configuration and metadata files for your analysis following the instructions in the `find_specific_genes_in_new_experiment.ipynb` notebook and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`). Here are the links to the compendium data needed:
 
-<TO DO: Link to normalized and mapped compendium data on AWS>
-7. Run notebook
+* normalized recount2 can be found [here](https://storage.googleapis.com/recount2/normalized_recount2_compendium.tsv)
+* mapped recount2 can be found [here](https://storage.googleapis.com/recount2/mapped_recount2_compendium.tsv).
+* normalized Powers et. al. can be found [here](https://storage.googleapis.com/powers_et_al/normalized_rani_compendium_filename.tsv).
+* mapped Powers et. al. can be found [here](https://storage.googleapis.com/powers_et_al/mapped_rani_compendium.tsv).
+* normalized _P. aeruginosa_ can be found [here](https://storage.googleapis.com/pseudomonas/normalized_pseudomonas_compendium_data.tsv).
+* mapped _P. aeruginosa_ can be found [here](https://storage.googleapis.com/pseudomonas/processed_pseudomonas_compendium_data.tsv).
+
+8. Run notebook
 
 *Note*:
 * Your input dataset should be a matrix that is sample x gene
@@ -113,24 +127,26 @@ pip install -e .
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking. The ** is only used if using `get_recount2_sra_subset` (in download_recount2_data.R).
 
-Note: Some of these parameters are required by the imported [ponyo](https://github.com/greenelab/ponyo) modules. 
+Note: Some of these parameters are required by the imported [ponyo](https://github.com/greenelab/ponyo) modules.
 
 | Name | Description |
 | :--- | :---------- |
-| local_dir| str: Parent directory on local machine to store intermediate results|
-| dataset_name| str: Name for analysis directory, which contains the notebooks being run. For our analysis its named "human_analysis"|
+| local_dir| str: Parent directory on local machine to store intermediate results.|
+| dataset_name| str: Name for analysis directory, which contains the notebooks being run. For our analysis its named "human_analysis".|
 | raw_template_filename | str: Downloaded template gene expression data file|
-| mapped_template_filename | str: Template gene expression data file after replacing gene ids in header|
-| processed_template_filename | str: Template gene expression data file after removing samples and genes|
+| mapped_template_filename | str: Template gene expression data file after replacing gene ids in header. This is an intermediate file that gets generated.|
+| processed_template_filename | str: Template gene expression data file after removing samples and genes. This is an intermediate file that gets generated.|
 | raw_compendium_filename | str: Downloaded compendium gene expression data file|
-| mapped_compendium_filename | str: Compendium gene expression data file after replacing gene ids in header|
-| normalized_compendium_filename | str: Normalized compendium gene expression data file|
-| shared_genes_filename | str: Pickle file on your local machine where to write and store genes that will be examined. These genes are the intersection of genes in your dataset versus a reference to ensure that there are not Nans in downstream analysis|
-| scaler_filename | str: Pickle file on your local machine where to write and store normalization transform to be used to process data for visualization|
+| mapped_compendium_filename | str: Compendium gene expression data file after replacing gene ids in header. This is an intermediate file that gets generated.|
+| normalized_compendium_filename | str: Normalized compendium gene expression data file. This is an intermediate file that gets generated.|
+| shared_genes_filename | str: Pickle file on your local machine where to write and store genes that will be examined. These genes are the intersection of genes in your dataset versus a reference to ensure that there are not Nans in downstream analysis. This is an intermediate file that gets generated.|
+| scaler_filename | str: Pickle file on your local machine where to write and store normalization transform to be used to process data for visualization. This is an intermediate file that gets generated.|
 | reference_gene_filename* | str: File that contains reference genes and their rank|
 | reference_gene_name_col| str: Name of the column header that contains the reference genes. This is found in reference_gene_filename*|
 | reference_rank_col | str: Name of the column header that contains the reference gene ranks. This is found in reference_gene_filename*|
 | rank_genes_by | str:  Name of column header from DE association statistic results. This column will be use to rank genes. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
+| DE_logFC_name | str: "logFC" or "log2FoldChange". This is used for plotting volcano plots|
+| DE_pvalue_name | str: "adj.P.Val" or "padj". This is used for plotting volcano plots|
 | pathway_DB_filename* | str: File that contains pathways to use for GSEA|
 | gsea_statistic| str:  Statistic to use to rank genes for GSEA analysis. Select `logFC`, `P.Value`, `adj.P.Val`, `t` if using Limma. Select `log2FoldChange`, `pvalue`, `padj` if using DESeq.|
 | rank_pathways_by | str:  Name of column header from GSEA association statistic results. This column will be use to rank pathways. Select `NES`, `padj` if using DESeq to rank genes.|
@@ -142,8 +158,9 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | intermediate_dim| int: Size of the hidden layer|
 | latent_dim | int: Size of the bottleneck layer|
 | epsilon_std | float: Standard deviation of Normal distribution to sample latent space|
+| validation_frac | float: Fraction of samples to use for validation in VAE training|
 | project_id | str:  Experiment id to use as a template experiment|
-| count_threshold | int: Minimum count threshold to use to filter RNA-seq data|
+| count_threshold | int: Minimum count threshold to use to filter RNA-seq data. Default is None|
 | metadata_colname | str:  Header of experiment metadata file to indicate column containing sample ids. This is used to extract gene expression data associated with project_id|
 | num_simulated| int: Simulate a compendia with these many experiments, created by shifting the template experiment these many times|
 | num_recount2_experiments_to_download** | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
