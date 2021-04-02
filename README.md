@@ -16,8 +16,7 @@ We introduce a new approach to identify generic patterns that uses generative ne
 Analyzing a target experiment against this automatically generated background set makes it straightforward to separate generic and specific results.
 This approach, called SOPHIE for Specific cOntext Pattern Highlighting In Expression data, can be applied to any new platform or species for which there is a large collection of unlabeled gene expression data.
 Here, we apply SOPHIE to the analysis of both human and bacterial datasets, and use this method to highlight the ability to detect highly specific but low magnitude transcriptional signals that are biologically relevant.
-The reusable notebooks for training neural networks and for the use of pre-trained generative models for the analysis of differential expression experiments may be broadly useful for the
-prioritization of specific findings in complex datasets.
+The reusable notebooks for training neural networks and for the use of pre-trained generative models for the analysis of differential expression experiments may be broadly useful for the prioritization of specific findings in complex datasets.
 
 **Citation:**
 For more details about the analysis, see our paper published in GigaScience. The paper should be cited as:
