@@ -16,10 +16,7 @@
 
 # # Original vs simulated counts
 #
-# This notebook tests the hypothesis that the VAE isn’t adequately accounting for low read counts.
-#
-# Say we have an experiment with low read depth where a set of genes have 0 expression (i.e. not detectable).
-# After going through the VAE shifting process, the gene counts might get compressed (i.e. very low gene counts are increased and very high gene counts are decreased) so that the new simulated counts for these originally 0-expressed genes, which should have a high error rate and therefore not found to be DE by DESeq, can be found as DE by DESeq with the artificial shift in values. If this is the case, we will need a way to re-scale values to account for the read depth differences.
+# This notebook tests the hypothesis that the VAE isn’t adequately accounting for low read counts. The VAE is artifically boosting the expression of these genes so that they are found to be DE.
 
 # %load_ext autoreload
 import os
@@ -356,7 +353,9 @@ def violin_plot_original_vs_simulated(
 
         # Create dataframe for plotting
         if if_mean:
+            stats_name = "mean_expression"
             if if_rnaseq_only:
+                gene_group_name = "RNAseq_only"
                 # Format mean df for plotting
                 mean_dist = pd.DataFrame(
                     data={
@@ -370,6 +369,7 @@ def violin_plot_original_vs_simulated(
                 )
                 colors = ["lightgrey", "#add8e6"]
             else:
+                gene_group_name = "RNAseq_array"
                 # Format mean df for plotting
                 mean_dist = pd.DataFrame(
                     data={
@@ -388,7 +388,7 @@ def violin_plot_original_vs_simulated(
             mean_dist_processed = mean_dist.replace([np.inf, -np.inf], np.nan).dropna()
 
             # Violin plot of average expression of RNA-seq only generic genes
-            sns.violinplot(
+            f = sns.violinplot(
                 data=mean_dist_processed, palette=colors, orient="h", ax=axes[i]
             )
             if i != 0:
@@ -416,7 +416,9 @@ def violin_plot_original_vs_simulated(
                 )
 
         else:
+            stats_name = "var_expression"
             if if_rnaseq_only:
+                gene_group_name = "RNAseq_only"
                 # Format var df for plotting
                 var_dist = pd.DataFrame(
                     data={
@@ -430,6 +432,7 @@ def violin_plot_original_vs_simulated(
                 )
                 colors = ["lightgrey", "#add8e6"]
             else:
+                gene_group_name = "RNAseq_array"
                 # Format var df for plotting
                 var_dist = pd.DataFrame(
                     data={
@@ -448,7 +451,7 @@ def violin_plot_original_vs_simulated(
             var_dist_processed = var_dist.replace([np.inf, -np.inf], np.nan).dropna()
 
             # Violin plot of average expression of RNA-seq only generic genes
-            sns.violinplot(
+            f = sns.violinplot(
                 data=var_dist_processed, palette=colors, orient="h", ax=axes[i]
             )
             if i != 0:
@@ -474,6 +477,14 @@ def violin_plot_original_vs_simulated(
                     fontsize=16,
                     fontname="Verdana",
                 )
+    f.get_figure().savefig(
+        f"violin_plot_{stats_name}_{gene_group_name}.svg",
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )
 
 
 # -
@@ -540,7 +551,8 @@ violin_plot_original_vs_simulated(
 #     * Similar trend seen in the variance -- the variance in gene expression for the simulated experiments seems to be similar or decreased compared to the template experiment.
 #
 # * Overall, it appears that lower expression values in the template (which correspond to RNA-seq only generic genes) are changed more than genes with higher values
-#     * Thinking this is due to the VAE compression -- possibly the ReLU activation function and/or gaussian constraint, but not sure why this compression isn’t affecting higher values (RNA-seq/array generic genes) as much? Maybe because these values are closer to the mean expression of the compendium
+#     * I believe this is likely due to the VAE compression -- possibly the ReLU activation function and/or gaussian constraint in the loss function.
+#     * Why does this compression not affect genes with higher expression values (RNA-seq/array generic genes) as much? This is probably because these values are closer to the mean expression of the compendium. The compression is probably affecting genes on the outliers of the distribution more.
 #
 # * Why is this compression not seen in the array data?
 #     * In the array data, the gene expression for the RNA-seq only genes vs RNA-seq/array genes were similar in the array training compendium.
