@@ -68,31 +68,41 @@ RNA-Seq is more likely to detect the changes at two different conditions for gen
 Expression dataset from Crow et. al. downloaded from https://github.com/PavlidisLab/gemmaAPI.R using script `download_Crow_data.R`
 
 **Results:**
-![hypothesis_2](https://github.com/greenelab/generic-expression-patterns/blob/master/explore_RNAseq_only_generic_genes/array_expression_dist_gene_groups_highlight.svg)
+![hypothesis_2_array](https://github.com/greenelab/generic-expression-patterns/blob/master/explore_RNAseq_only_generic_genes/array_expression_dist_gene_groups_highlight.svg)
 
 Looks like the RNA-seq generic genes (light blue) are lowly expressed, but not more than other RNA-seq and array generic genes (dark blue) captured on the array.
 
 ## VAE compression
 
-Based on experiment for hypothesis 2, we noticed that the RNA-seq generic genes tend to have lower read counts compared to RNA-seq/array generic genes in RNA-seq data.
+Based on experiment for hypothesis 2, we noticed that the RNA-seq generic genes tend to have lower read counts compared to RNA-seq/array generic genes in RNA-seq data (recount2).
+
+![hypothesis_2_rna](https://github.com/greenelab/generic-expression-patterns/blob/master/explore_RNAseq_only_generic_genes/recount2_expression_dist_gene_groups_highlight.svg)
 
 **Hypothesis 3:** The VAE isn’t adequately accounting for low read counts.
-Say we have an experiment with low read depth where a set of genes have 0 expression (i.e. not detectable).
-After going through the VAE shifting process, the gene counts might get compressed (i.e. very low gene counts are increased and very high gene counts are decreased) so that the new simulated counts for these originally 0-expressed genes, which should have a high error rate and therefore not found to be DE by DESeq, can be found as DE by DESeq with the artificial shift in values.
-If this is the case, we will need a way to re-scale values to account for the read depth differences.
+The VAE is artifically boosting the expression of these genes so that they are found to be DE.
 
 **Results:**
-* For about half of the cases, here is a horizontal trend that indicates that the variance in the actual total counts is lower compared to the simulated total counts. In other words the sequencing coverage of the actual experiment is consistent while the sequencing coverage of the simulated samples is variable.
-* Overall, there are cases where most/all samples have a lower total read count in the simulated experiments compared to the actual experiment (when samples are all on one side of the diagonal). There are also cases where some samples have increased counts in the simulated experiment and some have decreased counts in the simulated experiment (i.e. when sample cross the diagonal).
-* Ideally I would expect that the sequencing coverage of samples within a simulated experiment to be very tight (so not much spread horizontally. I would also expected that the sequencing coverage of the simulated experiment to be similar to the actual experiment, so the samples should cluster along the diagonal.
+
+The plot below shows the average expression of RNA-seq only generic genes in template vs simulated (panel = simulated experiment). The average simulated gene expression seems to be similar to the template or slightly increased
+
+![hypothesis_3_rna](https://github.com/greenelab/generic-expression-patterns/blob/master/explore_RNAseq_only_generic_genes/violin_plot_mean_expression_RNAseq_only.svg)
+
+The plot below shows the average expression of RNA-seq/array generic genes in template vs simulated (panel = simulated experiment). The average simulated gene expression seems to be mostly similar to the template, some cases where simulated expression is lower compared to the template
+
+![hypothesis_3_rna_array](https://github.com/greenelab/generic-expression-patterns/blob/master/explore_RNAseq_only_generic_genes/violin_plot_mean_expression_RNAseq_array.svg)
 
 
-After going through the VAE shifting process, some samples seem to have increased or decreased sequencing coverage/depth (i.e. total read count) compared to the actual sample.
-DESeq will scale count estimates and give a higher prob of error for genes with a low sequence coverage/depth.
-If different simulated samples have different sequencing depth, then a gene can be found to be artificially DE due to the differences in sequencing coverage between samples as opposed to the condition tested.
+Overall, it appears that lower expression values in the template (which correspond to RNA-seq only generic genes) are changed more than genes with higher values.
+I believe this is likely due to the VAE compression -- possibly the ReLU activation function and/or gaussian constraint in the loss function.
+_Why does this compression not affect genes with higher expression values (RNA-seq/array generic genes) as much?_ This is probably because these values are closer to the mean expression of the compendium (see distribution of gene expression in recount2).
+The compression is probably affecting genes on the outliers of the distribution more.
 
+_Why is this compression not seen in the array data?_
+In the array data, the gene expression for the RNA-seq only genes vs RNA-seq/array genes were similar in the array training compendium.
+Overall the variance in array expression is lower compared to RNA-seq so there isnt' as much compression needed
 
-To correct for this we can try to re-scale the decoded counts per sample so that the sum of the simulated counts is equal to the sum of the actual total counts.
+So genes with low gene expression in the real experiment are getting a boost/increase after going through VAE (simulated experiment) which allows them to be detected as DE.
 
-
-Our expectation is that once we correct the simulated samples to have the same sequencing coverage as the actual samples, some of the DE genes in the simulated experiment will go away and we believe those are the ones that were specific to RNA-seq.
+**Possible solutions:**
+* We don't want lowly expressed genes to get artificially detected as frequently DE.
+* Would requiring varying parameters for the activation function and weighting for KL term in the loss function. To be address in the future.

@@ -248,6 +248,15 @@ f = sns.violinplot(
 f.set_title("Average recount2 expression")
 f.set_xlabel("log10(average expression)")
 
+f.get_figure().savefig(
+    "recount2_expression_dist_gene_groups_highlight.svg",
+    format="svg",
+    bbox_inches="tight",
+    transparent=True,
+    pad_inches=0,
+    dpi=300,
+)
+
 # +
 # Format df for plotting
 crow_expression_mean_toplot = pd.DataFrame(

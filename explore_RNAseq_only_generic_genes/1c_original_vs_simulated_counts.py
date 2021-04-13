@@ -16,10 +16,7 @@
 
 # # Original vs simulated counts
 #
-# This notebook tests the hypothesis that the VAE isn’t adequately accounting for low read counts.
-#
-# Say we have an experiment with low read depth where a set of genes have 0 expression (i.e. not detectable).
-# After going through the VAE shifting process, the gene counts might get compressed (i.e. very low gene counts are increased and very high gene counts are decreased) so that the new simulated counts for these originally 0-expressed genes, which should have a high error rate and therefore not found to be DE by DESeq, can be found as DE by DESeq with the artificial shift in values. If this is the case, we will need a way to re-scale values to account for the read depth differences.
+# This notebook tests the hypothesis that the VAE isn’t adequately accounting for low read counts. The VAE is artifically boosting the expression of these genes so that they are found to be DE.
 
 # %load_ext autoreload
 import os
@@ -320,3 +317,249 @@ scatter_plot_original_vs_simulated(
 # * Since simulations are intended to produce different experiments, we don't expect the gene counts (activity) to be consistent between the actual vs simulated experiment which is what we see.
 #
 # * Some genes that have high actual counts are reduced or increased in the simulated experiment
+
+# ## Examine expression changes
+# * How does the mean expression of RNA-seq generic genes change after simulation? How does the variance change?
+# * We already know that the before expression of RNA-seq generic genes is low, what about after we simulate?
+# * How does the mean expression of array/RNA-seq generic genes change after simulation? How does the variance change?
+
+# +
+# There are many 0 values throwing warning message
+np.seterr(divide="ignore")
+
+
+def violin_plot_original_vs_simulated(
+    ncols,
+    nrows,
+    fig_width,
+    fig_height,
+    num_simulated,
+    template_df,
+    gene_list,
+    if_rnaseq_only,
+    if_mean,
+):
+    fig, axes = plt.subplots(ncols=ncols, nrows=nrows, figsize=(fig_width, fig_height))
+    axes = axes.ravel()
+
+    for i in range(num_simulated):
+        # Get simulated filename
+        simulated_filename = os.path.join(
+            simulated_dir, f"selected_simulated_data_{project_id}_{i}_processed.txt"
+        )
+
+        # Read simulated experiment
+        simulated = pd.read_csv(simulated_filename, sep="\t", index_col=0, header=0)
+
+        # Create dataframe for plotting
+        if if_mean:
+            stats_name = "mean_expression"
+            if if_rnaseq_only:
+                gene_group_name = "RNAseq_only"
+                # Format mean df for plotting
+                mean_dist = pd.DataFrame(
+                    data={
+                        "mean of RNAseq generic genes (template)": np.log10(
+                            template_df[gene_list].mean()
+                        ),
+                        "mean of RNAseq generic (simulated)": np.log10(
+                            simulated[gene_list].mean()
+                        ),
+                    }
+                )
+                colors = ["lightgrey", "#add8e6"]
+            else:
+                gene_group_name = "RNAseq_array"
+                # Format mean df for plotting
+                mean_dist = pd.DataFrame(
+                    data={
+                        "mean of array/RNAseq generic genes (template)": np.log10(
+                            template_df[gene_list].mean()
+                        ),
+                        "mean of array/RNAseq generic genes (simulated)": np.log10(
+                            simulated[gene_list].mean()
+                        ),
+                    }
+                )
+                colors = ["lightgrey", "#2c7fb8"]
+
+            # Remove NA genes (i.e. genes not in gene list)
+            # Drop -inf values
+            mean_dist_processed = mean_dist.replace([np.inf, -np.inf], np.nan).dropna()
+
+            # Violin plot of average expression of RNA-seq only generic genes
+            f = sns.violinplot(
+                data=mean_dist_processed, palette=colors, orient="h", ax=axes[i]
+            )
+            if i != 0:
+                axes[i].set_yticklabels([])
+
+            fig.text(
+                0.5,
+                0.0,
+                "log10(average expression)",
+                ha="center",
+                fontsize=16,
+                fontname="Verdana",
+            )
+            if if_rnaseq_only:
+                fig.suptitle(
+                    "Average expression of RNA-seq only generic genes",
+                    fontsize=16,
+                    fontname="Verdana",
+                )
+            else:
+                fig.suptitle(
+                    "Average expression of RNA-seq/array generic genes",
+                    fontsize=16,
+                    fontname="Verdana",
+                )
+
+        else:
+            stats_name = "var_expression"
+            if if_rnaseq_only:
+                gene_group_name = "RNAseq_only"
+                # Format var df for plotting
+                var_dist = pd.DataFrame(
+                    data={
+                        "variance of RNAseq generic genes (template)": np.log10(
+                            template_df[gene_list].var()
+                        ),
+                        "variance of RNAseq generic genes (simulated)": np.log10(
+                            simulated[gene_list].var()
+                        ),
+                    }
+                )
+                colors = ["lightgrey", "#add8e6"]
+            else:
+                gene_group_name = "RNAseq_array"
+                # Format var df for plotting
+                var_dist = pd.DataFrame(
+                    data={
+                        "variance of array/RNAseq generic genes (template)": np.log10(
+                            template_df[gene_list].var()
+                        ),
+                        "variance of array/RNAseq generic genes (simulated)": np.log10(
+                            simulated[gene_list].var()
+                        ),
+                    }
+                )
+                colors = ["lightgrey", "#2c7fb8"]
+
+            # Remove NA genes (i.e. genes not in gene list)
+            # Drop -inf values
+            var_dist_processed = var_dist.replace([np.inf, -np.inf], np.nan).dropna()
+
+            # Violin plot of average expression of RNA-seq only generic genes
+            f = sns.violinplot(
+                data=var_dist_processed, palette=colors, orient="h", ax=axes[i]
+            )
+            if i != 0:
+                axes[i].set_yticklabels([])
+
+            fig.text(
+                0.5,
+                0.0,
+                "log10(variance of expression)",
+                ha="center",
+                fontsize=16,
+                fontname="Verdana",
+            )
+            if if_rnaseq_only:
+                fig.suptitle(
+                    "Variance of expression of RNA-seq only generic genes",
+                    fontsize=16,
+                    fontname="Verdana",
+                )
+            else:
+                fig.suptitle(
+                    "Variance of expression of RNA-seq/array generic genes",
+                    fontsize=16,
+                    fontname="Verdana",
+                )
+    f.get_figure().savefig(
+        f"violin_plot_{stats_name}_{gene_group_name}.svg",
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )
+
+
+# -
+
+# Compare distribution of mean gene expression for RNA-seq only generic genes
+violin_plot_original_vs_simulated(
+    ncols=5,
+    nrows=5,
+    fig_width=20,
+    fig_height=20,
+    num_simulated=25,
+    template_df=template,
+    gene_list=uncorrelated_genes,
+    if_rnaseq_only=True,
+    if_mean=True,
+)
+
+# Compare distribution of variance gene expression for RNA-seq only generic genes
+violin_plot_original_vs_simulated(
+    ncols=5,
+    nrows=5,
+    fig_width=20,
+    fig_height=20,
+    num_simulated=25,
+    template_df=template,
+    gene_list=uncorrelated_genes,
+    if_rnaseq_only=True,
+    if_mean=False,
+)
+
+# Compare distribution of mean gene expression for RNA-seq/array generic genes
+violin_plot_original_vs_simulated(
+    ncols=5,
+    nrows=5,
+    fig_width=20,
+    fig_height=20,
+    num_simulated=25,
+    template_df=template,
+    gene_list=correlated_genes,
+    if_rnaseq_only=False,
+    if_mean=True,
+)
+
+# Compare distribution of variance gene expression for RNA-seq/array generic genes
+violin_plot_original_vs_simulated(
+    ncols=5,
+    nrows=5,
+    fig_width=20,
+    fig_height=20,
+    num_simulated=25,
+    template_df=template,
+    gene_list=correlated_genes,
+    if_rnaseq_only=False,
+    if_mean=False,
+)
+
+# **Takeaway:**
+# * For RNA-seq only generic genes:
+#     * The average simulated gene expression seems to be similar to the template or slightly increased
+#     * Similar trend see for the variance -- the variance in gene expression for simulated experiments seems to be similar or increased compared to the template experiment
+#
+# * For RNA-seq and array generic genes:
+#     * The average simulated gene expression seems to be mostly similar to the template and a few cases where the average simulated expression was decreased
+#     * Similar trend seen in the variance -- the variance in gene expression for the simulated experiments seems to be similar or decreased compared to the template experiment.
+#
+# * Overall, it appears that lower expression values in the template (which correspond to RNA-seq only generic genes) are changed more than genes with higher values
+#     * I believe this is likely due to the VAE compression -- possibly the ReLU activation function and/or gaussian constraint in the loss function.
+#     * Why does this compression not affect genes with higher expression values (RNA-seq/array generic genes) as much? This is probably because these values are closer to the mean expression of the compendium. The compression is probably affecting genes on the outliers of the distribution more.
+#
+# * Why is this compression not seen in the array data?
+#     * In the array data, the gene expression for the RNA-seq only genes vs RNA-seq/array genes were similar in the array training compendium.
+#     * Overall the variance in array expression is lower compared to RNA-seq so there isnt' as much compression needed
+#
+# * So genes with low gene expression in the real experiment are getting a boost/increase after going through VAE (simulated experiment) which allows them to be detected as DE.
+#
+# **Possible solutions:**
+# * We don't want lowly expressed genes to get artificially detected as frequently DE.
+# * Would requiring varying parameters for the activation function and weighting for KL term in the loss function
