@@ -48,6 +48,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import glob
+import scipy.stats as ss
 from keras.models import load_model
 from rpy2.robjects import pandas2ri
 from ponyo import utils
@@ -495,6 +496,35 @@ corr, shared_ranking = ranking.compare_gene_ranking(
     summary_gene_ranks, DE_prior_filename, ref_gene_col, ref_rank_col, figure_filename
 )
 # -
+
+# Hypergeometric test:
+# Given N number of genes with K common genes in Crow et al.
+# SOPHIE identifies n genes as being common
+# What is the probability that k of the genes identified by SOPHIE
+# are also common in Crow et al.? What is the probability of drawing
+# k or more concordant genes?
+num_Crow_genes = shared_ranking.shape[0]
+num_generic_Crow_genes = shared_ranking.query(f"{ref_rank_col}>=80.0").shape[0]
+num_generic_SOPHIE_genes = shared_ranking[
+    shared_ranking["Percentile (simulated)"] >= 80.0
+].shape[0]
+num_concordant_generic_genes = shared_ranking[
+    (shared_ranking[ref_rank_col] >= 80.0)
+    & (shared_ranking["Percentile (simulated)"] >= 80.0)
+].shape[0]
+
+print(num_Crow_genes)
+print(num_generic_Crow_genes)
+print(num_generic_SOPHIE_genes)
+print(num_concordant_generic_genes)
+
+p = ss.hypergeom.sf(
+    num_concordant_generic_genes,
+    num_Crow_genes,
+    num_generic_Crow_genes,
+    num_generic_SOPHIE_genes,
+)
+print(p)
 
 # **Takeaway:**
 # * Previously we compared gene ranks obtained from (recount2)-trained VAE model vs gene ranks obtained from manual curation using Crow et. al data. This [PR](https://github.com/ajlee21/generic-expression-patterns/blob/807377d76f63b6282c62255d7b160feb8585e0e2/human_analysis/2_identify_generic_genes_pathways.ipynb) shows that the correlation of gene ranks are very consistent.

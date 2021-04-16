@@ -49,6 +49,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import pickle
+import scipy.stats as ss
 
 from rpy2.robjects import pandas2ri
 from ponyo import utils, simulate_expression_data
@@ -290,6 +291,37 @@ generic_SOPHIE_only = shared_ranking[
     (shared_ranking["Percentile (simulated)"] > 80) & (shared_ranking["prop DEGs"] < 40)
 ]
 generic_SOPHIE_only.to_csv(os.path.join(local_dir, "SOPHIE_generic_only.tsv"), sep="\t")
+
+shared_ranking.head()
+
+# Hypergeometric test:
+# Given N number of genes with K common genes in GAPE.
+# SOPHIE identifies n genes as being common
+# What is the probability that k of the genes identified by SOPHIE
+# are also common in GAPE? What is the probability of drawing
+# k or more concordant genes?
+num_GAPE_genes = shared_ranking.shape[0]
+num_generic_GAPE_genes = shared_ranking[shared_ranking[ref_rank_col] >= 60.0].shape[0]
+num_generic_SOPHIE_genes = shared_ranking[
+    shared_ranking["Percentile (simulated)"] >= 80.0
+].shape[0]
+num_concordant_generic_genes = shared_ranking[
+    (shared_ranking[ref_rank_col] >= 60.0)
+    & (shared_ranking["Percentile (simulated)"] >= 80.0)
+].shape[0]
+
+print(num_GAPE_genes)
+print(num_generic_GAPE_genes)
+print(num_generic_SOPHIE_genes)
+print(num_concordant_generic_genes)
+
+p = ss.hypergeom.sf(
+    num_concordant_generic_genes,
+    num_GAPE_genes,
+    num_generic_GAPE_genes,
+    num_generic_SOPHIE_genes,
+)
+print(p)
 
 # **Takeaway:**
 #
