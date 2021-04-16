@@ -207,7 +207,7 @@ plt.text(
 nonzero_fig.set(ylim=(0, 800))
 nonzero_fig.set_xlabel(None)
 nonzero_fig.set_xticklabels(
-    ["generic genes", "other genes"], fontsize=14, fontname="Verdana"
+    ["common genes", "other genes"], fontsize=14, fontname="Verdana"
 )
 nonzero_fig.set_ylabel(
     textwrap.fill("Number of LVs", width=30), fontsize=14, fontname="Verdana"
@@ -242,7 +242,7 @@ plt.text(
 highweight_fig.set(ylim=(0, 150))
 highweight_fig.set_xlabel(None)
 highweight_fig.set_xticklabels(
-    ["generic genes", "other genes"], fontsize=14, fontname="Verdana"
+    ["common genes", "other genes"], fontsize=14, fontname="Verdana"
 )
 highweight_fig.set_ylabel(
     textwrap.fill("Number of LVs", width=30), fontsize=14, fontname="Verdana"

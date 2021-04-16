@@ -11,6 +11,7 @@ using features from either multiPLIER or eADAGE models.
 from glob import glob
 import pandas as pd
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def get_generic_specific_genes(summary_data, generic_threshold):
@@ -453,6 +454,8 @@ def plot_dist_weights(
         dodge=False,
         palette=["#81448e", "lightgrey"],
     )
+    L = plt.legend()
+    L.get_texts()[0].set_text("common")
 
     fig.set_xlabel("Weight", fontsize=14, fontname="Verdana")
     fig.set_ylabel("Gene", fontsize=14, fontname="Verdana")

@@ -225,10 +225,10 @@ recount2_expression_mean.head()
 recount2_expression_mean_toplot = pd.DataFrame(
     data={
         "all genes": np.log10(recount2_expression_mean),
-        "RNAseq and array generic": np.log10(
+        "common in RNAseq and array": np.log10(
             recount2_expression_mean[correlated_genes]
         ),
-        "only RNAseq generic": np.log10(recount2_expression_mean[uncorrelated_genes]),
+        "common in only RNAseq": np.log10(recount2_expression_mean[uncorrelated_genes]),
     }
 )
 
@@ -262,8 +262,8 @@ f.get_figure().savefig(
 crow_expression_mean_toplot = pd.DataFrame(
     data={
         "all genes": np.log10(crow_expression_mean),
-        "RNAseq and array generic": np.log10(crow_expression_mean[correlated_genes]),
-        "only RNAseq generic": np.log10(crow_expression_mean[uncorrelated_genes]),
+        "common in RNAseq and array": np.log10(crow_expression_mean[correlated_genes]),
+        "common only in RNAseq": np.log10(crow_expression_mean[uncorrelated_genes]),
     }
 )
 
