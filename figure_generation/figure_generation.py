@@ -112,7 +112,7 @@ figure_1.save("output/figure_1.svg")
 
 # Create panels for figure 2
 panel_2a = make_figure_panel(
-    "fig2A.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
+    "fig2A_v1.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
 panel_2b = make_figure_panel(
     "../human_cancer_analysis/gene_ranking_logFC.svg",
@@ -324,7 +324,7 @@ panel_5c = make_figure_panel(
     y_loc=10,
 )
 panel_5d = make_figure_panel(
-    os.path.join(local_directory, "WT-cbrB-EV-comp_10nM_Arg.svg"),
+    os.path.join(local_directory, "WT-cbrB-EV-comp_10nM_Arg_crc.svg"),
     scale_x_input=2,
     scale_y_input=2,
     x_loc=300,
@@ -359,40 +359,40 @@ figure_5.save("output/figure_5.svg")
 
 # Create panels for Supplement 1
 panel_S1a = make_figure_panel(
-    "../human_general_analysis/gene_ranking_log2FoldChange.svg",
+    "../explore_RNAseq_only_generic_genes/array_expression_dist_gene_groups_highlight.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
     x_loc=30,
     y_loc=20,
 )
 panel_S1b = make_figure_panel(
-    "../human_cancer_analysis/gene_ranking_logFC.svg",
+    "../explore_RNAseq_only_generic_genes/recount2_expression_dist_gene_groups_highlight.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
-    x_loc=400,
+    x_loc=450,
     y_loc=10,
 )
 panel_S1c = make_figure_panel(
-    "../human_general_analysis/pathway_ranking_padj.svg",
+    "../explore_RNAseq_only_generic_genes/violin_plot_mean_expression_RNAseq_only.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
     x_loc=30,
-    y_loc=400,
+    y_loc=300,
 )
 panel_S1d = make_figure_panel(
-    "../human_cancer_analysis/pathway_ranking_padj.svg",
+    "../explore_RNAseq_only_generic_genes/violin_plot_mean_expression_RNAseq_array.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
-    x_loc=400,
-    y_loc=400,
+    x_loc=30,
+    y_loc=1800,
 )
 
 panel_S1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_S1b_label = sg.TextElement(400, 20, "B", size=18, weight="bold", font="Verdana")
-panel_S1c_label = sg.TextElement(10, 400, "C", size=18, weight="bold", font="Verdana")
-panel_S1d_label = sg.TextElement(400, 400, "D", size=18, weight="bold", font="Verdana")
+panel_S1b_label = sg.TextElement(450, 20, "B", size=18, weight="bold", font="Verdana")
+panel_S1c_label = sg.TextElement(10, 300, "C", size=18, weight="bold", font="Verdana")
+panel_S1d_label = sg.TextElement(30, 1800, "D", size=18, weight="bold", font="Verdana")
 
-figure_S1 = sg.SVGFigure("800", "800")
+figure_S1 = sg.SVGFigure("1800", "3500")
 figure_S1.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -411,6 +411,62 @@ display(SVG(figure_S1.to_str()))
 # save generated SVG files
 figure_S1.save("output/figure_S1.svg")
 
+# ## Supplement 2
+
+# Create panels for Supplement 2
+panel_S2a = make_figure_panel(
+    "../human_general_analysis/gene_ranking_log2FoldChange.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=30,
+    y_loc=20,
+)
+panel_S2b = make_figure_panel(
+    "../human_cancer_analysis/gene_ranking_logFC.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=400,
+    y_loc=10,
+)
+panel_S2c = make_figure_panel(
+    "../human_general_analysis/pathway_ranking_padj.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=30,
+    y_loc=400,
+)
+panel_S2d = make_figure_panel(
+    "../human_cancer_analysis/pathway_ranking_padj.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=400,
+    y_loc=400,
+)
+
+panel_S2a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
+panel_S2b_label = sg.TextElement(400, 20, "B", size=18, weight="bold", font="Verdana")
+panel_S2c_label = sg.TextElement(10, 400, "C", size=18, weight="bold", font="Verdana")
+panel_S2d_label = sg.TextElement(400, 400, "D", size=18, weight="bold", font="Verdana")
+
+figure_S2 = sg.SVGFigure("800", "800")
+figure_S2.append(
+    [
+        etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
+        panel_S2a,
+        panel_S2b,
+        panel_S2c,
+        panel_S2d,
+        panel_S2a_label,
+        panel_S2b_label,
+        panel_S2c_label,
+        panel_S2d_label,
+    ]
+)
+display(SVG(figure_S2.to_str()))
+
+# save generated SVG files
+figure_S2.save("output/figure_S2.svg")
+
 # ## Output png version
 
 # !inkscape --export-png=output/figure_1.png output/figure_1.svg
@@ -419,3 +475,4 @@ figure_S1.save("output/figure_S1.svg")
 # !inkscape --export-png=output/figure_4.png output/figure_4.svg
 # !inkscape --export-png=output/figure_5.png output/figure_5.svg
 # !inkscape --export-png=output/figure_S1.png output/figure_S1.svg
+# !inkscape --export-png=output/figure_S2.png output/figure_S2.svg
