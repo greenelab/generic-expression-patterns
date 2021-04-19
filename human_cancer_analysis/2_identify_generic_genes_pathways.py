@@ -100,6 +100,9 @@ grp_metadata_filename = os.path.join(
 with open(scaler_filename, "rb") as scaler_fh:
     scaler = pickle.load(scaler_fh)
 
+# Percentile threshold to identify generic genes
+percentile_threshold = 80.0
+
 # +
 # Output files
 gene_summary_filename = os.path.join(
@@ -506,11 +509,11 @@ corr, shared_ranking = ranking.compare_gene_ranking(
 num_Crow_genes = shared_ranking.shape[0]
 num_generic_Crow_genes = shared_ranking.query(f"{ref_rank_col}>=80.0").shape[0]
 num_generic_SOPHIE_genes = shared_ranking[
-    shared_ranking["Percentile (simulated)"] >= 80.0
+    shared_ranking["Percentile (simulated)"] >= percentile_threshold
 ].shape[0]
 num_concordant_generic_genes = shared_ranking[
-    (shared_ranking[ref_rank_col] >= 80.0)
-    & (shared_ranking["Percentile (simulated)"] >= 80.0)
+    (shared_ranking[ref_rank_col] >= percentile_threshold)
+    & (shared_ranking["Percentile (simulated)"] >= percentile_threshold)
 ].shape[0]
 
 print(num_Crow_genes)
