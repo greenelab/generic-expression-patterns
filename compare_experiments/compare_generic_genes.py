@@ -22,6 +22,7 @@
 # %autoreload 2
 
 import os
+from scipy import stats
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -94,12 +95,17 @@ gene_ranking_same_combined[pd.isnull(gene_ranking_same_combined).any(axis=1)]
 
 # +
 # Plot correlation between ranking
+r, p = stats.spearmanr(
+    gene_ranking_same_combined["Rank 1"], gene_ranking_same_combined["Rank 2"]
+)
+print(r, p)
+
 fig = sns.jointplot(
     data=gene_ranking_same_combined,
     x="Rank 1",
     y="Rank 2",
     kind="hex",
-    marginal_kws={"color": "white"},
+    marginal_kws={"color": "white", "edgecolor": "white"},
 )
 
 fig.set_axis_labels(
@@ -108,7 +114,9 @@ fig.set_axis_labels(
     fontsize=14,
     fontname="Verdana",
 )
-plt.colorbar()
+cbar_ax = fig.fig.add_axes([0.9, 0.25, 0.05, 0.4])  # x, y, width, height
+cb = plt.colorbar(cax=cbar_ax)
+cb.set_label("Number of genes")
 
 output_figure_filename = "concordance_between_same_recount2_templates.svg"
 fig.savefig(
@@ -152,12 +160,17 @@ gene_ranking_diff_combined[pd.isnull(gene_ranking_diff_combined).any(axis=1)]
 
 # +
 # Plot correlation between ranking
+r, p = stats.spearmanr(
+    gene_ranking_diff_combined["Rank 1"], gene_ranking_diff_combined["Rank 2"]
+)
+print(r, p)
+
 fig = sns.jointplot(
     data=gene_ranking_diff_combined,
     x="Rank 1",
     y="Rank 2",
     kind="hex",
-    marginal_kws={"color": "white"},
+    marginal_kws={"color": "white", "edgecolor": "white"},
 )
 
 fig.set_axis_labels(
@@ -167,7 +180,9 @@ fig.set_axis_labels(
     fontname="Verdana",
 )
 
-plt.colorbar()
+cbar_ax = fig.fig.add_axes([0.9, 0.25, 0.05, 0.4])  # x, y, width, height
+cb = plt.colorbar(cax=cbar_ax)
+cb.set_label("Number of genes")
 
 output_figure_filename = "concordance_between_diff_recount2_templates.svg"
 fig.savefig(

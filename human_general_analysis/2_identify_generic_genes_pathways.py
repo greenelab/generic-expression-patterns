@@ -51,6 +51,7 @@ import sys
 import pandas as pd
 import numpy as np
 import pickle
+import scipy.stats as ss
 
 from rpy2.robjects import pandas2ri
 from ponyo import utils, simulate_expression_data
@@ -102,6 +103,9 @@ metadata_filename = os.path.join(
 # Load pickled file
 with open(scaler_filename, "rb") as scaler_fh:
     scaler = pickle.load(scaler_fh)
+
+# Percentile threshold to identify generic genes
+percentile_threshold = 80.0
 
 # +
 # Output files
@@ -296,7 +300,38 @@ figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
 corr, shared_ranking = ranking.compare_gene_ranking(
     summary_gene_ranks, DE_prior_filename, ref_gene_col, ref_rank_col, figure_filename
 )
+
+# +
+# Hypergeometric test:
+# Given N number of genes with K common genes in Crow et al.
+# SOPHIE identifies n genes as being common
+# What is the probability that k of the genes identified by SOPHIE
+# are also common in Crow et al.? What is the probability of drawing
+# k or more concordant genes?
+
+num_Crow_genes = shared_ranking.shape[0]
+num_generic_Crow_genes = shared_ranking.query(f"{ref_rank_col}>=80.0").shape[0]
+num_generic_SOPHIE_genes = shared_ranking[
+    shared_ranking["Percentile (simulated)"] >= percentile_threshold
+].shape[0]
+num_concordant_generic_genes = shared_ranking[
+    (shared_ranking[ref_rank_col] >= percentile_threshold)
+    & (shared_ranking["Percentile (simulated)"] >= percentile_threshold)
+].shape[0]
 # -
+
+print(num_Crow_genes)
+print(num_generic_Crow_genes)
+print(num_generic_SOPHIE_genes)
+print(num_concordant_generic_genes)
+
+p = ss.hypergeom.sf(
+    num_concordant_generic_genes,
+    num_Crow_genes,
+    num_generic_Crow_genes,
+    num_generic_SOPHIE_genes,
+)
+print(p)
 
 # **Takeaway:**
 # Based on the correlation plot, we can see that our simulation method is very good at capturing variability in genes that are very low or very high in the DE rank (i.e. are significantly differentially expressed often across different studies). These results serve to validate that our method can be used to identify these generic genes, as we were able to recapitulate some of the generic genes as those identified by Crow et. al. Additionally, our method extends the Crow et. al. work, which used array data, and since here we used RNA-seq.

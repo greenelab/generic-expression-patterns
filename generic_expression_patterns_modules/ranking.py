@@ -446,6 +446,7 @@ def get_shared_rank_scaled(
         associated with that gene.
     reference_filename: str
         File containing gene ranks from reference publication (Crow et. al.)
+        or proportions of experiments found to be DE ()
     ref_gene_col: str
         Name of column header containing reference gene symbols
     ref_rank_col: str
@@ -462,6 +463,9 @@ def get_shared_rank_scaled(
     shared_rank_df = merge_ranks_to_compare(
         summary_df, reference_filename, ref_gene_col, ref_rank_col
     )
+    # Convert GAPE proportions to ranking
+    if "GAPE" in reference_filename:
+        shared_rank_df[ref_rank_col] = shared_rank_df[ref_rank_col].rank()
     if max(shared_rank_df["Percentile (simulated)"]) != max(shared_rank_df[ref_rank_col]):
         shared_rank_scaled_df = scale_reference_ranking(shared_rank_df, ref_rank_col)
     else:

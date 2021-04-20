@@ -173,14 +173,14 @@ font = font_manager.FontProperties(family="Verdana", style="normal", size=12)
 
 communities_fig.legend(
     handles=[mpatches.Patch(color="lightgrey"), line1, line2],
-    labels=["Random gene samples", "Generic genes", "Total communities"],
+    labels=["Random gene samples", "Common genes", "Total communities"],
     bbox_to_anchor=(1, 1),
     loc="upper left",
     prop=font,
 )
 communities_fig.set_title(
     textwrap.fill(
-        "Number of communities, generic genes vs. {} degree-matched samples".format(
+        "Number of communities, common genes vs. {} degree-matched samples".format(
             NUM_NODE_SAMPLES
         ),
         width=40,

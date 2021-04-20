@@ -49,6 +49,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import pickle
+import scipy.stats as ss
 
 from rpy2.robjects import pandas2ri
 from ponyo import utils, simulate_expression_data
@@ -97,6 +98,9 @@ metadata_filename = os.path.join(
 
 # Load pickled file
 scaler = pickle.load(open(scaler_filename, "rb"))
+
+# Percentile threshold to identify generic genes
+percentile_threshold = 80.0
 # -
 
 # Output files
@@ -116,7 +120,7 @@ pathway_summary_filename = os.path.join(
 # 4. Decode the samples. This results in a new experiment
 # 5. Repeat steps 1-4 to get multiple simulated experiments
 
-# Simulate multiple experiments
+"""# Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -134,15 +138,14 @@ for run_id in range(num_runs):
         local_dir,
         base_dir,
         run_id,
-    )
+    )"""
 
 # ### Process template and simulated data
 #
 # * Remove samples not required for comparison.
 # * Make sure ordering of samples matches metadata for proper comparison
 
-# +
-if not os.path.exists(sample_id_metadata_filename):
+"""if not os.path.exists(sample_id_metadata_filename):
     sample_id_metadata_filename = None
 
 stats.process_samples_for_limma(
@@ -161,7 +164,7 @@ for i in range(num_runs):
         metadata_filename,
         None,
         sample_id_metadata_filename,
-    )
+    )"""
 
 # +
 # Quick check
@@ -290,6 +293,39 @@ generic_SOPHIE_only = shared_ranking[
     (shared_ranking["Percentile (simulated)"] > 80) & (shared_ranking["prop DEGs"] < 40)
 ]
 generic_SOPHIE_only.to_csv(os.path.join(local_dir, "SOPHIE_generic_only.tsv"), sep="\t")
+
+shared_ranking.head()
+
+# Hypergeometric test:
+# Given N number of genes with K common genes in GAPE.
+# SOPHIE identifies n genes as being common
+# What is the probability that k of the genes identified by SOPHIE
+# are also common in GAPE? What is the probability of drawing
+# k or more concordant genes?
+num_GAPE_genes = shared_ranking.shape[0]
+num_generic_GAPE_genes = shared_ranking[
+    shared_ranking[ref_rank_col] >= percentile_threshold
+].shape[0]
+num_generic_SOPHIE_genes = shared_ranking[
+    shared_ranking["Percentile (simulated)"] >= percentile_threshold
+].shape[0]
+num_concordant_generic_genes = shared_ranking[
+    (shared_ranking[ref_rank_col] >= percentile_threshold)
+    & (shared_ranking["Percentile (simulated)"] >= percentile_threshold)
+].shape[0]
+
+print(num_GAPE_genes)
+print(num_generic_GAPE_genes)
+print(num_generic_SOPHIE_genes)
+print(num_concordant_generic_genes)
+
+p = ss.hypergeom.sf(
+    num_concordant_generic_genes,
+    num_GAPE_genes,
+    num_generic_GAPE_genes,
+    num_generic_SOPHIE_genes,
+)
+print(p)
 
 # **Takeaway:**
 #
