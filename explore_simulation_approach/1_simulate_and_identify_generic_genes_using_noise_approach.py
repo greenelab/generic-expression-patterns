@@ -35,7 +35,8 @@ import pandas as pd
 import numpy as np
 import pickle
 import scipy.stats as ss
-
+import seaborn as sns
+import matplotlib.pyplot as plt
 from rpy2.robjects import pandas2ri
 from ponyo import utils
 from generic_expression_patterns_modules import process, stats, ranking
@@ -69,7 +70,7 @@ pvalue_name = params["DE_pvalue_name"]
 
 # Set mean and variance for noise distribution
 mu = 0
-sigma = 2
+sigma = 1000
 
 # Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(
@@ -117,6 +118,24 @@ for i in range(num_runs):
     simulated_data[simulated_data < 0] = 0
 
     simulated_data.to_csv(simulated_data_filename, sep="\t")
+
+# ### Examine distribution of template data
+#
+# We want to play around with the amount of noise that we add and so it would be a good idea to know what the distribution looks like for the original data
+
+print(mapped_template.mean().mean())
+sns.displot(mapped_template.mean())
+plt.title("Mean gene expression for template experiment")
+
+print(mapped_template.std().mean())
+sns.displot(mapped_template.std())
+plt.title("Std gene expression for template experiment")
+
+# ## Quick check
+#
+# Check that we are producing distinct simulated experiments (i.e. that we are not getting the same values for each simulated experiment)
+
+mapped_template.head()
 
 # +
 simulated_data_filename_0 = os.path.join(
