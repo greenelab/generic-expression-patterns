@@ -342,9 +342,8 @@ p = ss.hypergeom.sf(
 )
 print(p)
 
-# The results for SOPHIE vs Crow et. al found a significant over-representation of SOPHIE identified generic genes in Crow et al. generic gene set. Here we found...
-
-# +
-# Rank template genes by logFC
-# Add to shared_df with noise ranked genes
-# signed rank test of gene ranks
+# **Takeaway**
+# * Looks like noise and VAE can both recapitulate generic genes, which is expected.
+# * Looks like template experiment already expresses generic genes (refer to other [notebook](comparisons_against_template.ipynb), so adding a small amount of noise (Normal(0,2)) will still find these generic results. This is expected, given that generic genes are "generic" because they are found across many experiments
+#
+# What we really want is to determine if SOPHIE can better **separate** between generic and specific genes. To do this, we would need a gold standard for what are specific genes for some experiment, which we do not have. So for now we will leave the experiment as is.

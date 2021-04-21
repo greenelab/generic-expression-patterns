@@ -108,9 +108,11 @@ fig.set_axis_labels(
 )
 # -
 
-# Looks like template experiment already expresses generic genes, so adding a small amount of noise (Normal(0,2)) will still find these generic results.
+# * Looks like template experiment already expresses generic genes, so adding a small amount of noise (Normal(0,2)) will still find these generic results.
 #
-# This generic pattern does seem to be disrupted when we add enough noise (Normal(0.1000))
+# * This generic pattern does seem to be disrupted when we add enough noise (Normal(0.1000))
+#
+# * This is expected, given that generic genes are "generic" because they are found across many experiments
 
 # ## Template vs SOPHIE
 
