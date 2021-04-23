@@ -148,7 +148,7 @@ for run_id in range(num_runs):
         run_id,
     )
 
-# ## Process template and simulated experiments
+# ### Process template and simulated experiments
 #
 # * Remove samples not required for comparison
 # * Make sure ordering of samples matches metadata for proper comparison
