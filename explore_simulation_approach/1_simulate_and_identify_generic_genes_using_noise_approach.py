@@ -68,7 +68,8 @@ count_threshold = params["count_threshold"]
 logFC_name = params["DE_logFC_name"]
 pvalue_name = params["DE_pvalue_name"]
 
-# Set mean and variance for noise distribution
+# Set mean and standard deviation for noise distribution
+# Here I played around with different sigma values
 mu = 0
 sigma = 1000
 
@@ -134,6 +135,8 @@ plt.title("Std gene expression for template experiment")
 # ## Quick check
 #
 # Check that we are producing distinct simulated experiments (i.e. that we are not getting the same values for each simulated experiment)
+#
+# Here I randomly selected two different simulated experiments. File names for the simulated experiments have the following format `selected_simulated_data_{project_id}_<unique identifier>_processed.txt`. I selected two simulated experiments by their integer identifier.
 
 mapped_template.head()
 
@@ -320,7 +323,7 @@ corr, shared_ranking = ranking.compare_gene_ranking(
 
 num_Crow_genes = shared_ranking.shape[0]
 num_generic_Crow_genes = shared_ranking.query(f"{ref_rank_col}>=80.0").shape[0]
-num_generic_SOPHIE_genes = shared_ranking[
+num_generic_noise_genes = shared_ranking[
     shared_ranking["Percentile (simulated)"] >= percentile_threshold
 ].shape[0]
 num_concordant_generic_genes = shared_ranking[
@@ -331,19 +334,22 @@ num_concordant_generic_genes = shared_ranking[
 
 print(num_Crow_genes)
 print(num_generic_Crow_genes)
-print(num_generic_SOPHIE_genes)
+print(num_generic_noise_genes)
 print(num_concordant_generic_genes)
 
 p = ss.hypergeom.sf(
     num_concordant_generic_genes,
     num_Crow_genes,
     num_generic_Crow_genes,
-    num_generic_SOPHIE_genes,
+    num_generic_noise_genes,
 )
 print(p)
 
 # **Takeaway**
 # * Looks like noise and VAE can both recapitulate generic genes, which is expected.
-# * Looks like template experiment already expresses generic genes (refer to other [notebook](comparisons_against_template.ipynb), so adding a small amount of noise (Normal(0,2)) will still find these generic results. This is expected, given that generic genes are "generic" because they are found across many experiments
+# * Looks like template experiment already expresses generic genes (refer to other [notebook](comparisons_against_template.ipynb), so adding a small amount of noise (Normal(0,2)) will still find these generic results. This is expected, given that generic genes are "generic" because they are found across many experiments.
+# * The reason that we think that generic genes are found by both the VAE approach and this noise approach is because they are "generic". So these generic signals are already found to exist across many experiments and by adding noise to the experiments we are disrupting that signal a bit but its still there.
 #
-# What we really want is to determine if SOPHIE can better **separate** between generic and specific genes. To do this, we would need a gold standard for what are specific genes for some experiment, which we do not have. So for now we will leave the experiment as is.
+# The benefit to using a VAE, presumably, is that the VAE will allow us to identify those specific genes by generating different types of experiments, where as the noise approach is limited to generating the same experiment but with different amounts of noise added.
+#
+# So, what we really want to determine is if SOPHIE can better **separate** between generic and specific genes. To do this, we would need a gold standard for what are specific genes for some experiment, which we do not have. So for now we will leave the experiment as is.
