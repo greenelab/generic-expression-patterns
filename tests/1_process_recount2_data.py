@@ -69,6 +69,10 @@ normalized_compendium_filename = params["normalized_compendium_filename"]
 scaler_filename = params["scaler_filename"]
 # -
 
+assert os.path.exists("data")
+
+assert os.path.exists("data/input")
+
 # ## Test: Downloading data
 
 # +
@@ -77,6 +81,9 @@ template_download_dir = os.path.join(local_dir, "template_download")
 
 # Make sure this directory already exists
 os.makedirs(template_download_dir, exist_ok=True)
+# -
+
+assert os.path.exists(template_download_dir)
 
 # + magic_args="-i project_id -i template_download_dir -i raw_template_filename -i base_dir" language="R"
 #
