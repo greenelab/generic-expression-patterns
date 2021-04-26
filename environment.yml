@@ -10,7 +10,7 @@ dependencies:
 - r::r-stringi
 - bioconda::bioconductor-limma
 - bioconda::bioconductor-deseq2
-- bioconda::bioconductor-recount
+- bioconda::bioconductor-recount=1.12.0
 - bioconda::bioconductor-fgsea
 - bioconda::bioconductor-gsva
 - bioconda::bioconductor-DEFormats
