@@ -8,7 +8,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression_PYTEST] *
+#     display_name: Python [conda env:generic_expression_PYTEST]
 #     language: python
 #     name: conda-env-generic_expression_PYTEST-py
 # ---
@@ -90,9 +90,10 @@ assert os.path.exists(template_download_dir)
 # source(paste0(base_dir, '/generic_expression_patterns_modules/download_recount2_data.R'))
 #
 # get_recount2_template_experiment(project_id, template_download_dir, raw_template_filename)
-# -
 
-assert os.path.exists(raw_template_filename)
+# +
+# assert os.path.exists(raw_template_filename)
+# -
 
 # ## Test: Renaming gene ids
 
