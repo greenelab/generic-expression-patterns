@@ -3,6 +3,7 @@
 # This module includes a few functions to download recount2 SRA data.
 
 library('recount')
+library('gtools')
 
 set.seed(123)
 
@@ -18,24 +19,26 @@ get_recount2_template_experiment <- function(project_id,
   # The RSE object for the counts summarized at the gene level using the
   # Gencode v25 (GRCh38.p7, CHR) annotation as provided by Gencode.
   project_dir <- paste(download_dir, project_id, sep='/')
+
   if (!file.exists(file.path(project_dir, 'rse_gene.Rdata'))) {
     download_study(project_id, outdir=project_dir)
   }
   load(file.path(project_dir, 'rse_gene.Rdata'), verbose = TRUE)
 
+  stopifnot(file.exists(project_dir))
   # Counts are the number of reads that map that each gene
-  rse_gene_scaled <- scale_counts(rse_gene)
-  rse_gene_counts <- assays(rse_gene_scaled)$counts
-  data_counts <- t(rse_gene_counts)
+  #rse_gene_scaled <- scale_counts(rse_gene)
+  #rse_gene_counts <- assays(rse_gene_scaled)$counts
+  #data_counts <- t(rse_gene_counts)
 
   ## Save counts matrix to file
-  write.table(
-    data_counts,
-    raw_template_filename,
-    sep = '\t',
-    row.names = TRUE,
-    col.names = NA
-  )
+  #write.table(
+  #  data_counts,
+  #  raw_template_filename,
+  #  sep = '\t',
+  #  row.names = TRUE,
+  #  col.names = NA
+  #)
 
 }
 
