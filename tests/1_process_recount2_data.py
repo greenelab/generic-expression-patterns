@@ -69,6 +69,9 @@ normalized_compendium_filename = params["normalized_compendium_filename"]
 scaler_filename = params["scaler_filename"]
 # -
 
+# Make sure this directory already exists
+os.makedirs(local_dir, exist_ok=True)
+
 # ## Pre-downloaded and saved the template data
 
 # ## Test: Renaming gene ids
