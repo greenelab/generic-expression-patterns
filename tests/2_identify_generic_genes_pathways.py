@@ -163,33 +163,13 @@ assert os.path.exists(sim_output1) and os.path.exists(sim_output2)
 # Check that simulated files are non-empty
 assert os.path.getsize(sim_output1) > 0 and os.path.getsize(sim_output2) > 0
 
-# **Note:** These cells testing for reproducibility of the simulation pass when run locally. But fail when run on github actions, so for now I am commenting them out but will use them to test locally any future updates to the code
+# +
+# Check that simulated experiments are different
+sim1 = pd.read_csv(sim_output1, sep="\t", index_col=0, header=0)
+sim2 = pd.read_csv(sim_output2, sep="\t", index_col=0, header=0)
 
-"""# Check reproducibility of simulated experiments using random seed
-template_path = "data/test_simulated_data_SRP012656_0.txt"
-output_path = os.path.join(local_dir, "pseudo_experiment", "selected_simulated_data_SRP012656_0.txt")
-template_df = pd.read_csv(template_path, sep="\t", header=0, index_col=0)
-output_df = pd.read_csv(output_path, sep="\t", header=0, index_col=0)
-
-assert np.all(np.isclose(output_df.values, template_df.values)), (
-    output_df.iloc[
-        np.where(~np.all(np.isclose(output_df.values, template_df.values), axis=1))[0],
-        np.where(~np.all(np.isclose(output_df.values, template_df.values), axis=0))[0],
-    ],
-)"""
-
-# Check reproducibility of simulated experiments
-"""template_path = "data/test_simulated_data_SRP012656_1.txt"
-output_path = os.path.join(local_dir, "pseudo_experiment", "selected_simulated_data_SRP012656_1.txt")
-template_df = pd.read_csv(template_path, sep="\t", header=0, index_col=0)
-output_df = pd.read_csv(output_path, sep="\t", header=0, index_col=0)
-
-assert np.all(np.isclose(output_df.values, template_df.values)), (
-    output_df.iloc[
-        np.where(~np.all(np.isclose(output_df.values, template_df.values), axis=1))[0],
-        np.where(~np.all(np.isclose(output_df.values, template_df.values), axis=0))[0],
-    ]
-)"""
+assert sim.equals(sim2) == False
+# -
 
 # ## Test: Differential expression analysis
 
@@ -287,22 +267,6 @@ summary_gene_ranks[summary_gene_ranks.isna().any(axis=1)]
 gene_summary_filename = os.path.join(local_dir, "gene_summary_table.tsv")
 summary_gene_ranks.to_csv(gene_summary_filename, sep="\t")
 
-"""# Passed assertion locally but not on github actions but not clear why
-template_path = "data/test_gene_summary_table.tsv"
-template_df = pd.read_csv(template_path, sep="\t", header=0, index_col=0)
-output_df = pd.read_csv(gene_summary_filename, sep="\t", header=0, index_col=0)
-
-assert (template_df["Gene ID"].values == output_df["Gene ID"].values).all(),template_df.loc[template_df["Gene ID"].values != output_df["Gene ID"].values,"Gene ID"]
-
-assert np.all(np.isclose(
-    template_df[["Rank (Real)", "Rank (simulated)"]]values,
-    output_df[["Rank (Real)", "Rank (simulated)"]]values)),(
-    output_df[["Rank (Real)", "Rank (simulated)"]].iloc[
-        np.where(~np.all(np.isclose(output_df[["Rank (Real)", "Rank (simulated)"]].values, template_df[["Rank (Real)", "Rank (simulated)"]].values), axis=1))[0],
-        np.where(~np.all(np.isclose(output_df[["Rank (Real)", "Rank (simulated)"]].values, template_df[["Rank (Real)", "Rank (simulated)"]].values), axis=0))[0],
-    ]
-)"""
-
 # ## Test: Compare gene ranking
 # Studies have found that there are some genes that are more likely to be differentially expressed even across a wide range of experimental designs. These *generic genes* are not necessarily specific to the biological process being studied but instead represents a more systematic change.
 #
@@ -319,17 +283,12 @@ figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
 corr_stats, shared_ranking = ranking.compare_gene_ranking(
     summary_gene_ranks, DE_prior_file, ref_gene_col, ref_rank_col, figure_filename
 )
-r, p = corr_stats["r"], corr_stats["p"]
-
-# Expected output for DE using Limma
-# expected_r = 0.21913957199910106
-# expected_p = 6.871971345526456e-186
+r = corr_stats["r"]
 
 expected_r = 0.22258799129252085
-expected_p = 4.5589621319725286e-173
-assert np.all(np.isclose([r, p], [expected_r, expected_p])), (
-    [r, p],
-    [expected_r, expected_p],
+assert np.all(np.isclose([r], [expected_r])), (
+    [r],
+    [expected_r],
 )
 # -
 
@@ -423,38 +382,6 @@ template_GSEA_stats_filename = os.path.join(
 )
 # -
 
-"""# Concatenate simulated experiments
-simulated_GSEA_stats_all = process.concat_simulated_data(local_dir, num_runs, project_id, 'GSEA')
-simulated_GSEA_stats_all.set_index('pathway', inplace=True)
-print(simulated_GSEA_stats_all.shape)"""
-
-"""# Aggregate statistics across all simulated experiments
-simulated_GSEA_summary_stats = calc.aggregate_stats(
-    col_to_rank_pathways,
-    simulated_GSEA_stats_all,
-    'GSEA'
-)"""
-
-"""# Load association statistics for template experiment
-template_GSEA_stats = template_enriched_pathways.iloc[:, :-1]
-template_GSEA_stats.set_index('pathway', inplace=True)
-
-template_GSEA_stats.head()
-
-# Rank genes in template experiment
-template_GSEA_stats = calc.rank_genes_or_pathways(
-    col_to_rank_pathways,
-    template_GSEA_stats,
-    True
-)"""
-
-"""# Rank genes in simulated experiments
-simulated_GSEA_summary_stats = calc.rank_genes_or_pathways(
-    col_to_rank_pathways,
-    simulated_GSEA_summary_stats,
-    False
-)"""
-
 # ### Pathway summary table
 
 # Create intermediate file: "<local_dir>/gene_summary_table_<col_to_rank_pathways>.tsv"
@@ -518,13 +445,8 @@ corr_stats = ranking.compare_pathway_ranking(
     summary_pathway_ranks, powers_rank_processed_filename, figure_filename
 )
 # Note: Not getting reproducible results after GSEA, maybe due to permutations
-# r, p = corr_stats['r'], corr_stats['p']
+r = corr_stats["r"]
 
-# expected_r = 0.07620992008839596
-# expected_p = 0.5988732068701128
+expected_r = 0.08348143676828583
 
-# assert(
-#    np.all(
-#        np.isclose([r, p], [expected_r, expected_p])
-#    )
-# )
+assert np.all(np.isclose([r], [expected_r])), ([r], [expected_r])
