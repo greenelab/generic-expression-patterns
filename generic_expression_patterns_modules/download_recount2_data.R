@@ -18,6 +18,7 @@ get_recount2_template_experiment <- function(project_id,
   # The RSE object for the counts summarized at the gene level using the
   # Gencode v25 (GRCh38.p7, CHR) annotation as provided by Gencode.
   project_dir <- paste(download_dir, project_id, sep='/')
+
   if (!file.exists(file.path(project_dir, 'rse_gene.Rdata'))) {
     download_study(project_id, outdir=project_dir)
   }
@@ -36,6 +37,7 @@ get_recount2_template_experiment <- function(project_id,
     row.names = TRUE,
     col.names = NA
   )
+  stopifnot(file.exists(raw_template_filename))
 
 }
 

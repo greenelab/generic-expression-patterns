@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_PYTEST]
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_PYTEST-py
 # ---
 
 # # Process recount2 data
@@ -69,23 +69,10 @@ normalized_compendium_filename = params["normalized_compendium_filename"]
 scaler_filename = params["scaler_filename"]
 # -
 
-# ## Test: Downloading data
-
-# +
-# Directory where the downloaded files of template experiment will be saved into
-template_download_dir = os.path.join(local_dir, "template_download")
-
 # Make sure this directory already exists
-os.makedirs(template_download_dir, exist_ok=True)
+os.makedirs(local_dir, exist_ok=True)
 
-# + magic_args="-i project_id -i template_download_dir -i raw_template_filename -i base_dir" language="R"
-#
-# source(paste0(base_dir, '/generic_expression_patterns_modules/download_recount2_data.R'))
-#
-# get_recount2_template_experiment(project_id, template_download_dir, raw_template_filename)
-# -
-
-assert os.path.exists(raw_template_filename)
+# ## Pre-downloaded and saved the template data
 
 # ## Test: Renaming gene ids
 
