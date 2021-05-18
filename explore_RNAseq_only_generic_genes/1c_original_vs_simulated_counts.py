@@ -359,10 +359,10 @@ def violin_plot_original_vs_simulated(
                 # Format mean df for plotting
                 mean_dist = pd.DataFrame(
                     data={
-                        "mean of RNAseq common genes (template)": np.log10(
+                        "mean of RNAseq common DEGs (template)": np.log10(
                             template_df[gene_list].mean()
                         ),
-                        "mean of RNAseq common genes (simulated)": np.log10(
+                        "mean of RNAseq common DEGs (simulated)": np.log10(
                             simulated[gene_list].mean()
                         ),
                     }
@@ -373,10 +373,10 @@ def violin_plot_original_vs_simulated(
                 # Format mean df for plotting
                 mean_dist = pd.DataFrame(
                     data={
-                        "mean of array/RNAseq common genes (template)": np.log10(
+                        "mean of array/RNAseq common DEGs (template)": np.log10(
                             template_df[gene_list].mean()
                         ),
-                        "mean of array/RNAseq common genes (simulated)": np.log10(
+                        "mean of array/RNAseq common DEGs (simulated)": np.log10(
                             simulated[gene_list].mean()
                         ),
                     }
@@ -404,13 +404,13 @@ def violin_plot_original_vs_simulated(
             )
             if if_rnaseq_only:
                 fig.suptitle(
-                    "Average expression of RNA-seq only common genes",
+                    "Average expression of RNA-seq only common DEGs",
                     fontsize=16,
                     fontname="Verdana",
                 )
             else:
                 fig.suptitle(
-                    "Average expression of RNA-seq/array common genes",
+                    "Average expression of RNA-seq/array common DEGs",
                     fontsize=16,
                     fontname="Verdana",
                 )
@@ -422,10 +422,10 @@ def violin_plot_original_vs_simulated(
                 # Format var df for plotting
                 var_dist = pd.DataFrame(
                     data={
-                        "variance of RNAseq common genes (template)": np.log10(
+                        "variance of RNAseq common DEGs (template)": np.log10(
                             template_df[gene_list].var()
                         ),
-                        "variance of RNAseq common genes (simulated)": np.log10(
+                        "variance of RNAseq common DEGs (simulated)": np.log10(
                             simulated[gene_list].var()
                         ),
                     }
@@ -436,10 +436,10 @@ def violin_plot_original_vs_simulated(
                 # Format var df for plotting
                 var_dist = pd.DataFrame(
                     data={
-                        "variance of array/RNAseq common genes (template)": np.log10(
+                        "variance of array/RNAseq common DEGs (template)": np.log10(
                             template_df[gene_list].var()
                         ),
-                        "variance of array/RNAseq common genes (simulated)": np.log10(
+                        "variance of array/RNAseq common DEGs (simulated)": np.log10(
                             simulated[gene_list].var()
                         ),
                     }
@@ -467,13 +467,13 @@ def violin_plot_original_vs_simulated(
             )
             if if_rnaseq_only:
                 fig.suptitle(
-                    "Variance of expression of RNA-seq only common genes",
+                    "Variance of expression of RNA-seq only common DEGs",
                     fontsize=16,
                     fontname="Verdana",
                 )
             else:
                 fig.suptitle(
-                    "Variance of expression of RNA-seq/array common genes",
+                    "Variance of expression of RNA-seq/array common DEGs",
                     fontsize=16,
                     fontname="Verdana",
                 )
