@@ -34255,7 +34255,7 @@
   </clipPath>
  </defs>
 </g>
-    <g transform="translate(300, 300) scale(1)  scale(2.000000 2.000000)"><defs xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="defs2">
+    <g transform="translate(350, 300) scale(1)  scale(2.000000 2.000000)"><defs xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="defs2">
     <clipPath id="clipPath997" clipPathUnits="userSpaceOnUse">
       <path inkscape:connector-curvature="0" id="path995" d="m 85.58779,70.10088 h 344.9508 v 400.2629 H 85.58779 Z"/>
     </clipPath>
@@ -35027,6 +35027,6 @@
     <text x="10" y="20" font-size="18" font-family="Verdana" font-weight="bold" letter-spacing="0" text-anchor="start" fill="black">A</text>
     <text x="300" y="20" font-size="18" font-family="Verdana" font-weight="bold" letter-spacing="0" text-anchor="start" fill="black">B</text>
     <text x="700" y="20" font-size="18" font-family="Verdana" font-weight="bold" letter-spacing="0" text-anchor="start" fill="black">C</text>
-    <text x="300" y="300" font-size="18" font-family="Verdana" font-weight="bold" letter-spacing="0" text-anchor="start" fill="black">D</text>
+    <text x="350" y="300" font-size="18" font-family="Verdana" font-weight="bold" letter-spacing="0" text-anchor="start" fill="black">D</text>
   </g>
 </svg>
