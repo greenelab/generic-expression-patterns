@@ -72,8 +72,8 @@ def make_volcano_template_highlight_DEG(
     handles, labels = f.get_legend_handles_labels()
     f.legend([handles[1]], [labels[1]], loc="upper right")
 
-    f.set_xlabel("log2 Fold Change", fontsize=14, fontname="Verdana")
-    f.set_ylabel("-log10(FDR adjusted p-value)", fontsize=14, fontname="Verdana")
+    f.set_xlabel(r"log$_2$ Fold Change", fontsize=14, fontname="Verdana")
+    f.set_ylabel(r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana")
     f.set_title(f"Template experiment ({project_id})", fontsize=16, fontname="Verdana")
 
     f.figure.savefig(
@@ -179,11 +179,11 @@ def make_volcano_simulated_highlight_DEG(
             fig.legend(handles, labels, loc="center right")
             f.legend_.remove()
 
-    fig.text(0.5, 0.0, "log2 Fold Change", ha="center", fontsize=14, fontname="Verdana")
+    fig.text(0.5, 0.0, r"log$_2$ Fold Change", ha="center", fontsize=14, fontname="Verdana")
     fig.text(
         0.08,
         0.5,
-        "-log10(FDR adjusted p-value)",
+        r"-log$_{10}$ (FDR adjusted p-value)",
         va="center",
         rotation="vertical",
         fontsize=14,
@@ -315,8 +315,8 @@ def make_volcano_template_highlight_generic_specific(
         alpha=0.5,
     )
 
-    f.set_xlabel("log2 Fold Change", fontsize=14, fontname="Verdana")
-    f.set_ylabel("-log10(FDR adjusted p-value)", fontsize=14, fontname="Verdana")
+    f.set_xlabel(r"log$_2$ Fold Change", fontsize=14, fontname="Verdana")
+    f.set_ylabel(r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana")
     f.set_title(f"Template experiment ({project_id})", fontsize=16, fontname="Verdana")
 
     f.figure.savefig(
@@ -437,11 +437,11 @@ def make_volcano_simulated_highlight_generic_specific(
             fig.legend(handles, labels, loc="center right")
             f.legend_.remove()
 
-    fig.text(0.5, 0.0, "log2 Fold Change", ha="center", fontsize=14, fontname="Verdana")
+    fig.text(0.5, 0.0, r"log$_2$ Fold Change", ha="center", fontsize=14, fontname="Verdana")
     fig.text(
         0.08,
         0.5,
-        "-log10(FDR adjusted p-value)",
+        r"-log$_{10}$ (FDR adjusted p-value)",
         va="center",
         rotation="vertical",
         fontsize=14,
