@@ -145,11 +145,13 @@ def make_volcano_simulated_highlight_DEG_subset(
             axes[i].set_ylabel("")
             axes[i].set_xlabel("")
 
-    fig.text(0.5, 0.0, "log2 Fold Change", ha="center", fontsize=14, fontname="Verdana")
+    fig.text(
+        0.5, 0.0, r"log$_2$ Fold Change", ha="center", fontsize=14, fontname="Verdana"
+    )
     fig.text(
         0.08,
         0.5,
-        "-log10(FDR adjusted p-value)",
+        r"-log$_{10}$ (FDR adjusted p-value)",
         va="center",
         rotation="vertical",
         fontsize=14,
