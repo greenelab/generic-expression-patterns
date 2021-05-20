@@ -31,6 +31,7 @@ import graph_tool.all as gt
 import matplotlib.pyplot as plt
 import seaborn as sns
 import textwrap
+import scipy
 
 gt.seed_rng(1)
 np.random.seed(1)
@@ -72,6 +73,14 @@ sns.boxplot(data=degree_df, y="degree", x="is_generic", ax=axarr[1])
 axarr[1].set_title("Degree distribution of generic/non-generic genes")
 
 # +
+# Test: mean degree of generic communities vs non-generic communities
+generic_degree = degree_df[degree_df["is_generic"] == 1]["degree"].values
+non_generic_degree = degree_df[degree_df["is_generic"] == 0]["degree"].values
+
+(stats, pvalue) = scipy.stats.ttest_ind(generic_degree, non_generic_degree)
+print(pvalue)
+
+# +
 # Format figure for manuscript
 sns.set({"figure.figsize": (8, 6)})
 sns.set_style("whitegrid")
@@ -92,7 +101,23 @@ centrality_fig.set_ylabel(
 )
 centrality_fig.tick_params(labelsize=14)
 centrality_fig.set_title(
-    "Degree distribution of common DEGs/other genes", fontsize=16, fontname="Verdana"
+    "Degree distribution of common DEGs/other genes",
+    fontsize=16,
+    fontname="Verdana",
+    pad=10,
+)
+
+# Manually add statistical annotations based on t-tests below
+x1, x2 = 0, 1  # columns 'Sat' and 'Sun' (first column: 0, see plt.xticks())
+y, h, col = degree_df["degree"].max() + 10, 10, "k"
+plt.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=col)
+plt.text(
+    (x1 + x2) * 0.5,
+    y + h + 3,
+    "p-value = 0.000216",
+    ha="center",
+    va="bottom",
+    color=col,
 )
 
 # Save
