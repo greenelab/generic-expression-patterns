@@ -119,7 +119,7 @@ if platform == "rnaseq":
 
 # define plotting function
 def plot_significance_vs_ranking(
-    summary_df, method_name, stats_colname, x_label, output_figure_filename
+    summary_df, method_name, stats_colname, x_label, data_type, output_figure_filename
 ):
     # Format input dataframe
 
@@ -154,90 +154,85 @@ def plot_significance_vs_ranking(
 
     # Only used for array data
     # Manually stagger labels since they overlap here
-    """
-    if method_name == "GSEA":
-        labels = [x if plot_df.loc[x,'Percentile rank']>90.0 else "" for x in plot_df.index]
-        labels_1 = [x if x=='HALLMARK_MYC_TARGETS_V1' else "" for x in labels]
-        labels_2 = [x if x=='HALLMARK_E2F_TARGETS' else "" for x in labels]
-        labels_3 = [x if x=='HALLMARK_G2M_CHECKPOINT' else "" for x in labels]
-        labels_4 = [x if x=='HALLMARK_INTERFERON_GAMMA_RESPONSE' else "" for x in labels]
-        labels_5 = [x if x=='HALLMARK_INFLAMMATORY_RESPONSE' else "" for x in labels]
-        labels_6 = [x if x=='HALLMARK_TNFA_SIGNALING_VIA_NFKB' else "" for x in labels]
-
-        fig += pn.geom_text(pn.aes(label= labels_1),
-                            ha='right',
-                            va='top',
-                            size=5,
-                            y=102
-                           )
-        fig += pn.geom_text(pn.aes(label= labels_2),
-                            ha='right',
-                            va='bottom',
-                            size=5,
-                            y=98
-                           )
-        fig += pn.geom_text(pn.aes(label= labels_3),
-                            ha='right',
-                            va='bottom',
-                            size=5,
-                            y=96
-                           )
-        fig += pn.geom_text(pn.aes(label= labels_4),
-                            ha='right',
-                            va='bottom',
-                            size=5,
-                            y=94
-                           )
-        fig += pn.geom_text(pn.aes(label= labels_5),
-                            ha='right',
-                            va='bottom',
-                            size=5,
-                            y=92
-                           )
-        fig += pn.geom_text(pn.aes(label= labels_6),
-                            ha='right',
-                            va='bottom',
-                            size=5,
-                            y=90
-                           )
-    else:
-        fig += pn.geom_text(pn.aes(label=
-                                   [x if plot_df.loc[x,'Percentile rank']>90.0 else "" for x in plot_df.index]),
-                            ha='right',
-                            va='top',
-                            size=5
-                           )
-    """
-
-    # If using RNA-seq
-    fig += pn.geom_text(
-        pn.aes(
-            label=[
+    if data_type == "array":
+        if method_name == "GSEA":
+            labels = [
                 x if plot_df.loc[x, "Percentile rank"] > 90.0 else ""
                 for x in plot_df.index
             ]
-        ),
-        ha="right",
-        va="top",
-        size=5,
-    )
-    fig += pn.labs(
-        x=x_label,
-        y="Commonly enriched (percentile of ranking)",
-        title=f"{method_name} pathway statistics vs ranking",
-    )
-    fig += pn.theme_bw()
-    fig += pn.theme(
-        legend_title_align="center",
-        plot_background=pn.element_rect(fill="white"),
-        legend_key=pn.element_rect(fill="white", colour="white"),
-        legend_title=pn.element_text(family="sans-serif", size=15),
-        legend_text=pn.element_text(family="sans-serif", size=12),
-        plot_title=pn.element_text(family="sans-serif", size=15),
-        axis_text=pn.element_text(family="sans-serif", size=12),
-        axis_title=pn.element_text(family="sans-serif", size=15),
-    )
-    # fig += pn.scales.xlim(0,1)
+            labels_1 = [x if x == "HALLMARK_MYC_TARGETS_V1" else "" for x in labels]
+            labels_2 = [x if x == "HALLMARK_E2F_TARGETS" else "" for x in labels]
+            labels_3 = [x if x == "HALLMARK_G2M_CHECKPOINT" else "" for x in labels]
+            labels_4 = [
+                x if x == "HALLMARK_INTERFERON_GAMMA_RESPONSE" else "" for x in labels
+            ]
+            labels_5 = [
+                x if x == "HALLMARK_INFLAMMATORY_RESPONSE" else "" for x in labels
+            ]
+            labels_6 = [
+                x if x == "HALLMARK_TNFA_SIGNALING_VIA_NFKB" else "" for x in labels
+            ]
+
+            fig += pn.geom_text(
+                pn.aes(label=labels_1), ha="right", va="top", size=5, y=102
+            )
+            fig += pn.geom_text(
+                pn.aes(label=labels_2), ha="right", va="bottom", size=5, y=98
+            )
+            fig += pn.geom_text(
+                pn.aes(label=labels_3), ha="right", va="bottom", size=5, y=96
+            )
+            fig += pn.geom_text(
+                pn.aes(label=labels_4), ha="right", va="bottom", size=5, y=94
+            )
+            fig += pn.geom_text(
+                pn.aes(label=labels_5), ha="right", va="bottom", size=5, y=92
+            )
+            fig += pn.geom_text(
+                pn.aes(label=labels_6), ha="right", va="bottom", size=5, y=90
+            )
+        else:
+            fig += pn.geom_text(
+                pn.aes(
+                    label=[
+                        x if plot_df.loc[x, "Percentile rank"] > 90.0 else ""
+                        for x in plot_df.index
+                    ]
+                ),
+                ha="right",
+                va="top",
+                size=5,
+            )
+
+    # If using RNA-seq
+    if data_type == "rnaseq":
+        fig += pn.geom_text(
+            pn.aes(
+                label=[
+                    x if plot_df.loc[x, "Percentile rank"] > 90.0 else ""
+                    for x in plot_df.index
+                ]
+            ),
+            ha="right",
+            va="top",
+            size=5,
+        )
+        fig += pn.labs(
+            x=x_label,
+            y="Commonly enriched (percentile of ranking)",
+            title=f"{method_name} pathway statistics vs ranking",
+        )
+        fig += pn.theme_bw()
+        fig += pn.theme(
+            legend_title_align="center",
+            plot_background=pn.element_rect(fill="white"),
+            legend_key=pn.element_rect(fill="white", colour="white"),
+            legend_title=pn.element_text(family="sans-serif", size=15),
+            legend_text=pn.element_text(family="sans-serif", size=12),
+            plot_title=pn.element_text(family="sans-serif", size=15),
+            axis_text=pn.element_text(family="sans-serif", size=12),
+            axis_title=pn.element_text(family="sans-serif", size=15),
+        )
 
     # Save figure
     fig.save(
@@ -256,6 +251,7 @@ plot_significance_vs_ranking(
     "GSEA",
     "adj p-value",
     r"-log$_{10}$(median(adjusted p-value))",
+    "rnaseq",
     "GSEA_pathway_ranking.svg",
 )
 
@@ -264,6 +260,7 @@ plot_significance_vs_ranking(
     "GSVA",
     "ES",
     "Median(Enrichment score)",
+    "rnaseq",
     "GSVA_pathway_ranking.svg",
 )
 
@@ -272,6 +269,7 @@ plot_significance_vs_ranking(
     "CAMERA",
     "adj p-value",
     r"-log$_{10}$(median(FDR))",
+    "rnaseq",
     "CAMERA_pathway_ranking.svg",
 )
 
@@ -281,6 +279,7 @@ if platform == "rnaseq":
         "ORA",
         "adj p-value",
         r"-log$_{10}(median(adjusted p-value)))",
+        "rnaseq",
         "ORA_pathway_ranking.svg",
     )
 
