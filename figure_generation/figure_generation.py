@@ -201,10 +201,10 @@ panel_3c = make_figure_panel(
     y_loc=600,
 )
 panel_3d = make_figure_panel(
-    "../other_enrichment_methods/enrichment_paired_plot_rnaseq.svg",
-    scale_x_input=2,
-    scale_y_input=2,
-    x_loc=700,
+    "../other_enrichment_methods/enrichment_corr_plot.svg",
+    scale_x_input=1.5,
+    scale_y_input=1.5,
+    x_loc=750,
     y_loc=600,
 )
 
@@ -214,7 +214,7 @@ panel_3b_label = sg.TextElement(900, 20, "B", size=18, weight="bold", font="Verd
 panel_3c_label = sg.TextElement(10, 600, "C", size=18, weight="bold", font="Verdana")
 panel_3d_label = sg.TextElement(700, 600, "D", size=18, weight="bold", font="Verdana")
 
-figure_3 = sg.SVGFigure("2500", "2500")
+figure_3 = sg.SVGFigure("1500", "1200")
 figure_3.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -360,16 +360,16 @@ figure_5.save("output/figure_5.svg")
 # Create panels for Supplement 1
 panel_S1a = make_figure_panel(
     "../explore_RNAseq_only_generic_genes/array_expression_dist_gene_groups_highlight.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
+    scale_x_input=1,
+    scale_y_input=1,
     x_loc=30,
     y_loc=20,
 )
 panel_S1b = make_figure_panel(
     "../explore_RNAseq_only_generic_genes/recount2_expression_dist_gene_groups_highlight.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=450,
+    scale_x_input=1,
+    scale_y_input=1,
+    x_loc=600,
     y_loc=10,
 )
 panel_S1c = make_figure_panel(
@@ -388,11 +388,11 @@ panel_S1d = make_figure_panel(
 )
 
 panel_S1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_S1b_label = sg.TextElement(450, 20, "B", size=18, weight="bold", font="Verdana")
+panel_S1b_label = sg.TextElement(600, 20, "B", size=18, weight="bold", font="Verdana")
 panel_S1c_label = sg.TextElement(10, 300, "C", size=18, weight="bold", font="Verdana")
 panel_S1d_label = sg.TextElement(30, 1800, "D", size=18, weight="bold", font="Verdana")
 
-figure_S1 = sg.SVGFigure("1800", "3500")
+figure_S1 = sg.SVGFigure("1600", "3100")
 figure_S1.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -413,29 +413,54 @@ figure_S1.save("output/figure_S1.svg")
 
 # ## Supplement 2
 
+panel_Sa = make_figure_panel(
+    "../other_enrichment_methods/enrichment_paired_plot_rnaseq.svg",
+    scale_x_input=2,
+    scale_y_input=2,
+    x_loc=30,
+    y_loc=20,
+)
+
+panel_Sa_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
+
+figure_S2 = sg.SVGFigure("1800", "1800")
+figure_S2.append(
+    [
+        etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
+        panel_Sa,
+        panel_Sa_label,
+    ]
+)
+display(SVG(figure_S2.to_str()))
+
+# save generated SVG files
+figure_S2.save("output/figure_S2.svg")
+
+# ## Supplement 3
+
 # Create panels for Supplement 2
-panel_S2a = make_figure_panel(
+panel_S3a = make_figure_panel(
     "../human_general_analysis/gene_ranking_log2FoldChange.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
     x_loc=30,
     y_loc=20,
 )
-panel_S2b = make_figure_panel(
+panel_S3b = make_figure_panel(
     "../human_cancer_analysis/gene_ranking_logFC.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
     x_loc=400,
     y_loc=10,
 )
-panel_S2c = make_figure_panel(
+panel_S3c = make_figure_panel(
     "../human_general_analysis/pathway_ranking_padj.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
     x_loc=30,
     y_loc=400,
 )
-panel_S2d = make_figure_panel(
+panel_S3d = make_figure_panel(
     "../human_cancer_analysis/pathway_ranking_padj.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
@@ -443,29 +468,29 @@ panel_S2d = make_figure_panel(
     y_loc=400,
 )
 
-panel_S2a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_S2b_label = sg.TextElement(400, 20, "B", size=18, weight="bold", font="Verdana")
-panel_S2c_label = sg.TextElement(10, 400, "C", size=18, weight="bold", font="Verdana")
-panel_S2d_label = sg.TextElement(400, 400, "D", size=18, weight="bold", font="Verdana")
+panel_S3a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
+panel_S3b_label = sg.TextElement(400, 20, "B", size=18, weight="bold", font="Verdana")
+panel_S3c_label = sg.TextElement(10, 400, "C", size=18, weight="bold", font="Verdana")
+panel_S3d_label = sg.TextElement(400, 400, "D", size=18, weight="bold", font="Verdana")
 
-figure_S2 = sg.SVGFigure("800", "800")
-figure_S2.append(
+figure_S3 = sg.SVGFigure("800", "800")
+figure_S3.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
-        panel_S2a,
-        panel_S2b,
-        panel_S2c,
-        panel_S2d,
-        panel_S2a_label,
-        panel_S2b_label,
-        panel_S2c_label,
-        panel_S2d_label,
+        panel_S3a,
+        panel_S3b,
+        panel_S3c,
+        panel_S3d,
+        panel_S3a_label,
+        panel_S3b_label,
+        panel_S3c_label,
+        panel_S3d_label,
     ]
 )
-display(SVG(figure_S2.to_str()))
+display(SVG(figure_S3.to_str()))
 
 # save generated SVG files
-figure_S2.save("output/figure_S2.svg")
+figure_S3.save("output/figure_S3.svg")
 
 # ## Output png version
 
@@ -476,3 +501,4 @@ figure_S2.save("output/figure_S2.svg")
 # !inkscape --export-png=output/figure_5.png output/figure_5.svg
 # !inkscape --export-png=output/figure_S1.png output/figure_S1.svg
 # !inkscape --export-png=output/figure_S2.png output/figure_S2.svg
+# !inkscape --export-png=output/figure_S3.png output/figure_S3.svg

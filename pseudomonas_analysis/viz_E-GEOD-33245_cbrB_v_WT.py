@@ -134,7 +134,9 @@ def make_volcano_template_highlight_genelist(
         # Move location of legend
         plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.0)
 
-        f.set_ylabel("-log10(FDR adjusted p-value)", fontsize=14, fontname="Verdana")
+        f.set_ylabel(
+            r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana"
+        )
     else:
         f = sns.scatterplot(
             data=template_summary_df[template_summary_df["gene group"] == "none"],
@@ -160,7 +162,7 @@ def make_volcano_template_highlight_genelist(
         # Move location of legend
         plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.0)
 
-    f.set_xlabel("log2 Fold Change", fontsize=14, fontname="Verdana")
+    f.set_xlabel(r"log$_2$ Fold Change", fontsize=14, fontname="Verdana")
     f.set_title(f"Template experiment ({project_id})", fontsize=16, fontname="Verdana")
 
     f.figure.savefig(

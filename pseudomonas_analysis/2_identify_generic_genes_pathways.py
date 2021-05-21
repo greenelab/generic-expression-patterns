@@ -120,7 +120,7 @@ pathway_summary_filename = os.path.join(
 # 4. Decode the samples. This results in a new experiment
 # 5. Repeat steps 1-4 to get multiple simulated experiments
 
-"""# Simulate multiple experiments
+# Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -138,14 +138,15 @@ for run_id in range(num_runs):
         local_dir,
         base_dir,
         run_id,
-    )"""
+    )
 
 # ### Process template and simulated data
 #
 # * Remove samples not required for comparison.
 # * Make sure ordering of samples matches metadata for proper comparison
 
-"""if not os.path.exists(sample_id_metadata_filename):
+# +
+if not os.path.exists(sample_id_metadata_filename):
     sample_id_metadata_filename = None
 
 stats.process_samples_for_limma(
@@ -164,7 +165,7 @@ for i in range(num_runs):
         metadata_filename,
         None,
         sample_id_metadata_filename,
-    )"""
+    )
 
 # +
 # Quick check

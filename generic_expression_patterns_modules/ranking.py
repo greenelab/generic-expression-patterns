@@ -530,11 +530,11 @@ def compare_gene_ranking(
 
     if ref_rank_col == "DE_Prior_Rank":
         fig.set_axis_labels(
-            "SOPHIE", "DE prior (Crow et. al. 2019)", fontsize=14, fontname="Verdana"
+            "SOPHIE", "DE prior (Crow et al. 2019)", fontsize=14, fontname="Verdana"
         )
     elif ref_rank_col == "prop DEGs":
         fig.set_axis_labels(
-            "SOPHIE", "GAPE (Stanton lab, 2020)", fontsize=14, fontname="Verdana"
+            r"SOPHIE (${\it{P. aeruginosa}}$ compendium)", "GAPE (Stanton lab, 2021)", fontsize=14, fontname="Verdana"
         )
     cbar_ax = fig.fig.add_axes([.9, .25, .05, .4])  # x, y, width, height
     cb = plt.colorbar(cax=cbar_ax)
@@ -600,11 +600,11 @@ def compare_gene_ranking_highlight(
 
     if ref_rank_col == "DE_Prior_Rank":
         fig.set_axis_labels(
-            "SOPHIE", "DE prior (Crow et. al. 2019)", fontsize=14, fontname="Verdana"
+            "SOPHIE", "DE prior (Crow et al. 2019)", fontsize=14, fontname="Verdana"
         )
     elif ref_rank_col == "prop DEGs":
         fig.set_axis_labels(
-            "SOPHIE", "GAPE (Stanton lab, 2020)", fontsize=14, fontname="Verdana"
+            r"SOPHIE (${\it{P. aeruginosa}}$ compendium)", "GAPE (Stanton lab, 2021)", fontsize=14, fontname="Verdana"
         )
 
     fig.savefig(
@@ -654,7 +654,7 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
     plt.text(60, 98, "R^2 = " + str(round(correlations['r'], 3)), horizontalalignment='left', size='medium', color='black')
 
     fig.set_xlabel("SOPHIE", fontsize=14, fontname="Verdana")
-    fig.set_ylabel("Powers et. al. 2018", fontsize=14, fontname="Verdana")
+    fig.set_ylabel("Powers et al. 2018", fontsize=14, fontname="Verdana")
 
     fig.figure.savefig(
         output_figure_filename,
