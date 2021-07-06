@@ -4,7 +4,7 @@
 
 **University of Pennsylvania, University of Colorado Anschutz Medical Campus, Dartmouth College**
 
-<!--- [![PDF Manuscript](https://img.shields.io/badge/manuscript-PDF-blue.svg)](https://academic.oup.com/gigascience/article/9/11/giaa117/5952607) --->
+[![PDF Manuscript](https://img.shields.io/badge/manuscript-PDF-blue.svg)](https://www.biorxiv.org/content/10.1101/2021.05.24.445440v1)
 
 There exist some genes and pathways that are differentially expressed across many gene expression experiments ([Powers et. al., Bioinformatics 2018](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793 ); [Crow et. al., PNAS 2019](https://www.pnas.org/content/116/13/6491)).
 These generic findings can obscure results that are specific to the context or experiment of interest, which are often what we hope to glean when using gene expression to generate mechanistic insights into cellular states and diseases.
@@ -20,7 +20,7 @@ The reusable notebooks for training neural networks and for the use of pre-train
 
 **Citation:**
 For more details about the analysis, see our paper published in GigaScience. The paper should be cited as:
-<!--- >> Alexandra J Lee, YoSon Park, Georgia Doing, Deborah A Hogan, Casey S Greene, Correcting for experiment-specific variability in expression compendia can remove underlying signals, GigaScience, Volume 9, Issue 11, November 2020, giaa117, https://doi.org/10.1093/gigascience/giaa117 --->
+<!--- >> Alexandra J Lee, Dallas L Mould, Jake Crawford, Dongbo Hu, Rani K Powers, Georgia Doing, James C Costello, Deborah A Hogan, Casey S Greene, Generative neural networks separate common and specific transcriptional responses, ..., https://doi.org/10.1093/gigascience/giaa117 --->
 
 ## SOPHIE
 
@@ -43,6 +43,7 @@ This process is repeated multile times to created multiple simulated experiments
 | [configs](configs) | This folder contains configuration files used to set hyperparameters for the different experiments |
 | [explore_RNAseq_only_generic_genes](explore_RNAseq_only_generic_genes) | This folder contains analysis notebooks testing different hypotheses to explain the subset of genes found to be generic by SOPHIE trained on RNA-seq data but not found to be generic in the manually curated array dataset. |
 | [explore_data](explore_data) | This folder contains an analysis notebook visualizing the [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset to get a sense for the variation contained.|
+| [expression_common_vs_other](expression_common_vs_other) | This folder contains an analysis notebook to determine if there are technical reasons that explain why common DEGs are common. Specifically this notebook is comparing the average expression of common genes versus other genes. |
 | [figure_generation](figure_generation) | This folder contains a notebook toi generate figures seen in the manuscript. |
 | [generic_expression_patterns_modules](generic_expression_patterns_modules) | This folder contains supporting functions that other notebooks in this repository will use. |
 | [human_cancer_analysis](human_cancer_analysis) | This folder contains analysis notebooks to validate generic signals using [Powers et. al. dataset](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793), which is composed of experiments testing the response of small molecule treatments in cancer cell lines, to train VAE. |
