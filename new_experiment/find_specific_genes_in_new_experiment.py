@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_linux] *
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_linux-py
 # ---
 
 # # Application: new experiment
@@ -55,6 +55,8 @@ from generic_expression_patterns_modules import (
 # The remaining parameters specify filenames that intermediate data files will be written to.
 #
 # The user also needs to provide metadata files:
+#
+# These files should be located in `data/metadata/` directory.
 # 1. `<experiment id>_process_samples.tsv` contains 2 columns (sample ids, label that indicates if the sample is kept or removed). See [example](data/metadata/cis-gem-par-KU1919_process_samples.tsv). **Note: This file is not required if the user wishes to use all the samples in the template experiment file.**
 # 2. `<experiment id>_groups.tsv` contains 2 columns: sample ids, group label to perform DE analysis. See [example](data/metadata/cis-gem-par-KU1919_groups.tsv)
 
@@ -154,6 +156,8 @@ new_experiment_process.process_template_experiment(
 # ## Simulate experiments based on template experiment
 #
 # Embed template experiment into learned latent space and linearly shift template experiment to different locations of the latent space to create new experiments
+
+os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
 
 # +
 # Simulate experiments based on template experiment
@@ -375,5 +379,3 @@ summary_gene_ranks[summary_gene_ranks.isna().any(axis=1)]
 
 # Save
 summary_gene_ranks.to_csv(gene_summary_filename, sep="\t")
-
-
