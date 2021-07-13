@@ -27,7 +27,6 @@ dependencies:
 - conda-forge::jupyter
 - conda-forge::ipykernel=5.1.1
 - conda-forge::nb_conda_kernels
-- conda-forge::gxx_linux-64
 - conda-forge::rpy2=3.4.3
 - conda-forge::libiconv=1.15
 - conda-forge::r-biocmanager
