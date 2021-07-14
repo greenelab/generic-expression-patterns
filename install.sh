@@ -1,4 +1,4 @@
 #!/bin/bash
-conda env create --file environment_linux.yml
-conda activate generic_expression_linux
+conda env create --file environment.yml
+conda activate generic_expression
 pip install -e .
