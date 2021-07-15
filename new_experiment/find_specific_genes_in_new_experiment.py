@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_linux] *
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_linux-py
 # ---
 
 # # Application: new experiment
@@ -40,21 +40,24 @@ from generic_expression_patterns_modules import (
 #
 # User needs to define the following in the [config file](../configs/config_new_experiment.tsv):
 #
-# 1. Template experiment (`raw_template_filename`). This is the experiment you are interested in studying.
-# 2. Training compendium used to train VAE, including unnormalized gene mapped version (`mapped_compendium_filename`) and normalized version (`normalized_compendium_filename`). Links to these datasets can be found in the README.
-# 3. Scaler transform (`scaler_filename`) used to normalize the training compendium. This can be found in the `data/` directory within the analysis folder.
-# 4. Directory (`vae_model_dir`) containing trained VAE model.
-# 5. Experiment id (`project_id`) to label newly create simulated experiments.
-# 6. The number of experiments to simulate (`num_simulated`)
-# 7. Minimum average read count to filter data by (`count_threshold`)
-# 8. Size of existing models latent dimension (`latent_dim`). Should be 30.
-# 9. Name of column header (`rank_genes_by`) from DE association statistic results. This column will be use to rank genes. Select "logFC", "P.Value", "adj.P.Val", "t" if using Limma. Select "log2FoldChange", "pvalue", "padj" if using DESeq.
-# 10. `DE_logFC_name` is either "logFC" or "log2FoldChange". This is used for plotting volcano plots.
-# 11. `DE_pvalue_name` is either "adj.P.Val" or "padj". This is used for plotting volcano plots.
+# 1. Directory on your local machine to store intermediate and output data files generated (`local_dir`). Make sure to end with "\".
+# 2. Template experiment (`raw_template_filename`). This is the experiment you are interested in studying.
+# 3. Training compendium used to train VAE, including unnormalized gene mapped version (`mapped_compendium_filename`) and normalized version (`normalized_compendium_filename`). Links to these datasets can be found in the README.
+# 4. Scaler transform (`scaler_filename`) used to normalize the training compendium. This can be found in the `data/` directory within the analysis folder.
+# 5. Directory (`vae_model_dir`) containing trained VAE model.
+# 6. Experiment id (`project_id`) to label newly create simulated experiments.
+# 7. The number of experiments to simulate (`num_simulated`)
+# 8. Minimum average read count to filter data by (`count_threshold`)
+# 9. Size of existing models latent dimension (`latent_dim`). Should be 30.
+# 10. Name of column header (`rank_genes_by`) from DE association statistic results. This column will be use to rank genes. Select "logFC", "P.Value", "adj.P.Val", "t" if using Limma. Select "log2FoldChange", "pvalue", "padj" if using DESeq.
+# 11. `DE_logFC_name` is either "logFC" or "log2FoldChange". This is used for plotting volcano plots.
+# 12. `DE_pvalue_name` is either "adj.P.Val" or "padj". This is used for plotting volcano plots.
 #
 # The remaining parameters specify filenames that intermediate data files will be written to.
 #
 # The user also needs to provide metadata files:
+#
+# These files should be located in `data/metadata/` directory.
 # 1. `<experiment id>_process_samples.tsv` contains 2 columns (sample ids, label that indicates if the sample is kept or removed). See [example](data/metadata/cis-gem-par-KU1919_process_samples.tsv). **Note: This file is not required if the user wishes to use all the samples in the template experiment file.**
 # 2. `<experiment id>_groups.tsv` contains 2 columns: sample ids, group label to perform DE analysis. See [example](data/metadata/cis-gem-par-KU1919_groups.tsv)
 
@@ -154,6 +157,8 @@ new_experiment_process.process_template_experiment(
 # ## Simulate experiments based on template experiment
 #
 # Embed template experiment into learned latent space and linearly shift template experiment to different locations of the latent space to create new experiments
+
+os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
 
 # +
 # Simulate experiments based on template experiment
@@ -375,5 +380,3 @@ summary_gene_ranks[summary_gene_ranks.isna().any(axis=1)]
 
 # Save
 summary_gene_ranks.to_csv(gene_summary_filename, sep="\t")
-
-
