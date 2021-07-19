@@ -398,6 +398,11 @@ def normalize_compendium(
     mapped_compendium_df = pd.read_table(
         mapped_filename, header=0, sep="\t", index_col=0
     )
+    print(
+        "input: dataset contains {} samples and {} genes".format(
+            mapped_compendium_df.shape[0], mapped_compendium_df.shape[1]
+        )
+    )
 
     # 0-1 normalize per gene
     scaler = MinMaxScaler()
