@@ -65,10 +65,15 @@ project_id = params["project_id"]
 # processed_template_filename = params["processed_template_filename"]
 
 # Output files of recount2 compendium data
+MRnormalized_compendium_filename = params["MRnormalized_compendium_filename"]
 normalized_compendium_filename = params["normalized_compendium_filename"]
+
 
 # Output file: pickled scaler (generated during compendium normalization)
 scaler_filename = params["scaler_filename"]
+
+# Output: size factor for MR normalization
+sf_filename = "data/metadata/MR_norm_compendium_size_factor.tsv"
 # -
 
 # ### Load template data file
@@ -82,68 +87,50 @@ mapped_template.head()
 
 mapped_compendium_filename = params["mapped_compendium_filename"]
 
+mapped_compendium = pd.read_csv(
+    mapped_compendium_filename, sep="\t", index_col=0, header=0
+)
+
 # +
-# mapped_compendium = pd.read_csv(mapped_compendium_filename, sep="\t", index_col=0, header=0)
+# Add pseudo count otherwise we will get an error:
+# Error in estimateSizeFactorsForMatrix(counts(object), locfunc = locfunc,  :
+# every gene contains at least one zero, cannot compute log geometric means
 # -
 
+mapped_pseudo_compendium_filename = params["mapped_pseudo_compendium_filename"]
+mapped_compendium_pseudo = mapped_compendium + 1
+mapped_compendium_pseudo.to_csv(mapped_pseudo_compendium_filename, sep="\t")
+
+del mapped_compendium_pseudo
+
 # ### MR normalize
+#
+# Tutorial on MR normalization is [here](https://hbctraining.github.io/DGE_workshop/lessons/02_DGE_count_normalization.html)
+#
+# Normalized count = raw count/scale factor
 
 metadata = pd.DataFrame(
-    data=[i for i in range(mapped_template.shape[0])],
-    index=mapped_template.index,
+    data=[i for i in range(mapped_compendium.shape[0])],
+    index=mapped_compendium.index,
     columns=["group"],
 )
+del mapped_compendium
 metadata.head()
 
 metadata_filename = os.path.join(
-    base_dir, dataset_name, "data", "metadata", "MRnorm_metadata.tsv"
+    base_dir, dataset_name, "data", "metadata", "MRnorm_compendium_metadata.tsv"
 )
 metadata.to_csv(metadata_filename, sep="\t")
 
-# + magic_args="-i base_dir -i mapped_template_filename -i metadata_filename -i normalized_compendium_filename -i scaler_filename" language="R"
+# + magic_args="-i base_dir -i mapped_pseudo_compendium_filename -i metadata_filename -i MRnormalized_compendium_filename -i sf_filename" language="R"
 #
 # source(paste0(base_dir, '/generic_expression_patterns_modules/normalize_counts.R'))
 #
-# MRnorm_expression(mapped_template_filename, metadata_filename, normalized_compendium_filename, scaler_filename)
+# MRnorm_expression(mapped_pseudo_compendium_filename, metadata_filename, MRnormalized_compendium_filename, sf_filename)
 # -
 
-# Read in MR normalized data
-MRnorm_expression_data = pd.read_csv(
-    normalized_compendium_filename, sep="\t", index_col=0, header=0
+# ## 0-1 normalize
+
+process.normalize_compendium(
+    MRnormalized_compendium_filename, normalized_compendium_filename, scaler_filename
 )
-
-scale_factor = pd.read_csv(scaler_filename, sep="\t", index_col=0, header=0)
-
-scale_factor
-
-MRnorm_expression_data.head()
-
-sns.distplot(MRnorm_expression_data["SRR493937"])
-sns.distplot(MRnorm_expression_data["SRR493938"])
-
-# +
-# Check that we're normalizing by gene
-# Check that dist looks similar across genes
-# Determine how to re-scale using size factors
-# May need to do a hack job for ponyo
-# -
-
-# ### Train VAE
-# Performed exploratory analysis of compendium data [here](../explore_data/viz_recount2_compendium.ipynb) to help interpret loss curve.
-
-"""# Create VAE directories if needed
-output_dirs = [
-    os.path.join(base_dir, dataset_name, "models"),
-    os.path.join(base_dir, dataset_name, "logs"),
-]
-
-NN_architecture = params["NN_architecture"]
-
-# Check if NN architecture directory exist otherwise create
-for each_dir in output_dirs:
-    sub_dir = os.path.join(each_dir, NN_architecture)
-    os.makedirs(sub_dir, exist_ok=True)"""
-
-# +
-# Train VAE on new compendium data
-# train_vae_modules.train_vae(config_filename, normalized_compendium_filename)

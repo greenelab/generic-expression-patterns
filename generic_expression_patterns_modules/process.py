@@ -417,6 +417,7 @@ def normalize_compendium(
 
     # Save normalized data on disk: ~17.5 minutes
     normalized_compendium_df.to_csv(normalized_filename, float_format="%.3f", sep="\t")
+    del normalized_compendium_df
 
     # Pickle `scaler` as `scaler_filename` on disk
     with open(scaler_filename, "wb") as pkl_fh:
