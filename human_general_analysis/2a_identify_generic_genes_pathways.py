@@ -52,9 +52,13 @@ import pandas as pd
 import numpy as np
 import pickle
 import scipy.stats as ss
+import glob
+import warnings
+from keras.models import load_model
+from sklearn import preprocessing
 
 from rpy2.robjects import pandas2ri
-from ponyo import utils, simulate_expression_data
+from ponyo import utils
 from generic_expression_patterns_modules import process, stats, ranking
 
 pandas2ri.activate()
@@ -66,7 +70,7 @@ np.random.seed(123)
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 config_filename = os.path.abspath(
-    os.path.join(base_dir, "configs", "config_human_general.tsv")
+    os.path.join(base_dir, "configs", "config_human_general_MRnorm.tsv")
 )
 
 params = utils.read_config(config_filename)
@@ -89,6 +93,8 @@ statistic = params["gsea_statistic"]
 count_threshold = params["count_threshold"]
 logFC_name = params["DE_logFC_name"]
 pvalue_name = params["DE_pvalue_name"]
+latent_dim = params["latent_dim"]
+
 
 # Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(
@@ -106,16 +112,238 @@ with open(scaler_filename, "rb") as scaler_fh:
 
 # Percentile threshold to identify generic genes
 percentile_threshold = 80.0
+# -
+
+latent_dim
 
 # +
 # Output files
 gene_summary_filename = os.path.join(
-    base_dir, dataset_name, f"generic_gene_summary_{project_id}.tsv"
+    base_dir, dataset_name, f"generic_gene_summary_{project_id}_MRnorm.tsv"
 )
 
 pathway_summary_filename = os.path.join(
-    base_dir, dataset_name, f"generic_pathway_summary_{project_id}.tsv"
+    base_dir, dataset_name, f"generic_pathway_summary_{project_id}_MRnorm.tsv"
 )
+
+
+# +
+# Functions from ponyo 0.2 that I temporarily imported due to hard coded issue
+def get_sample_ids(experiment_id, dataset_name, sample_id_colname):
+    """
+    Returns sample ids (found in gene expression df) associated with
+    a given list of experiment ids (found in the metadata)
+
+    Arguments
+    ----------
+    experiment_ids_file: str
+        File containing all cleaned experiment ids
+
+    dataset_name: str
+        Name for analysis directory. Either "Human" or "Pseudomonas"
+
+    sample_id_colname: str
+        Column header that contains sample id that maps expression data
+        and metadata
+
+    """
+    base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
+
+    if "pseudomonas" in dataset_name.lower():
+        # metadata file
+        mapping_file = os.path.join(
+            base_dir, dataset_name, "data", "metadata", "sample_annotations.tsv"
+        )
+
+        # Read in metadata
+        metadata = pd.read_csv(mapping_file, header=0, sep="\t", index_col=0)
+
+        selected_metadata = metadata.loc[experiment_id]
+        sample_ids = list(selected_metadata[sample_id_colname])
+
+    else:
+        # metadata file
+        mapping_file = os.path.join(
+            base_dir, dataset_name, "data", "metadata", "recount2_metadata.tsv"
+        )
+
+        # Read in metadata
+        metadata = pd.read_csv(mapping_file, header=0, sep="\t", index_col=0)
+
+        selected_metadata = metadata.loc[experiment_id]
+        sample_ids = list(selected_metadata[sample_id_colname])
+
+    return sample_ids
+
+
+def shift_template_experiment_tmp(
+    normalized_data_file,
+    selected_experiment_id,
+    sample_id_colname,
+    NN_architecture,
+    latent_dim,
+    dataset_name,
+    scaler,
+    local_dir,
+    base_dir,
+    run,
+):
+    """
+    Generate new simulated experiment using the selected_experiment_id as a template
+    experiment using the same workflow as `simulate_by_latent_transform`
+
+    This will return a file with a single simulated experiment following the workflow mentioned.
+    This function can be run multiple times to generate multiple simulated experiments from a
+    single selected_experiment_id.
+
+    Arguments
+    ----------
+    normalized_data_file: str
+        File containing normalized gene expression data
+
+        ------------------------------| PA0001 | PA0002 |...
+        05_PA14000-4-2_5-10-07_S2.CEL | 0.8533 | 0.7252 |...
+        54375-4-05.CEL                | 0.7789 | 0.7678 |...
+        ...                           | ...    | ...    |...
+
+    selected_experiment_id: str
+        Experiment id selected as template
+
+    sample_id_colname: str
+        Column header that contains sample id that maps expression data and metadata
+
+    NN_architecture: str
+        Name of neural network architecture to use.
+        Format 'NN_<intermediate layer>_<latent layer>'
+
+    dataset_name: str
+        Name for analysis directory. Either "Human" or "Pseudomonas"
+
+    scaler: minmax model
+        Model used to transform data into a different range
+
+    local_dir: str
+        Parent directory on local machine to store intermediate results
+
+    base_dir: str
+        Root directory containing analysis subdirectories
+
+    run: int
+        Simulation run
+
+    Returns
+    --------
+    simulated_data_file: str
+        File containing simulated gene expression data
+
+    """
+
+    # Files
+    NN_dir = os.path.join(base_dir, dataset_name, "models", NN_architecture)
+
+    model_encoder_file = glob.glob(os.path.join(NN_dir, "*_encoder_model.h5"))[0]
+
+    weights_encoder_file = glob.glob(os.path.join(NN_dir, "*_encoder_weights.h5"))[0]
+
+    model_decoder_file = glob.glob(os.path.join(NN_dir, "*_decoder_model.h5"))[0]
+
+    weights_decoder_file = glob.glob(os.path.join(NN_dir, "*_decoder_weights.h5"))[0]
+
+    # Load saved models
+    loaded_model = load_model(model_encoder_file, compile=False)
+    loaded_decode_model = load_model(model_decoder_file, compile=False)
+
+    loaded_model.load_weights(weights_encoder_file)
+    loaded_decode_model.load_weights(weights_decoder_file)
+
+    # Read data
+    normalized_data = pd.read_csv(normalized_data_file, header=0, sep="\t", index_col=0)
+
+    # Get corresponding sample ids
+    sample_ids = get_sample_ids(selected_experiment_id, dataset_name, sample_id_colname)
+
+    # Gene expression data for selected samples
+    selected_data_df = normalized_data.loc[sample_ids]
+
+    # Encode selected experiment into latent space
+    data_encoded = loaded_model.predict_on_batch(selected_data_df)
+    data_encoded_df = pd.DataFrame(data_encoded, index=selected_data_df.index)
+
+    # Get centroid of original data
+    centroid = data_encoded_df.mean(axis=0)
+
+    # Add individual vectors(centroid, sample point) to new_centroid
+
+    # Encode original gene expression data into latent space
+    data_encoded_all = loaded_model.predict_on_batch(normalized_data)
+    data_encoded_all_df = pd.DataFrame(data_encoded_all, index=normalized_data.index)
+
+    data_encoded_all_df.head()
+
+    # Find a new location in the latent space by sampling from the latent space
+    encoded_means = data_encoded_all_df.mean(axis=0)
+    encoded_stds = data_encoded_all_df.std(axis=0)
+
+    latent_dim = int(latent_dim)
+    new_centroid = np.zeros(latent_dim)
+
+    for j in range(latent_dim):
+        new_centroid[j] = np.random.normal(encoded_means[j], encoded_stds[j])
+
+    shift_vec_df = new_centroid - centroid
+    # print(shift_vec_df)
+
+    simulated_data_encoded_df = data_encoded_df.apply(
+        lambda x: x + shift_vec_df, axis=1
+    )
+
+    # Decode simulated data into raw gene space
+    simulated_data_decoded = loaded_decode_model.predict_on_batch(
+        simulated_data_encoded_df
+    )
+
+    simulated_data_decoded_df = pd.DataFrame(
+        simulated_data_decoded,
+        index=simulated_data_encoded_df.index,
+        columns=selected_data_df.columns,
+    )
+
+    # Un-normalize the data in order to run DE analysis downstream
+    simulated_data_scaled = scaler.inverse_transform(simulated_data_decoded_df)
+
+    simulated_data_scaled_df = pd.DataFrame(
+        simulated_data_scaled,
+        columns=simulated_data_decoded_df.columns,
+        index=simulated_data_decoded_df.index,
+    )
+
+    # Save template data for visualization validation
+    test_file = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        "template_normalized_data_" + selected_experiment_id + "_test.txt",
+    )
+
+    selected_data_df.to_csv(test_file, float_format="%.3f", sep="\t")
+
+    # Save
+    out_file = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        "selected_simulated_data_" + selected_experiment_id + "_" + str(run) + ".txt",
+    )
+
+    simulated_data_scaled_df.to_csv(out_file, float_format="%.3f", sep="\t")
+
+    out_encoded_file = os.path.join(
+        local_dir,
+        "pseudo_experiment",
+        f"selected_simulated_encoded_data_{selected_experiment_id}_{run}.txt",
+    )
+
+    simulated_data_encoded_df.to_csv(out_encoded_file, float_format="%.3f", sep="\t")
+
+
 # -
 
 # ### Simulate experiments using selected template experiment
@@ -136,11 +364,12 @@ pathway_summary_filename = os.path.join(
 # in which "<n>" is an integer in the range of [0, num_runs-1]
 os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
 for run_id in range(num_runs):
-    simulate_expression_data.shift_template_experiment(
+    shift_template_experiment_tmp(
         normalized_compendium_filename,
         project_id,
         metadata_col_id,
         NN_architecture,
+        latent_dim,
         dataset_name,
         scaler,
         local_dir,
@@ -153,7 +382,7 @@ for run_id in range(num_runs):
 #
 # Normalized count = raw count/scale factor
 
-sf_name = "data/metadata/MR_norm_compendium_size_factor.tsv"
+sf_filename = "data/metadata/MR_norm_compendium_size_factor.tsv"
 scale_factor = pd.read_csv(sf_filename, sep="\t")
 
 scale_factor.head()
@@ -162,11 +391,13 @@ for i in range(num_runs):
     simulated_filename = os.path.join(
         local_dir, "pseudo_experiment", f"selected_simulated_data_{project_id}_{i}.txt"
     )
-    MRnorm_simulated_data = pd.read_csv(simulated_filename, sep="\t")
-    print(MRnorm_simulated_data.head())
+    MRnorm_simulated_data = pd.read_csv(
+        simulated_filename, sep="\t", index_col=0, header=0
+    )
 
-    raw_simulated_data = MRnorm_simulated_data * scale_factor
-    print(raw_simulated_data.head())
+    scale_factor_subset = scale_factor.loc[MRnorm_simulated_data.index]
+
+    raw_simulated_data = np.multiply(MRnorm_simulated_data, scale_factor_subset)
 
     raw_simulated_data.to_csv(simulated_filename, sep="\t")
 
@@ -317,7 +548,7 @@ DE_prior_filename = params["reference_gene_filename"]
 ref_gene_col = params["reference_gene_name_col"]
 ref_rank_col = params["reference_rank_col"]
 
-figure_filename = f"gene_ranking_{col_to_rank_genes}.svg"
+figure_filename = f"gene_ranking_{col_to_rank_genes}_MRnorm.svg"
 
 corr, shared_ranking = ranking.compare_gene_ranking(
     summary_gene_ranks, DE_prior_filename, ref_gene_col, ref_rank_col, figure_filename
@@ -516,7 +747,7 @@ powers_rank_stats_df.to_csv(
 )
 
 # +
-figure_filename = f"pathway_ranking_{col_to_rank_pathways}.svg"
+figure_filename = f"pathway_ranking_{col_to_rank_pathways}_MRnorm.svg"
 
 ranking.compare_pathway_ranking(
     summary_pathway_ranks, powers_rank_processed_filename, figure_filename
