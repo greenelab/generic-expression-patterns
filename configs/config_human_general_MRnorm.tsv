@@ -17,13 +17,13 @@ DE_pvalue_name	"padj"
 pathway_DB_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/hallmark_DB.gmt"
 gsea_statistic	'log2FoldChange'
 rank_pathways_by	"padj"
-NN_architecture	"NN_2500_30_MRnorm"
+NN_architecture	"NN_2500_100_MRnorm"
 learning_rate	0.001
-batch_size	10
-epochs	40
+batch_size	100
+epochs	10
 kappa	0.01
 intermediate_dim	2500
-latent_dim	30
+latent_dim	100
 epsilon_std	1.0
 validation_frac	0.25
 project_id	"SRP012656"
