@@ -134,7 +134,3 @@ metadata.to_csv(metadata_filename, sep="\t")
 process.normalize_compendium(
     MRnormalized_compendium_filename, normalized_compendium_filename, scaler_filename
 )
-
-
-
-

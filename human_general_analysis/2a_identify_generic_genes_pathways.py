@@ -112,9 +112,6 @@ with open(scaler_filename, "rb") as scaler_fh:
 
 # Percentile threshold to identify generic genes
 percentile_threshold = 80.0
-# -
-
-latent_dim
 
 # +
 # Output files
