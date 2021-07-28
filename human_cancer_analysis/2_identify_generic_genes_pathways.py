@@ -501,11 +501,11 @@ corr, shared_ranking = ranking.compare_gene_ranking(
 # -
 
 # Hypergeometric test:
-# Given N number of genes with K common genes in Crow et al.
-# SOPHIE identifies n genes as being common
-# What is the probability that k of the genes identified by SOPHIE
-# are also common in Crow et al.? What is the probability of drawing
-# k or more concordant genes?
+#
+# Given N number of genes with K common genes in Crow et al. SOPHIE identifies n genes as being common. What is the probability that k of the genes identified by SOPHIE are also common in Crow et al.? What is the probability of drawing k or more concordant genes?
+#
+# This was a way for us to quantify the correlation between SOPHIE and Crow et al common findings, since the correlation coefficient wasn't very convincing since we're considering all genes in addition to the common ones
+
 num_Crow_genes = shared_ranking.shape[0]
 num_generic_Crow_genes = shared_ranking.query(f"{ref_rank_col}>=80.0").shape[0]
 num_generic_SOPHIE_genes = shared_ranking[

@@ -3,7 +3,7 @@ library("DESeq2")
 
 MRnorm_expression <- function(expression_filename, metadata_filename, expression_out_filename, size_out_filename) {
 	# Read in data
-	# Note the expression data is transposed to gene x sample in order to run Limma
+	# Note the expression data is transposed to gene x sample
 	expression_data <- t(as.matrix(read.csv(expression_filename, sep="\t", header=TRUE, row.names=1)))
 	metadata <- as.matrix(read.csv(metadata_filename, sep="\t", header=TRUE, row.names=1))
 

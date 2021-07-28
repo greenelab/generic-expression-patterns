@@ -146,29 +146,16 @@ def get_sample_ids(experiment_id, dataset_name, sample_id_colname):
     """
     base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
-    if "pseudomonas" in dataset_name.lower():
-        # metadata file
-        mapping_file = os.path.join(
-            base_dir, dataset_name, "data", "metadata", "sample_annotations.tsv"
-        )
+    # metadata file
+    mapping_file = os.path.join(
+        base_dir, dataset_name, "data", "metadata", "recount2_metadata.tsv"
+    )
 
-        # Read in metadata
-        metadata = pd.read_csv(mapping_file, header=0, sep="\t", index_col=0)
+    # Read in metadata
+    metadata = pd.read_csv(mapping_file, header=0, sep="\t", index_col=0)
 
-        selected_metadata = metadata.loc[experiment_id]
-        sample_ids = list(selected_metadata[sample_id_colname])
-
-    else:
-        # metadata file
-        mapping_file = os.path.join(
-            base_dir, dataset_name, "data", "metadata", "recount2_metadata.tsv"
-        )
-
-        # Read in metadata
-        metadata = pd.read_csv(mapping_file, header=0, sep="\t", index_col=0)
-
-        selected_metadata = metadata.loc[experiment_id]
-        sample_ids = list(selected_metadata[sample_id_colname])
+    selected_metadata = metadata.loc[experiment_id]
+    sample_ids = list(selected_metadata[sample_id_colname])
 
     return sample_ids
 
@@ -380,9 +367,9 @@ for run_id in range(num_runs):
 # Normalized count = raw count/scale factor
 
 sf_filename = "data/metadata/MR_norm_compendium_size_factor.tsv"
-scale_factor = pd.read_csv(sf_filename, sep="\t")
+size_factor = pd.read_csv(sf_filename, sep="\t")
 
-scale_factor.head()
+size_factor.head()
 
 for i in range(num_runs):
     simulated_filename = os.path.join(
@@ -392,9 +379,9 @@ for i in range(num_runs):
         simulated_filename, sep="\t", index_col=0, header=0
     )
 
-    scale_factor_subset = scale_factor.loc[MRnorm_simulated_data.index]
+    size_factor_subset = size_factor.loc[MRnorm_simulated_data.index]
 
-    raw_simulated_data = np.multiply(MRnorm_simulated_data, scale_factor_subset)
+    raw_simulated_data = np.multiply(MRnorm_simulated_data, size_factor_subset)
 
     raw_simulated_data.to_csv(simulated_filename, sep="\t")
 
@@ -550,14 +537,13 @@ figure_filename = f"gene_ranking_{col_to_rank_genes}_MRnorm.svg"
 corr, shared_ranking = ranking.compare_gene_ranking(
     summary_gene_ranks, DE_prior_filename, ref_gene_col, ref_rank_col, figure_filename
 )
+# -
 
-# +
 # Hypergeometric test:
-# Given N number of genes with K common genes in Crow et al.
-# SOPHIE identifies n genes as being common
-# What is the probability that k of the genes identified by SOPHIE
-# are also common in Crow et al.? What is the probability of drawing
-# k or more concordant genes?
+#
+# Given N number of genes with K common genes in Crow et al. SOPHIE identifies n genes as being common. What is the probability that k of the genes identified by SOPHIE are also common in Crow et al.? What is the probability of drawing k or more concordant genes?
+#
+# This was a way for us to quantify the correlation between SOPHIE and Crow et al common findings, since the correlation coefficient wasn't very convincing since we're considering all genes in addition to the common ones
 
 num_Crow_genes = shared_ranking.shape[0]
 num_generic_Crow_genes = shared_ranking.query(f"{ref_rank_col}>=80.0").shape[0]
@@ -568,7 +554,6 @@ num_concordant_generic_genes = shared_ranking[
     (shared_ranking[ref_rank_col] >= percentile_threshold)
     & (shared_ranking["Percentile (simulated)"] >= percentile_threshold)
 ].shape[0]
-# -
 
 print(num_Crow_genes)
 print(num_generic_Crow_genes)

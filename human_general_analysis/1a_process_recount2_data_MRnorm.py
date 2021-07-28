@@ -21,8 +21,7 @@
 #
 # 2. Uses pre-downloaded data from [notebook]()
 #
-# 3. Normalizes data using MRnorm
-# Check what the distribution looks like
+# 3. Normalizes data using [MRnorm](https://hbctraining.github.io/DGE_workshop/lessons/02_DGE_count_normalization.html)
 #
 # 4. Train VAE on recount2 data
 
