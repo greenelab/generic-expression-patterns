@@ -398,6 +398,11 @@ def normalize_compendium(
     mapped_compendium_df = pd.read_table(
         mapped_filename, header=0, sep="\t", index_col=0
     )
+    print(
+        "input: dataset contains {} samples and {} genes".format(
+            mapped_compendium_df.shape[0], mapped_compendium_df.shape[1]
+        )
+    )
 
     # 0-1 normalize per gene
     scaler = MinMaxScaler()
@@ -412,6 +417,7 @@ def normalize_compendium(
 
     # Save normalized data on disk: ~17.5 minutes
     normalized_compendium_df.to_csv(normalized_filename, float_format="%.3f", sep="\t")
+    del normalized_compendium_df
 
     # Pickle `scaler` as `scaler_filename` on disk
     with open(scaler_filename, "wb") as pkl_fh:
