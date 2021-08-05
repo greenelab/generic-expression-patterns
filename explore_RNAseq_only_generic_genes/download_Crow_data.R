@@ -38,7 +38,7 @@ devtools::install_github('PavlidisLab/gemmaAPI.R')
 # Note manually adjustments:
 # Change name: GSE11512-Human --> GSE11512.1
 # Remove "GSE25119"; "GSE33903"; "GSE36809", "GSE7214"
-supplementary_filename <- "/home/alexandra/Documents/Repos/generic-expression-patterns/explore_uncorrelated_genes/pnas.1802973116.sd01.csv"
+supplementary_filename <- "/home/alexandra/Documents/Data/Generic_expression_patterns_Crow/pnas.1802973116.sd01.csv"
 metadata <- as.matrix(read.csv(supplementary_filename, header=TRUE, row.names=1))
 
 gse_ids <- metadata[,"External.ID"]
@@ -47,6 +47,9 @@ for (i in 1:length(gse_ids)){
   print(gse_ids[i])
   # Download expression data for selected experiment ids
   data <- as.data.frame(gemmaAPI::datasetInfo(gse_ids[i], request='data', filter=FALSE))
+  #metadata <- as.data.frame(gemmaAPI::datasetInfo(gse_ids[i], request='platform'))
+  print(head(adata))
+
 
   # Drop all columns except gene symbol and sample ids
   columns_to_drop <- c("Probe", "Sequence", "GeneName", "GemmaId", "NCBIid")
@@ -78,6 +81,9 @@ for (i in 1:length(gse_ids)){
     all_data <- data_final
   }
   else{
+    # Note: taking the intersection will result in different sets of genes selected because
+    # it will depend on the order that datasets were read in and which genes were
+    # present
     #shared_gene_ids <- intersect(names(all_data), names(data_final))
     #all_data_intersect <- rbind(all_data[, shared_gene_ids], data_final[, shared_gene_ids])
     all_data <- dplyr::bind_rows(all_data, data_final)
