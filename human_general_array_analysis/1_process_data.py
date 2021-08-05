@@ -18,7 +18,9 @@
 #
 # 1. Select template experiment. This template experiment will be used in the next [notebook](2_identify_generic_genes_pathways.ipynb) to simulate experiments with the same experimental design but testing a different biological process.
 #
-# 2. Crow et al. data was downloaded using `download_Crow_data.R` script that downloads expression data from https://github.com/PavlidisLab/gemmaAPI.R
+# 2. Crow et al. data was downloaded using `explore_RNAseq_only_generic_genes/download_Crow_data.R` script that downloads expression data from https://github.com/PavlidisLab/gemmaAPI.R
+#
+# Note: For the analysis exploring the RNA-seq only common DEGs we used the union of genes per experiment, which resulted in some samples having NaNs for some samples. For this analysis we are taking the intersection so that we can remove all NaNs to train.
 #
 # 3. Train VAE on processed data.
 
@@ -90,11 +92,15 @@ raw_compendium.head()
 # 4. Normalize
 
 # +
-# Transpose matrix to be sample x gene
-processed_compendium = raw_compendium
+# Matrix is sample x gene
+# Note, there are NaNs in the matrix. I'm not exactly sure what is causing this since the data
+# downloaded was based on what Crow et al used in their analysis and therefore should have been
+# filtered by platform.
+# All genes have at least 1 NaN so dropping all genes with NaN removes all the data
+# Instead we will move genes if they are NaN in _most_ samples (>90%)
+x = raw_compendium.isna().sum()
 
-# TO DO:
-# Remove NaN columns?
+processed_compendium = raw_compendium[x.index[x < 3000]]
 
 # Get only gene expression data for genes in Crow et. al.
 our_gene_ids_hgnc = list(processed_compendium.columns)
