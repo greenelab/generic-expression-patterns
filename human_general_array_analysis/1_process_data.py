@@ -30,6 +30,8 @@
 import os
 import pandas as pd
 import pickle
+import numpy as np
+import seaborn as sns
 from ponyo import utils, train_vae_modules
 from generic_expression_patterns_modules import process
 
@@ -84,6 +86,41 @@ raw_compendium = pd.read_csv(raw_compendium_filename, sep="\t", header=0, index_
 print(raw_compendium.shape)
 raw_compendium.head()
 
+# +
+# raw_compendium.isna().sum()>0
+
+# +
+# Samples with all NAs
+# test = raw_compendium[raw_compendium.isna().sum(axis=1)== 14487]
+# test
+
+# +
+# test_remaining = raw_compendium.drop(test.index)
+
+# +
+# test_remaining.isna().sum(axis=1).sort_values()
+
+# +
+# test_remaining.isna().sum()
+
+# +
+# x = raw_compendium.isna().sum()
+# processed_compendium = raw_compendium[x.index[x<500]]
+
+# +
+# Find samples with NaN
+# processed_compendium = raw_compendium[raw_compendium.isna().sum(axis=1)<1]
+
+# +
+# print(processed_compendium.shape)
+
+# +
+# processed_compendium[processed_compendium.isna().sum(axis=1)<1]
+
+# +
+# processed_compendium.loc["GSE17372_Biomat_204___BioAssayId=142015Name=2067.mAdbID.92564","ZSWIM2"] == -np.inf
+# -
+
 # ### Process compendium data
 #
 # 1. Drop probe column
@@ -96,11 +133,24 @@ raw_compendium.head()
 # Note, there are NaNs in the matrix. I'm not exactly sure what is causing this since the data
 # downloaded was based on what Crow et al used in their analysis and therefore should have been
 # filtered by platform.
+
+# Filter out samples that are all NaNs ***
+samples_to_drop = raw_compendium[
+    raw_compendium.isna().sum(axis=1) == raw_compendium.shape[1]
+].index
+processed_compendium = raw_compendium.drop(samples_to_drop)
+# processed_compendium = processed_compendium[processed_compendium.isna().sum(axis=1)<1]
+
 # All genes have at least 1 NaN so dropping all genes with NaN removes all the data
 # Instead we will move genes if they are NaN in _most_ samples (>90%)
-x = raw_compendium.isna().sum()
+x = processed_compendium.isna().sum()
+processed_compendium = processed_compendium[x.index[x < 500]]
 
-processed_compendium = raw_compendium[x.index[x < 3000]]
+# Log transformed the data
+processed_compendium = np.log10(processed_compendium)
+
+# Replace -inf with 0
+processed_compendium = processed_compendium.replace(-np.inf, 0.0)
 
 # Get only gene expression data for genes in Crow et. al.
 our_gene_ids_hgnc = list(processed_compendium.columns)
@@ -119,7 +169,7 @@ if not os.path.exists(shared_genes_filename):
 
 mapped_compendium = processed_compendium[shared_genes_hgnc]
 print(mapped_compendium.shape)
-mapped_compendium.head()
+mapped_compendium.head(10)
 # -
 
 # Save
@@ -129,6 +179,15 @@ mapped_compendium.to_csv(mapped_compendium_filename, sep="\t")
 process.normalize_compendium(
     mapped_compendium_filename, normalized_compendium_filename, scaler_filename
 )
+
+# Check normalized data values
+normalized_compendium = pd.read_csv(
+    normalized_compendium_filename, sep="\t", index_col=0
+)
+
+normalized_compendium.head(10)
+
+sns.displot(normalized_compendium["AA06"])
 
 
 # ### Select and process template data

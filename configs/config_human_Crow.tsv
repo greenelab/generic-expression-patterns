@@ -20,7 +20,7 @@ rank_pathways_by	"padj"
 NN_architecture	"NN_2500_30"
 learning_rate	0.001
 batch_size	10
-epochs	40
+epochs	10
 kappa	0.01
 intermediate_dim	2500
 latent_dim	30
