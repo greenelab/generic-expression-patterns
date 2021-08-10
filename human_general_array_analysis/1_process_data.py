@@ -86,47 +86,21 @@ raw_compendium = pd.read_csv(raw_compendium_filename, sep="\t", header=0, index_
 print(raw_compendium.shape)
 raw_compendium.head()
 
-# +
-# raw_compendium.isna().sum()>0
-
-# +
-# Samples with all NAs
-# test = raw_compendium[raw_compendium.isna().sum(axis=1)== 14487]
-# test
-
-# +
-# test_remaining = raw_compendium.drop(test.index)
-
-# +
-# test_remaining.isna().sum(axis=1).sort_values()
-
-# +
-# test_remaining.isna().sum()
-
-# +
-# x = raw_compendium.isna().sum()
-# processed_compendium = raw_compendium[x.index[x<500]]
-
-# +
-# Find samples with NaN
-# processed_compendium = raw_compendium[raw_compendium.isna().sum(axis=1)<1]
-
-# +
-# print(processed_compendium.shape)
-
-# +
-# processed_compendium[processed_compendium.isna().sum(axis=1)<1]
-
-# +
-# processed_compendium.loc["GSE17372_Biomat_204___BioAssayId=142015Name=2067.mAdbID.92564","ZSWIM2"] == -np.inf
-# -
-
 # ### Process compendium data
 #
 # 1. Drop probe column
 # 2. Transpose
 # 3. Get only shared genes from Crow et. al.
 # 4. Normalize
+
+# I manually looked up GSE experiment ids with ~3K - ~9K NA genes using gemma.msl.ubc.ca. These experiments were all using the  GPL570 (Affymetrix Human Genome U133 Plus 2.0 Array) platform described in [Crow et al.](https://www.pnas.org/content/116/13/6491).
+#
+# Some examples:
+# * https://gemma.msl.ubc.ca/expressionExperiment/showExpressionExperiment.html?id=3195
+# * https://gemma.msl.ubc.ca/expressionExperiment/showExpressionExperiment.html?id=7470
+# * https://gemma.msl.ubc.ca/expressionExperiment/showExpressionExperiment.html?id=7934
+#
+# If i look up the genes that have NA, it says there is "no data" though I'm not sure what is causing this. So for now I will try to remove as many of the NAs as I can with filtering.
 
 # +
 # Matrix is sample x gene
@@ -139,21 +113,34 @@ samples_to_drop = raw_compendium[
     raw_compendium.isna().sum(axis=1) == raw_compendium.shape[1]
 ].index
 processed_compendium = raw_compendium.drop(samples_to_drop)
-# processed_compendium = processed_compendium[processed_compendium.isna().sum(axis=1)<1]
 
 # All genes have at least 1 NaN so dropping all genes with NaN removes all the data
 # Instead we will move genes if they are NaN in _most_ samples (>90%)
 x = processed_compendium.isna().sum()
-processed_compendium = processed_compendium[x.index[x < 500]]
+processed_compendium = processed_compendium[x.index[x < 100]]
 
-# Log transformed the data
-processed_compendium = np.log10(processed_compendium)
+# Remove remaining samples with NaNs
+processed_compendium = processed_compendium[processed_compendium.isna().sum(axis=1) < 1]
 
-# Replace -inf with 0
-processed_compendium = processed_compendium.replace(-np.inf, 0.0)
+assert processed_compendium.isna().sum().sum() == 0
 
+# +
+# Log transformed the data since the spread is very large
+processed_compendium_transform = np.log10(processed_compendium)
+
+# Replace -inf (from 0 input) and nans (from negative values) with 0
+# Not sure why there are negative values here.
+# Not sure what batch correction measures were used
+# TO DO: Check Gemma documentation again
+processed_compendium_transform = processed_compendium_transform.replace(
+    -np.inf, 0.0
+).replace(np.nan, 0.0)
+
+assert processed_compendium_transform.isna().sum().sum() == 0
+
+# +
 # Get only gene expression data for genes in Crow et. al.
-our_gene_ids_hgnc = list(processed_compendium.columns)
+our_gene_ids_hgnc = list(processed_compendium_transform.columns)
 
 published_generic_genes = process.get_published_generic_genes(DE_prior_filename)
 shared_genes_hgnc = list(set(our_gene_ids_hgnc).intersection(published_generic_genes))
@@ -167,7 +154,10 @@ if not os.path.exists(shared_genes_filename):
     with open(shared_genes_filename, "wb") as pkl_fh:
         pickle.dump(shared_genes_hgnc, pkl_fh)
 
-mapped_compendium = processed_compendium[shared_genes_hgnc]
+mapped_compendium = processed_compendium_transform[shared_genes_hgnc]
+
+assert mapped_compendium.isna().sum().sum() == 0
+
 print(mapped_compendium.shape)
 mapped_compendium.head(10)
 # -
@@ -248,3 +238,5 @@ for each_dir in output_dirs:
 
 # Train VAE on new compendium data
 train_vae_modules.train_vae(config_filename, normalized_compendium_filename)
+
+

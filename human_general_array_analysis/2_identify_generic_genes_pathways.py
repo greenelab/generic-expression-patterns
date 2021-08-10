@@ -63,7 +63,7 @@ np.random.seed(123)
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 config_filename = os.path.abspath(
-    os.path.join(base_dir, "configs", "config_human_general_array.tsv")
+    os.path.join(base_dir, "configs", "config_human_Crow.tsv")
 )
 
 params = utils.read_config(config_filename)
@@ -332,7 +332,7 @@ def shift_template_experiment_with_metadatafile(
 
 # Load metadata file with grouping assignments for samples
 metadata_filename = os.path.join(
-    base_dir, dataset_name, "data", "metadata", "experiments_sample_annotations.csv"
+    base_dir, dataset_name, "data", "metadata", "experiment_sample_annotations.csv"
 )
 
 # Simulate multiple experiments
@@ -355,6 +355,21 @@ for run_id in range(num_runs):
         run_id,
         metadata_filename,
     )
+
+# ## Reverse transformation
+
+# +
+# Undo log transformation...
+# CHeck that template is also in log or unlogged form
+# Or log transform mapped_template instead
+mapped_template = pd.read_csv(mapped_template_filename, sep="\t", index_col=0, header=0)
+
+mapped_template_transform = (
+    np.log10(mapped_template).replace(-np.inf, 0.0).replace(np.nan, 0.0)
+)
+
+mapped_template_transform.to_csv(mapped_template_filename, sep="\t")
+# -
 
 # ### Process template and simulated experiments
 #
