@@ -55,52 +55,19 @@ def make_figure_panel(filename, scale_x_input, scale_y_input, x_loc, y_loc):
 # ## Figure 1
 
 # Create panels for figure 1
-panel_1a = make_figure_panel(
-    "fig1A.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
-)
-panel_1b = make_figure_panel(
-    os.path.join(local_directory, "tybalt_2layer_30latent_hist.svg"),
-    scale_x_input=1,
-    scale_y_input=1,
-    x_loc=900,
-    y_loc=10,
-)
-panel_1c = make_figure_panel(
-    "fig1C.svg", scale_x_input=5.5, scale_y_input=5.5, x_loc=30, y_loc=300
-)
-panel_1dleft = make_figure_panel(
-    os.path.join(local_directory, "template_volcano_DEG_SRP061689.svg"),
-    scale_x_input=0.9,
-    scale_y_input=0.9,
-    x_loc=30,
-    y_loc=900,
-)
-panel_1dright = make_figure_panel(
-    os.path.join(local_directory, "simulated_volcano_DEG_SRP061689.svg"),
-    scale_x_input=0.95,
-    scale_y_input=0.95,
-    x_loc=400,
-    y_loc=885,
+panel_1 = make_figure_panel(
+    "Fig-1 Overall workflow.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
 
-panel_1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_1b_label = sg.TextElement(900, 20, "B", size=18, weight="bold", font="Verdana")
-panel_1c_label = sg.TextElement(10, 300, "C", size=18, weight="bold", font="Verdana")
-panel_1d_label = sg.TextElement(10, 900, "D", size=18, weight="bold", font="Verdana")
+# +
+# panel_1_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
+# -
 
-figure_1 = sg.SVGFigure("1500", "1200")
+figure_1 = sg.SVGFigure("900", "500")
 figure_1.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
-        panel_1a,
-        panel_1b,
-        panel_1c,
-        panel_1dleft,
-        panel_1dright,
-        panel_1a_label,
-        panel_1b_label,
-        panel_1c_label,
-        panel_1d_label,
+        panel_1,
     ]
 )
 display(SVG(figure_1.to_str()))
@@ -112,67 +79,37 @@ figure_1.save("output/figure_1.svg")
 
 # Create panels for figure 2
 panel_2a = make_figure_panel(
-    "fig2A_v1.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
+    "Fig-2A-genes workflow.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
 panel_2b = make_figure_panel(
-    "../human_cancer_analysis/gene_ranking_logFC.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
+    "Fig-2B-model validation.svg",
+    scale_x_input=2,
+    scale_y_input=2,
     x_loc=30,
     y_loc=550,
 )
 panel_2c = make_figure_panel(
-    "../human_general_analysis/gene_ranking_log2FoldChange.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
+    "Fig-2C-model power.svg",
+    scale_x_input=2,
+    scale_y_input=2,
     x_loc=400,
     y_loc=550,
-)
-panel_2d = make_figure_panel(
-    "../pseudomonas_analysis/gene_ranking_logFC.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=800,
-    y_loc=550,
-)
-panel_2e = make_figure_panel(
-    "../compare_experiments/concordance_between_same_recount2_templates.svg",
-    scale_x_input=0.77,
-    scale_y_input=0.77,
-    x_loc=30,
-    y_loc=900,
-)
-panel_2f = make_figure_panel(
-    "../compare_experiments/concordance_between_diff_recount2_templates.svg",
-    scale_x_input=0.77,
-    scale_y_input=0.77,
-    x_loc=400,
-    y_loc=900,
 )
 
 panel_2a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_2b_label = sg.TextElement(10, 550, "B", size=18, weight="bold", font="Verdana")
 panel_2c_label = sg.TextElement(400, 550, "C", size=18, weight="bold", font="Verdana")
-panel_2d_label = sg.TextElement(800, 550, "D", size=18, weight="bold", font="Verdana")
-panel_2e_label = sg.TextElement(10, 900, "E", size=18, weight="bold", font="Verdana")
-panel_2f_label = sg.TextElement(400, 900, "F", size=18, weight="bold", font="Verdana")
 
-figure_2 = sg.SVGFigure("1200", "1300")
+figure_2 = sg.SVGFigure("1000", "1000")
 figure_2.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
         panel_2a,
         panel_2b,
         panel_2c,
-        panel_2d,
-        panel_2e,
-        panel_2f,
         panel_2a_label,
         panel_2b_label,
         panel_2c_label,
-        panel_2d_label,
-        panel_2e_label,
-        panel_2f_label,
     ]
 )
 display(SVG(figure_2.to_str()))
@@ -182,39 +119,50 @@ figure_2.save("output/figure_2.svg")
 
 # ## Figure 3
 
-# Create panels for figure 3
+# Create panels for figure 2
 panel_3a = make_figure_panel(
-    "fig2D.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
+    "../human_cancer_analysis/gene_ranking_logFC.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=10,
+    y_loc=20,
 )
 panel_3b = make_figure_panel(
-    "../human_cancer_analysis/pathway_ranking_padj.svg",
-    scale_x_input=1,
-    scale_y_input=1,
-    x_loc=900,
-    y_loc=30,
+    "../human_general_analysis/gene_ranking_log2FoldChange.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=400,
+    y_loc=20,
 )
 panel_3c = make_figure_panel(
-    os.path.join(local_directory, "fig3C.svg"),
-    scale_x_input=3,
-    scale_y_input=3,
-    x_loc=30,
-    y_loc=600,
+    "../pseudomonas_analysis/gene_ranking_logFC.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=800,
+    y_loc=20,
 )
 panel_3d = make_figure_panel(
-    "../other_enrichment_methods/enrichment_corr_plot.svg",
-    scale_x_input=1.5,
-    scale_y_input=1.5,
-    x_loc=750,
-    y_loc=600,
+    "../compare_experiments/concordance_between_same_recount2_templates.svg",
+    scale_x_input=0.77,
+    scale_y_input=0.77,
+    x_loc=30,
+    y_loc=400,
+)
+panel_3e = make_figure_panel(
+    "../compare_experiments/concordance_between_diff_recount2_templates.svg",
+    scale_x_input=0.77,
+    scale_y_input=0.77,
+    x_loc=400,
+    y_loc=400,
 )
 
-
 panel_3a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_3b_label = sg.TextElement(900, 20, "B", size=18, weight="bold", font="Verdana")
-panel_3c_label = sg.TextElement(10, 600, "C", size=18, weight="bold", font="Verdana")
-panel_3d_label = sg.TextElement(700, 600, "D", size=18, weight="bold", font="Verdana")
+panel_3b_label = sg.TextElement(400, 20, "B", size=18, weight="bold", font="Verdana")
+panel_3c_label = sg.TextElement(800, 20, "C", size=18, weight="bold", font="Verdana")
+panel_3d_label = sg.TextElement(30, 400, "D", size=18, weight="bold", font="Verdana")
+panel_3e_label = sg.TextElement(400, 400, "E", size=18, weight="bold", font="Verdana")
 
-figure_3 = sg.SVGFigure("1500", "1200")
+figure_3 = sg.SVGFigure("1200", "800")
 figure_3.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -222,10 +170,12 @@ figure_3.append(
         panel_3b,
         panel_3c,
         panel_3d,
+        panel_3e,
         panel_3a_label,
         panel_3b_label,
         panel_3c_label,
         panel_3d_label,
+        panel_3e_label,
     ]
 )
 display(SVG(figure_3.to_str()))
@@ -235,50 +185,39 @@ figure_3.save("output/figure_3.svg")
 
 # ## Figure 4
 
-# Create panels for figure 4
+# Create panels for figure 3
 panel_4a = make_figure_panel(
-    "../LV_analysis/nonzero_LV_coverage.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=30,
-    y_loc=10,
+    "Fig-4A-pathway workflow .svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
 panel_4b = make_figure_panel(
-    "../LV_analysis/highweight_LV_coverage.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=350,
-    y_loc=10,
+    "../human_cancer_analysis/pathway_ranking_padj.svg",
+    scale_x_input=1,
+    scale_y_input=1,
+    x_loc=900,
+    y_loc=30,
 )
 panel_4c = make_figure_panel(
-    "../LV_analysis/weight_dist_LV61.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=700,
-    y_loc=10,
+    "Fig-4C-extendable workflow.svg",
+    scale_x_input=3,
+    scale_y_input=3,
+    x_loc=30,
+    y_loc=600,
 )
 panel_4d = make_figure_panel(
-    "../network_analysis/communities_fig.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=30,
-    y_loc=300,
+    "../other_enrichment_methods/enrichment_corr_plot.svg",
+    scale_x_input=1.5,
+    scale_y_input=1.5,
+    x_loc=750,
+    y_loc=600,
 )
-panel_4e = make_figure_panel(
-    "../network_analysis/centrality_figure.svg",
-    scale_x_input=0.85,
-    scale_y_input=0.85,
-    x_loc=600,
-    y_loc=300,
-)
+
 
 panel_4a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_4b_label = sg.TextElement(350, 20, "B", size=18, weight="bold", font="Verdana")
-panel_4c_label = sg.TextElement(700, 20, "C", size=18, weight="bold", font="Verdana")
-panel_4d_label = sg.TextElement(10, 300, "D", size=18, weight="bold", font="Verdana")
-panel_4e_label = sg.TextElement(600, 300, "E", size=18, weight="bold", font="Verdana")
+panel_4b_label = sg.TextElement(900, 20, "B", size=18, weight="bold", font="Verdana")
+panel_4c_label = sg.TextElement(10, 600, "C", size=18, weight="bold", font="Verdana")
+panel_4d_label = sg.TextElement(700, 600, "D", size=18, weight="bold", font="Verdana")
 
-figure_4 = sg.SVGFigure("1500", "800")
+figure_4 = sg.SVGFigure("1500", "1200")
 figure_4.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -286,12 +225,10 @@ figure_4.append(
         panel_4b,
         panel_4c,
         panel_4d,
-        panel_4e,
         panel_4a_label,
         panel_4b_label,
         panel_4c_label,
         panel_4d_label,
-        panel_4e_label,
     ]
 )
 display(SVG(figure_4.to_str()))
@@ -301,42 +238,50 @@ figure_4.save("output/figure_4.svg")
 
 # ## Figure 5
 
-# Create panels for figure 5
+# Create panels for figure 4
 panel_5a = make_figure_panel(
-    os.path.join(local_directory, "cbrAB_simpler_arg_model.svg"),
-    scale_x_input=2,
-    scale_y_input=2,
-    x_loc=30,
-    y_loc=20,
-)
-panel_5b = make_figure_panel(
-    os.path.join(local_directory, "template_zscore_volcano_ArgR_E-GEOD-33245.svg"),
+    "../LV_analysis/nonzero_LV_coverage.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
-    x_loc=300,
+    x_loc=30,
+    y_loc=10,
+)
+panel_5b = make_figure_panel(
+    "../LV_analysis/highweight_LV_coverage.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=350,
     y_loc=10,
 )
 panel_5c = make_figure_panel(
-    os.path.join(local_directory, "template_traditional_volcano_ArgR_E-GEOD-33245.svg"),
+    "../LV_analysis/weight_dist_LV61.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
     x_loc=700,
     y_loc=10,
 )
 panel_5d = make_figure_panel(
-    os.path.join(local_directory, "WT-cbrB-EV-comp_10nM_Arg_crc.svg"),
-    scale_x_input=2,
-    scale_y_input=2,
-    x_loc=350,
+    "../network_analysis/communities_fig.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=30,
+    y_loc=300,
+)
+panel_5e = make_figure_panel(
+    "../network_analysis/centrality_figure.svg",
+    scale_x_input=0.85,
+    scale_y_input=0.85,
+    x_loc=600,
     y_loc=300,
 )
 
 panel_5a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_5b_label = sg.TextElement(300, 20, "B", size=18, weight="bold", font="Verdana")
+panel_5b_label = sg.TextElement(350, 20, "B", size=18, weight="bold", font="Verdana")
 panel_5c_label = sg.TextElement(700, 20, "C", size=18, weight="bold", font="Verdana")
-panel_5d_label = sg.TextElement(350, 300, "D", size=18, weight="bold", font="Verdana")
+panel_5d_label = sg.TextElement(10, 300, "D", size=18, weight="bold", font="Verdana")
+panel_5e_label = sg.TextElement(600, 300, "E", size=18, weight="bold", font="Verdana")
 
-figure_5 = sg.SVGFigure("1200", "800")
+figure_5 = sg.SVGFigure("1500", "800")
 figure_5.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -344,16 +289,84 @@ figure_5.append(
         panel_5b,
         panel_5c,
         panel_5d,
+        panel_5e,
         panel_5a_label,
         panel_5b_label,
         panel_5c_label,
         panel_5d_label,
+        panel_5e_label,
     ]
 )
 display(SVG(figure_5.to_str()))
 
 # save generated SVG files
 figure_5.save("output/figure_5.svg")
+
+# ## Figure 6
+
+# Create panels for figure 5
+panel_6a = make_figure_panel(
+    os.path.join(local_directory, "cbrAB_simpler_arg_model.svg"),
+    scale_x_input=2,
+    scale_y_input=2,
+    x_loc=30,
+    y_loc=20,
+)
+panel_6b = make_figure_panel(
+    os.path.join(local_directory, "template_zscore_volcano_ArgR_E-GEOD-33245.svg"),
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=350,
+    y_loc=10,
+)
+panel_6c = make_figure_panel(
+    os.path.join(local_directory, "template_traditional_volcano_ArgR_E-GEOD-33245.svg"),
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=750,
+    y_loc=10,
+)
+panel_6d = make_figure_panel(
+    "../pseudomonas_analysis/cbrB_crc_zscore_compare.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=350,
+    y_loc=300,
+)
+panel_6e = make_figure_panel(
+    os.path.join(local_directory, "WT-cbrB-EV-comp_10nM_Arg_crc.svg"),
+    scale_x_input=2,
+    scale_y_input=2,
+    x_loc=750,
+    y_loc=300,
+)
+
+panel_6a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
+panel_6b_label = sg.TextElement(350, 20, "B", size=18, weight="bold", font="Verdana")
+panel_6c_label = sg.TextElement(750, 20, "C", size=18, weight="bold", font="Verdana")
+panel_6d_label = sg.TextElement(350, 300, "D", size=18, weight="bold", font="Verdana")
+panel_6e_label = sg.TextElement(750, 300, "E", size=18, weight="bold", font="Verdana")
+
+figure_6 = sg.SVGFigure("1200", "800")
+figure_6.append(
+    [
+        etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
+        panel_6a,
+        panel_6b,
+        panel_6c,
+        panel_6d,
+        panel_6e,
+        panel_6a_label,
+        panel_6b_label,
+        panel_6c_label,
+        panel_6d_label,
+        panel_6e_label,
+    ]
+)
+display(SVG(figure_6.to_str()))
+
+# save generated SVG files
+figure_6.save("output/figure_6.svg")
 
 # ## Supplement 1
 
@@ -499,6 +512,7 @@ figure_S3.save("output/figure_S3.svg")
 # !inkscape --export-png=output/figure_3.png output/figure_3.svg
 # !inkscape --export-png=output/figure_4.png output/figure_4.svg
 # !inkscape --export-png=output/figure_5.png output/figure_5.svg
+# !inkscape --export-png=output/figure_6.png output/figure_6.svg
 # !inkscape --export-png=output/figure_S1.png output/figure_S1.svg
 # !inkscape --export-png=output/figure_S2.png output/figure_S2.svg
 # !inkscape --export-png=output/figure_S3.png output/figure_S3.svg
