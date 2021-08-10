@@ -330,7 +330,7 @@ def shift_template_experiment_with_metadatafile(
 # 4. Decode the samples. This results in a new experiment
 # 5. Repeat steps 1-4 to get multiple simulated experiments
 
-# Load metadata file with grouping assignments for samples
+# Load metadata file with experiment to sample mapping
 metadata_filename = os.path.join(
     base_dir, dataset_name, "data", "metadata", "experiment_sample_annotations.csv"
 )
@@ -411,12 +411,12 @@ for i in range(num_runs):
 # Create subdirectory: "<local_dir>/DE_stats/"
 os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 
-# + magic_args="-i metadata_filename -i project_id -i processed_template_filename -i local_dir -i base_dir" language="R"
+# + magic_args="-i grp_metadata_filename -i project_id -i processed_template_filename -i local_dir -i base_dir" language="R"
 #
 # source(paste0(base_dir, '/generic_expression_patterns_modules/DE_analysis.R'))
 #
 # # File created: "<local_dir>/DE_stats/DE_stats_template_data_SRP012656_real.txt"
-# get_DE_stats_limma(metadata_filename,
+# get_DE_stats_limma(grp_metadata_filename,
 #                    project_id,
 #                    processed_template_filename,
 #                    "template",
@@ -438,7 +438,7 @@ selected = template_DE_stats[
 ]
 print(selected.shape)
 
-# + magic_args="-i metadata_filename -i project_id -i base_dir -i local_dir -i num_runs" language="R"
+# + magic_args="-i grp_metadata_filename -i project_id -i base_dir -i local_dir -i num_runs" language="R"
 #
 # source(paste0(base_dir, '/generic_expression_patterns_modules/DE_analysis.R'))
 #
@@ -452,7 +452,7 @@ print(selected.shape)
 #                                      ".txt",
 #                                      sep = "")
 #
-#     get_DE_stats_limma(metadata_filename,
+#     get_DE_stats_limma(grp_metadata_filename,
 #                        project_id,
 #                        simulated_data_filename,
 #                        "simulated",
