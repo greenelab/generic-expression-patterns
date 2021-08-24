@@ -86,6 +86,19 @@ raw_compendium = pd.read_csv(raw_compendium_filename, sep="\t", header=0, index_
 print(raw_compendium.shape)
 raw_compendium.head()
 
+# +
+# Are there any negative values in the raw downloaded data
+# Expression data was downloaded from GEMMA (https://gemma.msl.ubc.ca/home.html)
+# Description for how the data was processed can be found: https://pavlidislab.github.io/Gemma/curation.html
+# Looks like there are some negative values in the raw downloaded data.
+# Possibly from the log transform
+tmp = raw_compendium[(raw_compendium < 0).any(axis=1)]
+
+tmp[tmp.loc["GSE12108_Biomat_8___BioAssayId=46616Name=SchuS4infectedD8_S4"] < 0]
+tmp2 = tmp.loc["GSE12108_Biomat_8___BioAssayId=46616Name=SchuS4infectedD8_S4"]
+tmp2[tmp2 < 0]
+# -
+
 # ### Process compendium data
 #
 # 1. Drop probe column
@@ -129,9 +142,8 @@ assert processed_compendium.isna().sum().sum() == 0
 processed_compendium_transform = np.log10(processed_compendium)
 
 # Replace -inf (from 0 input) and nans (from negative values) with 0
-# Not sure why there are negative values here.
-# Not sure what batch correction measures were used
-# TO DO: Check Gemma documentation again
+# Negatives probably created from taking the log of very small values
+# Normalization performed using RMA
 processed_compendium_transform = processed_compendium_transform.replace(
     -np.inf, 0.0
 ).replace(np.nan, 0.0)
@@ -176,6 +188,10 @@ normalized_compendium = pd.read_csv(
 )
 
 normalized_compendium.head(10)
+
+# +
+# Check that there are no negative values
+# -
 
 sns.displot(normalized_compendium["AA06"])
 
