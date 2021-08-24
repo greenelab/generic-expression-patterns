@@ -55,13 +55,10 @@ def make_figure_panel(filename, scale_x_input, scale_y_input, x_loc, y_loc):
 # ## Figure 1
 
 # Create panels for figure 1
+# This panel was made in google slides and exported from inkscape
 panel_1 = make_figure_panel(
     "Fig-1 Overall workflow.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
-
-# +
-# panel_1_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-# -
 
 figure_1 = sg.SVGFigure("900", "500")
 figure_1.append(
@@ -78,6 +75,7 @@ figure_1.save("output/figure_1.svg")
 # ## Figure 2
 
 # Create panels for figure 2
+# Note: panel A, C was created in google slides and then exported from inkscape
 panel_2a = make_figure_panel(
     "Fig-2A-genes workflow.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
@@ -119,7 +117,7 @@ figure_2.save("output/figure_2.svg")
 
 # ## Figure 3
 
-# Create panels for figure 2
+# Create panels for figure 3
 panel_3a = make_figure_panel(
     "../human_cancer_analysis/gene_ranking_logFC.svg",
     scale_x_input=0.8,
@@ -185,7 +183,8 @@ figure_3.save("output/figure_3.svg")
 
 # ## Figure 4
 
-# Create panels for figure 3
+# Create panels for figure 4
+# Note: panel A, C was created in google slides and then exported from inkscape
 panel_4a = make_figure_panel(
     "Fig-4A-pathway workflow .svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
@@ -238,7 +237,7 @@ figure_4.save("output/figure_4.svg")
 
 # ## Figure 5
 
-# Create panels for figure 4
+# Create panels for figure 5
 panel_5a = make_figure_panel(
     "../LV_analysis/nonzero_LV_coverage.svg",
     scale_x_input=0.8,
@@ -304,7 +303,7 @@ figure_5.save("output/figure_5.svg")
 
 # ## Figure 6
 
-# Create panels for figure 5
+# Create panels for figure 6
 panel_6a = make_figure_panel(
     os.path.join(local_directory, "cbrAB_simpler_arg_model.svg"),
     scale_x_input=2,
@@ -451,7 +450,7 @@ figure_S2.save("output/figure_S2.svg")
 
 # ## Supplement 3
 
-# Create panels for Supplement 2
+# Create panels for Supplement 3
 panel_S3a = make_figure_panel(
     "../human_general_analysis/gene_ranking_log2FoldChange.svg",
     scale_x_input=0.8,

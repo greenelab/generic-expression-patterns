@@ -271,7 +271,7 @@ h.axvline(-1, c="black", lw=0.7, ls="--")
 # Move location of legend
 plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.0)
 
-h.set_xlabel(r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana")
+h.set_xlabel(r"log$_{2}$ Fold Change", fontsize=14, fontname="Verdana")
 h.set_ylabel("cbrB z-score - crc z-score", fontsize=14, fontname="Verdana")
 # -
 
