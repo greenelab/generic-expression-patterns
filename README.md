@@ -20,7 +20,7 @@ The reusable notebooks for training neural networks and for the use of pre-train
 
 **Citation:**
 For more details about the analysis, see our preprint on bioRxiv. The paper should be cited as:
-<!--- >> Alexandra J Lee, Dallas L Mould, Jake Crawford, Dongbo Hu, Rani K Powers, Georgia Doing, James C Costello, Deborah A Hogan, Casey S Greene, Generative neural networks separate common and specific transcriptional responses, ..., https://doi.org/10.1093/gigascience/giaa117 --->
+<!--- >> Alexandra J Lee, Dallas L Mould, Jake Crawford, Dongbo Hu, Rani K Powers, Georgia Doing, James C Costello, Deborah A Hogan, Casey S Greene, Generative neural networks separate common and specific transcriptional responses, ..., https://www.biorxiv.org/content/10.1101/2021.05.24.445440v1 --->
 
 ## SOPHIE
 
