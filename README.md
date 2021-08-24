@@ -79,6 +79,8 @@ cd generic-expression-patterns
 ```bash
 bash install.sh
 ```
+This bash script uses the linux environment. If you are using a mac, you will need to update `install.sh` script to use `environment_mac.yml` and activate `generic_expression_mac`
+
 6. Navigate to either the `pseudomonas_analysis`, `human_general_analysis` or `human_cancer_analysis` directories and run the notebooks in order.
 
 *Note:* Running the `human_general_analysis/1_process_recount2_data.ipynb` notebook can take several days to run since the dataset is very large. If you would like to run only the analysis notebook (`human_general_analysis/2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations:
@@ -119,8 +121,8 @@ bash install.sh
 
 8. Run notebook
 
-*Note*:
-* Your input dataset should be a matrix that is sample x gene
+**Note**:
+* Your input dataset should be a matrix that is sample x gene. The file should tab-delimited.
 * The gene ids should be HGNC symbols (if using human data) or PA numbers (if using *P. aeruginosa* data)
 * Your input dataset should be generated using the same platform as the model you plan to use (i.e. RNA-seq or array)
 * Models available to use are: recount2 (human RNA-seq model found in `human_general_analysis/models`), Powers et. al. (human array model found in `human_cancer_analysis/models`), *P. aeruginosa* (*P. aeruginosa* array model found in `pseudomonas_analysis/models`)
@@ -132,7 +134,7 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 
 | Name | Description |
 | :--- | :---------- |
-| local_dir| str: Parent directory on local machine to store intermediate results.|
+| local_dir| str: Parent directory on local machine to store intermediate results. Make sure to end path name with "/"|
 | dataset_name| str: Name for analysis directory, which contains the notebooks being run. For our analysis its named "human_analysis".|
 | raw_template_filename | str: Downloaded template gene expression data file|
 | mapped_template_filename | str: Template gene expression data file after replacing gene ids in header. This is an intermediate file that gets generated.|

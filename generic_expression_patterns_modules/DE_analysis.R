@@ -180,7 +180,7 @@ get_DE_stats_DESeq <- function(metadata_file,
 
   ddset <- DESeqDataSetFromMatrix(expression_data, colData=metadata, design = ~group)
 
-  deseq_object <- DESeq(ddset)
+  deseq_object <- DESeq(ddset, quiet=TRUE)
 
   # Note parameter settings:
   # `independentFilter=False`: We have turned off the automatic filtering, which

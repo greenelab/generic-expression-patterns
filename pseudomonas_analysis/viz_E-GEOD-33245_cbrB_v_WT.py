@@ -196,3 +196,91 @@ make_volcano_template_highlight_genelist(
     argR_genes,
     os.path.join(local_dir, f"template_zscore_volcano_ArgR_{project_id}.svg"),
 )
+
+# ## logFC vs z-score difference
+
+# Load summary tables for cbrB vs WT and crc vs WT
+cbrB_summary_filename = os.path.join(
+    base_dir, dataset_name, f"generic_gene_summary_{project_id}_cbrB_v_WT.tsv"
+)
+crc_summary_filename = os.path.join(
+    base_dir, dataset_name, f"generic_gene_summary_{project_id}_crc_v_WT.tsv"
+)
+
+# Read summary tables
+cbrB_summary_df = pd.read_csv(cbrB_summary_filename, sep="\t", index_col=0, header=0)
+crc_summary_df = pd.read_csv(crc_summary_filename, sep="\t", index_col=0, header=0)
+
+cbrB_summary_df.head()
+
+crc_summary_df.head()
+
+# Select logFC(Real) and z score columns
+cbrB_select = cbrB_summary_df[["Gene Name", "logFC (Real)", "Z score"]]
+crc_select = crc_summary_df[["logFC (Real)", "Z score"]]
+
+print(cbrB_select.shape)
+print(crc_select.shape)
+
+# Merge on gene id
+cbrB_crc_df = cbrB_select.merge(
+    crc_select, left_index=True, right_index=True, suffixes=["_cbrB", "_crc"]
+)
+print(cbrB_crc_df.shape)
+cbrB_crc_df.head()
+
+# Calculate the difference in z score
+cbrB_crc_df["diff z-score (cbrB-crc)"] = (
+    cbrB_crc_df["Z score_cbrB"] - cbrB_crc_df["Z score_crc"]
+)
+cbrB_crc_df.head()
+
+# Label genes in input list
+cbrB_crc_df["gene group"] = "none"
+cbrB_crc_df.loc[argR_genes, "gene group"] = "ArgR genes"
+
+cbrB_crc_df.head()
+
+# +
+# Plot
+h = sns.scatterplot(
+    data=cbrB_crc_df[cbrB_crc_df["gene group"] == "none"],
+    x="logFC (Real)_cbrB",
+    y="diff z-score (cbrB-crc)",
+    hue="gene group",
+    alpha=0.5,
+    palette=["lightgrey"],
+    linewidth=0,
+    legend=False,
+)
+h = sns.scatterplot(
+    data=cbrB_crc_df[cbrB_crc_df["gene group"] == "ArgR genes"],
+    x="logFC (Real)_cbrB",
+    y="diff z-score (cbrB-crc)",
+    hue="gene group",
+    alpha=0.5,
+    palette=["red"],
+    linewidth=0,
+)
+
+# Add traditional thresholds
+h.axhline(0.0, c="black", lw=0.7, ls="--")
+h.axvline(1, c="black", lw=0.7, ls="--")
+h.axvline(-1, c="black", lw=0.7, ls="--")
+
+# Move location of legend
+plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.0)
+
+h.set_xlabel(r"log$_{2}$ Fold Change", fontsize=14, fontname="Verdana")
+h.set_ylabel("cbrB z-score - crc z-score", fontsize=14, fontname="Verdana")
+# -
+
+# Save
+h.figure.savefig(
+    "cbrB_crc_zscore_compare.svg",
+    format="svg",
+    bbox_inches="tight",
+    transparent=True,
+    pad_inches=0,
+    dpi=300,
+)
