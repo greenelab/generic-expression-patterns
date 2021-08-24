@@ -25,7 +25,9 @@ import os
 from scipy import stats
 import seaborn as sns
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 from ponyo import utils
 
 # +
@@ -78,14 +80,33 @@ gene_ranking_summary1_run2 = pd.read_csv(
     gene_ranking_filename1_run2, sep="\t", index_col=0, header=0
 )
 
-# +
 # Get simulated ranking
-gene_ranking1 = gene_ranking_summary1["Rank (simulated)"].rename("Rank 1")
-gene_ranking1_run2 = gene_ranking_summary1_run2["Rank (simulated)"].rename("Rank 2")
+gene_ranking1 = (
+    gene_ranking_summary1["Rank (simulated)"].rename("Rank 1").to_frame("Rank 1")
+)
+gene_ranking1_run2 = (
+    gene_ranking_summary1_run2["Rank (simulated)"].rename("Rank 2").to_frame("Rank 2")
+)
+
+# +
+# Scale ranking to percentile (0,100)
+scaler = MinMaxScaler(feature_range=(0, 100))
+
+gene_ranking1["Percentile 1"] = scaler.fit_transform(
+    np.array(gene_ranking1["Rank 1"]).reshape(-1, 1)
+)
+
+gene_ranking1_run2["Percentile 2"] = scaler.fit_transform(
+    np.array(gene_ranking1_run2["Rank 2"]).reshape(-1, 1)
+)
+
+gene_ranking1_run2.head()
+# -
 
 # Combine ranking
-gene_ranking_same_combined = pd.concat([gene_ranking1, gene_ranking1_run2], axis=1)
-# -
+gene_ranking_same_combined = pd.concat(
+    [gene_ranking1["Percentile 1"], gene_ranking1_run2["Percentile 2"]], axis=1
+)
 
 print(gene_ranking_same_combined.shape)
 gene_ranking_same_combined.head()
@@ -96,21 +117,22 @@ gene_ranking_same_combined[pd.isnull(gene_ranking_same_combined).any(axis=1)]
 # +
 # Plot correlation between ranking
 r, p = stats.spearmanr(
-    gene_ranking_same_combined["Rank 1"], gene_ranking_same_combined["Rank 2"]
+    gene_ranking_same_combined["Percentile 1"],
+    gene_ranking_same_combined["Percentile 2"],
 )
 print(r, p)
 
 fig = sns.jointplot(
     data=gene_ranking_same_combined,
-    x="Rank 1",
-    y="Rank 2",
+    x="Percentile 1",
+    y="Percentile 2",
     kind="hex",
     marginal_kws={"color": "white", "edgecolor": "white"},
 )
 
 fig.set_axis_labels(
-    f"Ranking in {project_id1}",
-    f"Ranking in {project_id1} different runs",
+    f"Percentile in {project_id1}",
+    f"Percentile in {project_id1} different runs",
     fontsize=14,
     fontname="Verdana",
 )
@@ -143,14 +165,33 @@ gene_ranking_summary2 = pd.read_csv(
     gene_ranking_filename2, sep="\t", index_col=0, header=0
 )
 
-# +
 # Get simulated ranking
-gene_ranking1 = gene_ranking_summary1["Rank (simulated)"].rename("Rank 1")
-gene_ranking2 = gene_ranking_summary2["Rank (simulated)"].rename("Rank 2")
+gene_ranking1 = (
+    gene_ranking_summary1["Rank (simulated)"].rename("Rank 1").to_frame("Rank 1")
+)
+gene_ranking2 = (
+    gene_ranking_summary2["Rank (simulated)"].rename("Rank 2").to_frame("Rank 2")
+)
+
+# +
+# Scale ranking to percentile (0,100)
+scaler = MinMaxScaler(feature_range=(0, 100))
+
+gene_ranking1["Percentile 1"] = scaler.fit_transform(
+    np.array(gene_ranking1["Rank 1"]).reshape(-1, 1)
+)
+
+gene_ranking2["Percentile 2"] = scaler.fit_transform(
+    np.array(gene_ranking2["Rank 2"]).reshape(-1, 1)
+)
+
+gene_ranking2.head()
+# -
 
 # Combine ranking
-gene_ranking_diff_combined = pd.concat([gene_ranking1, gene_ranking2], axis=1)
-# -
+gene_ranking_diff_combined = pd.concat(
+    [gene_ranking1["Percentile 1"], gene_ranking2["Percentile 2"]], axis=1
+)
 
 print(gene_ranking_diff_combined.shape)
 gene_ranking_diff_combined.head()
@@ -161,21 +202,22 @@ gene_ranking_diff_combined[pd.isnull(gene_ranking_diff_combined).any(axis=1)]
 # +
 # Plot correlation between ranking
 r, p = stats.spearmanr(
-    gene_ranking_diff_combined["Rank 1"], gene_ranking_diff_combined["Rank 2"]
+    gene_ranking_diff_combined["Percentile 1"],
+    gene_ranking_diff_combined["Percentile 2"],
 )
 print(r, p)
 
 fig = sns.jointplot(
     data=gene_ranking_diff_combined,
-    x="Rank 1",
-    y="Rank 2",
+    x="Percentile 1",
+    y="Percentile 2",
     kind="hex",
     marginal_kws={"color": "white", "edgecolor": "white"},
 )
 
 fig.set_axis_labels(
-    f"Ranking in {project_id1}",
-    f"Ranking in {project_id2}",
+    f"Percentile in {project_id1}",
+    f"Percentile in {project_id2}",
     fontsize=14,
     fontname="Verdana",
 )
@@ -211,8 +253,8 @@ template_2 = pd.read_csv(template_filename2, sep="\t", index_col=0, header=0)
 # Get concordance genes
 concordant_genes = list(
     gene_ranking_diff_combined[
-        (gene_ranking_diff_combined["Rank 1"] > 15000)
-        & (gene_ranking_diff_combined["Rank 2"] > 15000)
+        (gene_ranking_diff_combined["Percentile 1"] > 80)
+        & (gene_ranking_diff_combined["Percentile 2"] > 80)
     ].index
 )
 
