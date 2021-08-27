@@ -81,10 +81,23 @@ scaler_filename = params["scaler_filename"]
 # -
 
 # ### Load compendium data
+#
+# [Gemma](https://pavlidislab.github.io/Gemma/) contains nearly 4K expression profiling studies/datasets. The data comes from different platforms, including array and RNA-seq platforms. To enable comparisons across platforms, we perform sequence analysis and gene assignment based on the current genome annotations: https://pubmed.ncbi.nlm.nih.gov/16237126/
+#
+# Data was normalized using RMA, which outputs log2 transformed data: https://pubmed.ncbi.nlm.nih.gov/12925520/. Positive logFC indicate the logarithmic foldness of UPregulation. Negative logFC indicate the logarithmic foldness of DOWNregulation
 
 raw_compendium = pd.read_csv(raw_compendium_filename, sep="\t", header=0, index_col=0)
 print(raw_compendium.shape)
 raw_compendium.head()
+
+# Are there any negative values in the raw downloaded data
+# Expression data was downloaded from GEMMA (https://gemma.msl.ubc.ca/home.html)
+# Description for how the data was processed can be found: https://pavlidislab.github.io/Gemma/curation.html
+# Looks like there are some negative values in the raw downloaded data.
+# Possibly from the log transform
+tmp = raw_compendium[(raw_compendium < 0).any(axis=1)]
+tmp2 = tmp.loc["GSE12108_Biomat_8___BioAssayId=46616Name=SchuS4infectedD8_S4"]
+tmp2[tmp2 < 0]
 
 # ### Process compendium data
 #
@@ -126,12 +139,18 @@ assert processed_compendium.isna().sum().sum() == 0
 
 # +
 # Log transformed the data since the spread is very large
+# If we do not log10 transform the data, the few very samples with very large expression values
+# will be the dominant signal that will drown out the small signals in the data
+# Depending on the biological interest of these large expression signals we can choose to process the
+# data differently. In this case, since we are looking at the data wholistically we will use the
+# log10 transform of the data here.
 processed_compendium_transform = np.log10(processed_compendium)
 
 # Replace -inf (from 0 input) and nans (from negative values) with 0
-# Not sure why there are negative values here.
-# Not sure what batch correction measures were used
-# TO DO: Check Gemma documentation again
+# Negatives probably created from taking the log of very small values
+# Normalization performed using RMA
+# Note: the input data is already log2 transformed from the RMA bioconductor library
+# so using pseudocounts will not work in this case
 processed_compendium_transform = processed_compendium_transform.replace(
     -np.inf, 0.0
 ).replace(np.nan, 0.0)
@@ -176,6 +195,10 @@ normalized_compendium = pd.read_csv(
 )
 
 normalized_compendium.head(10)
+
+# +
+# Check that there are no negative values
+# -
 
 sns.displot(normalized_compendium["AA06"])
 
@@ -238,5 +261,3 @@ for each_dir in output_dirs:
 
 # Train VAE on new compendium data
 train_vae_modules.train_vae(config_filename, normalized_compendium_filename)
-
-
