@@ -149,6 +149,8 @@ processed_compendium_transform = np.log10(processed_compendium)
 # Replace -inf (from 0 input) and nans (from negative values) with 0
 # Negatives probably created from taking the log of very small values
 # Normalization performed using RMA
+# Note: the input data is already log2 transformed from the RMA bioconductor library
+# so using pseudocounts will not work in this case
 processed_compendium_transform = processed_compendium_transform.replace(
     -np.inf, 0.0
 ).replace(np.nan, 0.0)
