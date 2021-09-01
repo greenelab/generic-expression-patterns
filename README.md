@@ -46,12 +46,13 @@ This process is repeated multile times to created multiple simulated experiments
 | [expression_common_vs_other](expression_common_vs_other) | This folder contains an analysis notebook to determine if there are technical reasons that explain why common DEGs are common. Specifically this notebook is comparing the average expression of common genes versus other genes. |
 | [figure_generation](figure_generation) | This folder contains a notebook toi generate figures seen in the manuscript. |
 | [generic_expression_patterns_modules](generic_expression_patterns_modules) | This folder contains supporting functions that other notebooks in this repository will use. |
-| [human_cancer_analysis](human_cancer_analysis) | This folder contains analysis notebooks to validate generic signals using [Powers et. al. dataset](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793), which is composed of experiments testing the response of small molecule treatments in cancer cell lines, to train VAE. |
-| [human_general_analysis](human_general_analysis) | This folder contains analysis notebooks to validate generic signals using [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset, which contains a heterogeneous set of experiments, to train VAE. |
+| [human_cancer_analysis](human_cancer_analysis) | This folder contains analysis notebooks to validate generic signals using [Powers et. al. dataset](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793), which is composed of microarray experiments testing the response of small molecule treatments in human cancer cell lines, to train VAE. |
+| [human_general_analysis](human_general_analysis) | This folder contains analysis notebooks to validate generic signals using [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset, which contains a heterogeneous set of human RNA-seq experiments, to train VAE. |
+| [human_general_array_analysis](human_general_array_analysis) | This folder contains analysis notebooks to validate generic signals using [Crow et al](https://www.pnas.org/content/116/13/6491) dataset, which contains a heterogeneous set of human microarray experiments, to train VAE. |
 | [network_analysis](network_analysis) |  This folder contains analysis notebooks to examine the potential role of generic genes by looking at the clustering of generic genes within network communities.|
 | [new_experiment](new_experiment) |  This folder contains analysis notebooks to identify specific and generic signals using a new experiment and an existing VAE model|
 | [other_enrichment_methods](other_enrichment_methods) |  This folder contains analysis notebooks to apply different gene set enrichment methods. The default method used is GSEA.|
-| [pseudomonas_analysis](pseudomonas_analysis) |  This folder contains analysis notebooks to identify specific and generic signals using *P. aeruginosa* dataset to train VAE |
+| [pseudomonas_analysis](pseudomonas_analysis) |  This folder contains analysis notebooks to identify specific and generic signals using *P. aeruginosa* microarray dataset to train VAE |
 | [tests](tests) |  This folder contains notebooks to test the code in this repository. These notebooks run a small dataset across the analysis notebooks found in the `human_general_analysis` directory. |
 
 
