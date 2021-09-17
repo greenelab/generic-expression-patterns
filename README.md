@@ -24,15 +24,14 @@ For more details about the analysis, see our preprint on bioRxiv. The paper shou
 
 ## SOPHIE
 
-This method was named after one of the main characters from Hayao Miyazaki's animated film [Howl’s moving castle](https://en.wikipedia.org/wiki/Howl%27s_Moving_Castle_(film)).
+This approach was named after one of the main characters from Hayao Miyazaki's animated film [Howl’s moving castle](https://en.wikipedia.org/wiki/Howl%27s_Moving_Castle_(film)).
 Sophie’s outwardly appearance as an old woman despite being a young woman that has been cursed, demonstrates that the most obvious thing you see isn't always the truth.
 This is the idea behind our approach, which allows users to identify specific gene expression signatures that can be masked by generic background patterns.
 
-SOPHIE trains a a multi-layer variational autoencoder (VAE) on gene expression compendium.
-Then new experiments are simulated by linearly shifting the selected template experiment (i.e. real experiment selected from the training compendium or externally) to a new location in the latent space.
-This new location is a randomly sampled from the distribution of the low dimensional representation of the trained gene expression compendium.
-The vector that connects the template experiment and the new location is added to the template experiment to create a new simulated experiment.
-This process is repeated multile times to created multiple simulated experiments based on the single template experiment.
+SOPHIE applies [ponyo](https://github.com/greenelab/ponyo) to simulate gene expression experiments to use as a background set.
+Then SOPHIE calculates differential expression statistics for each experiment in the background set.
+The distribution of the log2 fold change of each gene across the simulated experiments can be used as a null to compare how changed a gene is in our target experiment of interest.
+This approach allows investigators to distinguish common DEGs from context specific ones in their results.
 
 
 ## Directory Structure
