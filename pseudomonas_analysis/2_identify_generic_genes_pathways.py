@@ -299,7 +299,7 @@ shared_ranking.head()
 
 # Hypergeometric test:
 #
-# Given N number of genes with K common genes in GAPE. SOPHIE identifies n genes as being common. What is the probability that k of the genes identified by SOPHIE are also common in GAPE? What is the probability of drawing k or more concordant genes?
+# Given $N$ number of genes with $K$ common genes in GAPE. SOPHIE identifies $n$ genes as being common. What is the probability that $k$ of the genes identified by SOPHIE are also common in GAPE? What is the probability of drawing $k$ or more concordant genes?
 #
 # This was a way for us to quantify the correlation between SOPHIE and GAPE common findings, since the correlation coefficient wasn't very convincing since we're considering all genes in addition to the common ones
 
