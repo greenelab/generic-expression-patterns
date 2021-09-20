@@ -24,27 +24,26 @@ For more details about the analysis, see our preprint on bioRxiv. The paper shou
 
 ## SOPHIE
 
-This method was named after one of the main characters from Hayao Miyazaki's animated film [Howl’s moving castle](https://en.wikipedia.org/wiki/Howl%27s_Moving_Castle_(film)).
+This approach was named after one of the main characters from Hayao Miyazaki's animated film [Howl’s moving castle](https://en.wikipedia.org/wiki/Howl%27s_Moving_Castle_(film)).
 Sophie’s outwardly appearance as an old woman despite being a young woman that has been cursed, demonstrates that the most obvious thing you see isn't always the truth.
 This is the idea behind our approach, which allows users to identify specific gene expression signatures that can be masked by generic background patterns.
 
-SOPHIE trains a a multi-layer variational autoencoder (VAE) on gene expression compendium.
-Then new experiments are simulated by linearly shifting the selected template experiment (i.e. real experiment selected from the training compendium or externally) to a new location in the latent space.
-This new location is a randomly sampled from the distribution of the low dimensional representation of the trained gene expression compendium.
-The vector that connects the template experiment and the new location is added to the template experiment to create a new simulated experiment.
-This process is repeated multile times to created multiple simulated experiments based on the single template experiment.
+SOPHIE applies [ponyo](https://github.com/greenelab/ponyo) to simulate gene expression experiments to use as a background set.
+Then SOPHIE calculates differential expression statistics for each experiment in the background set.
+The distribution of the log2 fold change of each gene across the simulated experiments can be used as a null to compare how changed a gene is in our target experiment of interest.
+This approach allows investigators to distinguish common DEGs from context specific ones in their results.
 
 
 ## Directory Structure
 | Folder | Description |
 | --- | --- |
 | [LV_analysis](LV_analysis) | This folder contains analysis notebooks to examine the potential role of generic genes by looking at the coverage of generic genes across [PLIER latent variables](https://www.cell.com/cell-systems/pdfExtended/S2405-4712\(19\)30119-X)) or [eADAGE latent variables](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5532071/), which are associated with known biological pathways.|
-| [compare_experiments](compare_experiments) | This folder analysis notebooks to compare multiple SOPHIE results using the same template experiment and different template experiments. This analysis tests the robustness of SOPHIE results. |
+| [compare_experiments](compare_experiments) | This folder contains analysis notebooks to compare multiple SOPHIE results using the same template experiment and different template experiments. This analysis tests the robustness of SOPHIE results. |
 | [configs](configs) | This folder contains configuration files used to set hyperparameters for the different experiments |
 | [explore_RNAseq_only_generic_genes](explore_RNAseq_only_generic_genes) | This folder contains analysis notebooks testing different hypotheses to explain the subset of genes found to be generic by SOPHIE trained on RNA-seq data but not found to be generic in the manually curated array dataset. |
 | [explore_data](explore_data) | This folder contains an analysis notebook visualizing the [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset to get a sense for the variation contained.|
 | [expression_common_vs_other](expression_common_vs_other) | This folder contains an analysis notebook to determine if there are technical reasons that explain why common DEGs are common. Specifically this notebook is comparing the average expression of common genes versus other genes. |
-| [figure_generation](figure_generation) | This folder contains a notebook toi generate figures seen in the manuscript. |
+| [figure_generation](figure_generation) | This folder contains a notebook to generate figures seen in the manuscript. |
 | [generic_expression_patterns_modules](generic_expression_patterns_modules) | This folder contains supporting functions that other notebooks in this repository will use. |
 | [human_cancer_analysis](human_cancer_analysis) | This folder contains analysis notebooks to validate generic signals using [Powers et. al. dataset](https://academic.oup.com/bioinformatics/article/34/13/i555/5045793), which is composed of microarray experiments testing the response of small molecule treatments in human cancer cell lines, to train VAE. |
 | [human_general_analysis](human_general_analysis) | This folder contains analysis notebooks to validate generic signals using [recount2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6742427/) dataset, which contains a heterogeneous set of human RNA-seq experiments, to train VAE. |

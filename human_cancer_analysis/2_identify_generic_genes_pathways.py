@@ -502,7 +502,7 @@ corr, shared_ranking = ranking.compare_gene_ranking(
 
 # Hypergeometric test:
 #
-# Given N number of genes with K common genes in Crow et al. SOPHIE identifies n genes as being common. What is the probability that k of the genes identified by SOPHIE are also common in Crow et al.? What is the probability of drawing k or more concordant genes?
+# Given $N$ number of genes with $K$ common genes in Crow et al. SOPHIE identifies $n$ genes as being common. What is the probability that $k$ of the genes identified by SOPHIE are also common in Crow et al.? What is the probability of drawing $k$ or more concordant genes?
 #
 # This was a way for us to quantify the correlation between SOPHIE and Crow et al common findings, since the correlation coefficient wasn't very convincing since we're considering all genes in addition to the common ones
 
@@ -530,9 +530,8 @@ p = ss.hypergeom.sf(
 print(p)
 
 # **Takeaway:**
-# * Previously we compared gene ranks obtained from (recount2)-trained VAE model vs gene ranks obtained from manual curation using Crow et. al data. This [PR](https://github.com/ajlee21/generic-expression-patterns/blob/807377d76f63b6282c62255d7b160feb8585e0e2/human_analysis/2_identify_generic_genes_pathways.ipynb) shows that the correlation of gene ranks are very consistent.
-#
-# * Here we are comparing gene ranks obtained from a (Powers et. al.)-trained VAE model vs gene ranks obtained from manual curation using Crow et. al. Based on this correlation plot there is a high correlation between those very high and low ranked genes -- high correlation at the extremes but there is a lot of noise in the middle.
+# * Here we are comparing gene percentiles obtained from a SOPHIE trained on Powers et al. vs gene percentiles obtained from manual curation using Crow et al. The plot shows that there is a high correlation between those very high and low ranked genes -- high correlation at the extremes but there is a lot of noise in the middle.
+# * While the two datasets used the same array platform to generate data, the datasets have different compositions – Crow et al. is a heterogenous mixture of different types of experiments while Power et al. is specifically cancer cell lines treated with small molecules. The consistency we observe in the common DEGs despite the differences in context demonstrates that many common DEGs are differentially expressed regardless of the context.
 
 # ### GSEA
 # **Goal:** To detect modest but coordinated changes in prespecified sets of related genes (i.e. those genes in the same pathway or share the same GO term).
@@ -700,18 +699,7 @@ ranking.compare_pathway_ranking(
 )
 # -
 
+# **Takeaway:**
 # * Our method ranked pathways using median adjusted p-value score across simulated experiments.
 # * Powers et. al. ranked pathways based on the fraction of experiments they had adjusted p-value < 0.05.
-#
-# **Takeaway:**
-# * Previously we compared pathway ranks obtained from (recount2)-trained VAE model vs pathway ranking based on manual curation using Powers et. al. This [PR](https://github.com/ajlee21/generic-expression-patterns/blob/807377d76f63b6282c62255d7b160feb8585e0e2/human_analysis/2_identify_generic_genes_pathways.ipynb) shows that there was no correlation.
-#
-# * Here we validated that our analysis pipeline is working correctly by comparing pathway ranks obtained from a (Powers et. al.)-trained VAE model vs pathway ranking based on manual curation using Powers et. al datasets. We expect to see a high correlation between pathway ranks given that we are using the same training dataset. Indeed that is what we find
-
-# **Conclusion:**
-#
-# * We find relatively similar generic genes using our simulation approach (i.e. VAE model trained on a cancer-specific dataset, Powers et. al.) compared to generic genes found from real general experiments from Crow et. al. These generic genes are not *that* context-specific at the extremes.
-#
-# * We found very different generic pathways training using our simulation approach trained on a general dataset (recount2) compared to generic pathways found from real cancer-specific experiments from Powers et. al. See [analysis](../human_general_analysis/2_identify_generic_genes_pathways.ipynb). But we get very similar generic pathways using our simulation approach trained on a cancer-specific dataset (Powers et. al.) compared with generic pathways found from cancer-specific dataset (Powers et. al.). This indicates that generic pathways are more context specific.
-#
-# * Why would the context matter more for pathways as opposed to genes? One way to think about this is using this figure from a recent [preprint](https://www.biorxiv.org/content/10.1101/2020.07.30.228296v1).Information flows from a stimulation that activates proteins within pathways and these proteins regulate gene expression. Say we have a context specific signal, that changes the TF within some pathways, this eventually trickles down to changes in gene expression. So if we think about flow of information, measuring pathway activity (or pathway enrichment, etc) will be more sensitive to our context compared to measuring DE in individual genes. Since the genes are regulated as a group, you'd see coordinated changes in expression that are correlated with your condition but looking at the expression of individual genes you wouldn’t necessarily see this correlation with condition.
+# * Here we validated that our analysis pipeline is working correctly by comparing pathway ranks obtained from a (Powers et. al.)-trained VAE model vs pathway ranking based on manual curation using Powers et. al datasets. We expect to see a high correlation between pathway ranks given that we are using the same training dataset. Indeed that is what we find.

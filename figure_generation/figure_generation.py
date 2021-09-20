@@ -55,39 +55,31 @@ def make_figure_panel(filename, scale_x_input, scale_y_input, x_loc, y_loc):
 # ## Figure 1
 
 # Create panels for figure 1
-# This panel was made in google slides and exported from inkscape
+# Note panel 1A was made in google slides and exported from inkscape
 panel_1a = make_figure_panel(
-    "Fig-1 Overall workflow.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
+    "Fig-1A-SOPHIE workflow.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
 panel_1b = make_figure_panel(
-    "Fig-2A-genes workflow.svg",
-    scale_x_input=2.5,
-    scale_y_input=2.5,
-    x_loc=30,
-    y_loc=550,
-)
-panel_1c = make_figure_panel(
     "../human_general_array_analysis/gene_ranking_logFC.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
-    x_loc=600,
-    y_loc=550,
+    x_loc=30,
+    y_loc=500,
 )
 
 panel_1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_1b_label = sg.TextElement(10, 550, "B", size=18, weight="bold", font="Verdana")
-panel_1c_label = sg.TextElement(600, 550, "C", size=18, weight="bold", font="Verdana")
+panel_1b_label = sg.TextElement(10, 500, "B", size=18, weight="bold", font="Verdana")
 
-figure_1 = sg.SVGFigure("900", "1000")
+figure_1 = sg.SVGFigure("900", "900")
 figure_1.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
         panel_1a,
         panel_1b,
-        panel_1c,
+        # panel_1c,
         panel_1a_label,
         panel_1b_label,
-        panel_1c_label,
+        # panel_1c_label,
     ]
 )
 display(SVG(figure_1.to_str()))
@@ -164,37 +156,33 @@ figure_2.save("output/figure_2.svg")
 # ## Figure 3
 
 # Create panels for figure 3
-# Note: panel A, C was created in google slides and then exported from inkscape
+# Note: panel 3B was created in google slides and then exported from inkscape
 panel_3a = make_figure_panel(
-    "Fig-4A-pathway workflow .svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
-)
-panel_3b = make_figure_panel(
     "../human_cancer_analysis/pathway_ranking_padj.svg",
     scale_x_input=1,
     scale_y_input=1,
-    x_loc=900,
-    y_loc=30,
+    x_loc=30,
+    y_loc=10,
 )
-panel_3c = make_figure_panel(
+panel_3b = make_figure_panel(
     "Fig-4C-extendable workflow.svg",
     scale_x_input=3,
     scale_y_input=3,
     x_loc=30,
-    y_loc=600,
+    y_loc=300,
 )
-panel_3d = make_figure_panel(
+panel_3c = make_figure_panel(
     "../other_enrichment_methods/enrichment_corr_plot.svg",
     scale_x_input=1.5,
     scale_y_input=1.5,
     x_loc=750,
-    y_loc=600,
+    y_loc=300,
 )
 
 
 panel_3a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_3b_label = sg.TextElement(900, 20, "B", size=18, weight="bold", font="Verdana")
-panel_3c_label = sg.TextElement(10, 600, "C", size=18, weight="bold", font="Verdana")
-panel_3d_label = sg.TextElement(700, 600, "D", size=18, weight="bold", font="Verdana")
+panel_3b_label = sg.TextElement(10, 300, "B", size=18, weight="bold", font="Verdana")
+panel_3c_label = sg.TextElement(700, 300, "C", size=18, weight="bold", font="Verdana")
 
 figure_3 = sg.SVGFigure("1500", "1200")
 figure_3.append(
@@ -203,11 +191,11 @@ figure_3.append(
         panel_3a,
         panel_3b,
         panel_3c,
-        panel_3d,
+        # panel_3d,
         panel_3a_label,
         panel_3b_label,
         panel_3c_label,
-        panel_3d_label,
+        # panel_3d_label,
     ]
 )
 display(SVG(figure_3.to_str()))
@@ -427,62 +415,6 @@ display(SVG(figure_S2.to_str()))
 
 # save generated SVG files
 figure_S2.save("output/figure_S2.svg")
-
-# ## Supplement 3
-
-# Create panels for Supplement 3
-panel_S3a = make_figure_panel(
-    "../human_general_analysis/gene_ranking_log2FoldChange.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=30,
-    y_loc=20,
-)
-panel_S3b = make_figure_panel(
-    "../human_cancer_analysis/gene_ranking_logFC.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=400,
-    y_loc=10,
-)
-panel_S3c = make_figure_panel(
-    "../human_general_analysis/pathway_ranking_padj.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=30,
-    y_loc=400,
-)
-panel_S3d = make_figure_panel(
-    "../human_cancer_analysis/pathway_ranking_padj.svg",
-    scale_x_input=0.8,
-    scale_y_input=0.8,
-    x_loc=400,
-    y_loc=400,
-)
-
-panel_S3a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_S3b_label = sg.TextElement(400, 20, "B", size=18, weight="bold", font="Verdana")
-panel_S3c_label = sg.TextElement(10, 400, "C", size=18, weight="bold", font="Verdana")
-panel_S3d_label = sg.TextElement(400, 400, "D", size=18, weight="bold", font="Verdana")
-
-figure_S3 = sg.SVGFigure("800", "800")
-figure_S3.append(
-    [
-        etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
-        panel_S3a,
-        panel_S3b,
-        panel_S3c,
-        panel_S3d,
-        panel_S3a_label,
-        panel_S3b_label,
-        panel_S3c_label,
-        panel_S3d_label,
-    ]
-)
-display(SVG(figure_S3.to_str()))
-
-# save generated SVG files
-figure_S3.save("output/figure_S3.svg")
 
 # ## Output png version
 
