@@ -64,13 +64,13 @@ panel_1b = make_figure_panel(
     scale_x_input=0.8,
     scale_y_input=0.8,
     x_loc=30,
-    y_loc=550,
+    y_loc=500,
 )
 
 panel_1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_1b_label = sg.TextElement(10, 550, "B", size=18, weight="bold", font="Verdana")
+panel_1b_label = sg.TextElement(10, 500, "B", size=18, weight="bold", font="Verdana")
 
-figure_1 = sg.SVGFigure("900", "1000")
+figure_1 = sg.SVGFigure("900", "900")
 figure_1.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
