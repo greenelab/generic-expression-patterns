@@ -237,7 +237,7 @@ cbrB_crc_df.head()
 
 # Label genes in input list
 cbrB_crc_df["gene group"] = "none"
-cbrB_crc_df.loc[argR_genes, "gene group"] = "ArgR genes"
+cbrB_crc_df.loc[argR_genes, "gene group"] = "argA aotJQMP genes"
 
 cbrB_crc_df.head()
 
@@ -254,13 +254,46 @@ h = sns.scatterplot(
     legend=False,
 )
 h = sns.scatterplot(
-    data=cbrB_crc_df[cbrB_crc_df["gene group"] == "ArgR genes"],
+    data=cbrB_crc_df[cbrB_crc_df["gene group"] == "argA aotJQMP genes"],
     x="logFC (Real)_cbrB",
     y="diff z-score (cbrB-crc)",
     hue="gene group",
     alpha=0.5,
     palette=["red"],
     linewidth=0,
+)
+
+# Highlight specific genes mentioned in the paper (cbrB, crc, argA, aotJQMP)
+h = sns.scatterplot(
+    data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "cbrB"],
+    x="logFC (Real)_cbrB",
+    y="diff z-score (cbrB-crc)",
+    hue="gene group",
+    alpha=1,
+    palette=["#f2b4b4"],
+    linewidth=0,
+)
+h = sns.scatterplot(
+    data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "crc"],
+    x="logFC (Real)_cbrB",
+    y="diff z-score (cbrB-crc)",
+    hue="gene group",
+    alpha=1,
+    palette=["#facf5a"],
+    linewidth=0,
+)
+
+# Add text labels for those genes mentioned above
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "cbrB", "logFC (Real)_cbrB"] + 0.1,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "cbrB", "diff z-score (cbrB-crc)"]
+    - 2,
+    s="$cbrB$",
+)
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "crc", "logFC (Real)_cbrB"] + 0.1,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "crc", "diff z-score (cbrB-crc)"] - 1,
+    s="$crc$",
 )
 
 # Add traditional thresholds
@@ -273,11 +306,121 @@ plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.0)
 
 h.set_xlabel(r"log$_{2}$ Fold Change", fontsize=14, fontname="Verdana")
 h.set_ylabel("cbrB z-score - crc z-score", fontsize=14, fontname="Verdana")
+
+# TO DO
+# Verify arg genes to highlight
+# Fix legend
 # -
 
 # Save
 h.figure.savefig(
     "cbrB_crc_zscore_compare.svg",
+    format="svg",
+    bbox_inches="tight",
+    transparent=True,
+    pad_inches=0,
+    dpi=300,
+)
+
+# ## Volcano plot with genes colored by z-score
+
+# +
+# Read template DE stats
+template_summary_filename = os.path.join(
+    base_dir, dataset_name, f"generic_gene_summary_{project_id}_cbrB_v_WT.tsv"
+)
+template_summary_df = pd.read_csv(
+    template_summary_filename, sep="\t", index_col=0, header=0
+)
+
+# Take -log10 of adjusted p-value
+template_summary_df["padj_log10"] = -np.log10(template_summary_df["Adj P-value (Real)"])
+
+# Plot
+f1 = sns.scatterplot(
+    data=template_summary_df,
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    palette="rocket_r",
+    linewidth=0,
+    legend=False,
+)
+
+# Add traditional thresholds
+f1.axhline(-np.log10(0.05), c="black", lw=0.7, ls="--")
+f1.axvline(1, c="black", lw=0.7, ls="--")
+f1.axvline(-1, c="black", lw=0.7, ls="--")
+
+f1.set_ylabel(r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana")
+f1.set_title("$cbrB$ vs WT", fontsize=14, fontname="Verdana")
+
+norm = plt.Normalize(
+    template_summary_df["Z score"].min(), template_summary_df["Z score"].max()
+)
+sm = plt.cm.ScalarMappable(cmap="rocket_r", norm=norm)
+sm.set_array([])
+cb = f1.figure.colorbar(sm)
+
+cb.ax.tick_params(labelsize=10)
+cb.set_label(label="z-score", size=12, fontname="Verdana")
+
+# +
+# Read template DE stats
+template_summary_filename = os.path.join(
+    base_dir, dataset_name, f"generic_gene_summary_{project_id}_crc_v_WT.tsv"
+)
+template_summary_df = pd.read_csv(
+    template_summary_filename, sep="\t", index_col=0, header=0
+)
+
+# Take -log10 of adjusted p-value
+template_summary_df["padj_log10"] = -np.log10(template_summary_df["Adj P-value (Real)"])
+
+# Plot
+f2 = sns.scatterplot(
+    data=template_summary_df,
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    palette="rocket_r",
+    linewidth=0,
+    legend=False,
+)
+
+# Add traditional thresholds
+f2.axhline(-np.log10(0.05), c="black", lw=0.7, ls="--")
+f2.axvline(1, c="black", lw=0.7, ls="--")
+f2.axvline(-1, c="black", lw=0.7, ls="--")
+
+f2.set_ylabel(r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana")
+f2.set_title("$crc$ vs WT", fontsize=14, fontname="Verdana")
+
+norm = plt.Normalize(
+    template_summary_df["Z score"].min(), template_summary_df["Z score"].max()
+)
+sm = plt.cm.ScalarMappable(cmap="rocket_r", norm=norm)
+sm.set_array([])
+cb = f2.figure.colorbar(sm)
+
+cb.ax.tick_params(labelsize=10)
+cb.set_label(label="z-score", size=12, fontname="Verdana")
+# -
+
+# Save
+f1.figure.savefig(
+    "cbrB_volcano_zscore_highlight.svg",
+    format="svg",
+    bbox_inches="tight",
+    transparent=True,
+    pad_inches=0,
+    dpi=300,
+)
+# Save
+f2.figure.savefig(
+    "crc_volcano_zscore_highlight.svg",
     format="svg",
     bbox_inches="tight",
     transparent=True,
