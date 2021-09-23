@@ -237,7 +237,9 @@ cbrB_crc_df.head()
 
 # Label genes in input list
 cbrB_crc_df["gene group"] = "none"
-cbrB_crc_df.loc[argR_genes, "gene group"] = "argA aotJQMP genes"
+cbrB_crc_df.loc[argR_genes, "gene group"] = "genes involved in argA and aotJQMP"
+cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "cbrB", "gene group"] = "cbrB"
+cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "crc", "gene group"] = "crc"
 
 cbrB_crc_df.head()
 
@@ -254,7 +256,7 @@ h = sns.scatterplot(
     legend=False,
 )
 h = sns.scatterplot(
-    data=cbrB_crc_df[cbrB_crc_df["gene group"] == "argA aotJQMP genes"],
+    data=cbrB_crc_df[cbrB_crc_df["gene group"] == "genes involved in argA and aotJQMP"],
     x="logFC (Real)_cbrB",
     y="diff z-score (cbrB-crc)",
     hue="gene group",
