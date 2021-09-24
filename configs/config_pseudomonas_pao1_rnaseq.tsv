@@ -6,11 +6,12 @@ processed_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression
 normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/normalized_pao1_rnaseq_compendium.tsv"
 shared_genes_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/shared_genes_pao1_rnaseq.pickle"
 scaler_filename	"data/scaler_transform_pao1_rnaseq.pickle"
-rank_genes_by	"logFC"
-DE_logFC_name	"logFC"
-DE_pvalue_name	"adj.P.Val"
-gsea_statistic	'log2FoldChange'
-rank_pathways_by	"padj"
+rank_genes_by	"log2FoldChange"
+DE_logFC_name	"log2FoldChange"
+DE_pvalue_name	"padj"
+reference_gene_filename	"../pseudomonas_analysis/GAPE_proportions.txt"
+reference_gene_name_col	"gene id"
+reference_rank_col	"prop DEGs"
 NN_architecture	"NN_2500_30_pao1"
 learning_rate	0.001
 batch_size	10
