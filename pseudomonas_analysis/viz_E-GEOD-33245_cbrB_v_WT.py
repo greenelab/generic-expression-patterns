@@ -237,7 +237,7 @@ cbrB_crc_df.head()
 
 # Label genes in input list
 cbrB_crc_df["gene group"] = "none"
-cbrB_crc_df.loc[argR_genes, "gene group"] = "genes involved in argA and aotJQMP"
+cbrB_crc_df.loc[argR_genes, "gene group"] = "ArgR regulon"
 cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "cbrB", "gene group"] = "cbrB"
 cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "crc", "gene group"] = "crc"
 
@@ -256,7 +256,7 @@ h = sns.scatterplot(
     legend=False,
 )
 h = sns.scatterplot(
-    data=cbrB_crc_df[cbrB_crc_df["gene group"] == "genes involved in argA and aotJQMP"],
+    data=cbrB_crc_df[cbrB_crc_df["gene group"] == "ArgR regulon"],
     x="logFC (Real)_cbrB",
     y="diff z-score (cbrB-crc)",
     hue="gene group",
@@ -274,6 +274,7 @@ h = sns.scatterplot(
     alpha=1,
     palette=["#f2b4b4"],
     linewidth=0,
+    legend=False,
 )
 h = sns.scatterplot(
     data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "crc"],
@@ -283,6 +284,62 @@ h = sns.scatterplot(
     alpha=1,
     palette=["#facf5a"],
     linewidth=0,
+    legend=False,
+)
+h = sns.scatterplot(
+    data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "argA"],
+    x="logFC (Real)_cbrB",
+    y="diff z-score (cbrB-crc)",
+    hue="gene group",
+    alpha=0.5,
+    palette=["lightgrey"],
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+h = sns.scatterplot(
+    data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "aotJ"],
+    x="logFC (Real)_cbrB",
+    y="diff z-score (cbrB-crc)",
+    hue="gene group",
+    alpha=0.5,
+    palette=["red"],
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+h = sns.scatterplot(
+    data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "aotQ"],
+    x="logFC (Real)_cbrB",
+    y="diff z-score (cbrB-crc)",
+    hue="gene group",
+    alpha=0.5,
+    palette=["red"],
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+h = sns.scatterplot(
+    data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "aotM"],
+    x="logFC (Real)_cbrB",
+    y="diff z-score (cbrB-crc)",
+    hue="gene group",
+    alpha=0.5,
+    palette=["red"],
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+h = sns.scatterplot(
+    data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "aotP"],
+    x="logFC (Real)_cbrB",
+    y="diff z-score (cbrB-crc)",
+    hue="gene group",
+    alpha=0.5,
+    palette=["red"],
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
 )
 
 # Add text labels for those genes mentioned above
@@ -297,6 +354,35 @@ plt.text(
     y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "crc", "diff z-score (cbrB-crc)"] - 1,
     s="$crc$",
 )
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "argA", "logFC (Real)_cbrB"] + 0.1,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "argA", "diff z-score (cbrB-crc)"],
+    s="$argA$",
+)
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotJ", "logFC (Real)_cbrB"] - 0.4,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotJ", "diff z-score (cbrB-crc)"]
+    + 4,
+    s="$aotJ$",
+)
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotQ", "logFC (Real)_cbrB"] + 0.1,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotQ", "diff z-score (cbrB-crc)"]
+    - 2,
+    s="$aotQ$",
+)
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotM", "logFC (Real)_cbrB"] - 0.1,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotM", "diff z-score (cbrB-crc)"]
+    + 2,
+    s="$aotM$",
+)
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotP", "logFC (Real)_cbrB"] - 0.5,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotP", "diff z-score (cbrB-crc)"]
+    - 6,
+    s="$aotP$",
+)
 
 # Add traditional thresholds
 h.axhline(0.0, c="black", lw=0.7, ls="--")
@@ -308,10 +394,6 @@ plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.0)
 
 h.set_xlabel(r"log$_{2}$ Fold Change", fontsize=14, fontname="Verdana")
 h.set_ylabel("cbrB z-score - crc z-score", fontsize=14, fontname="Verdana")
-
-# TO DO
-# Verify arg genes to highlight
-# Fix legend
 # -
 
 # Save
@@ -350,6 +432,85 @@ f1 = sns.scatterplot(
     legend=False,
 )
 
+# Highlight specific common DEGs mentioned in the text
+f1 = sns.scatterplot(
+    data=template_summary_df[template_summary_df["Gene Name"] == "pqsA"],
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+f1 = sns.scatterplot(
+    data=template_summary_df[template_summary_df["Gene Name"] == "nosZ"],
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+f1 = sns.scatterplot(
+    data=template_summary_df[template_summary_df["Gene Name"] == "pqsE"],
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+f1 = sns.scatterplot(
+    data=template_summary_df[template_summary_df["Gene Name"] == "ccoP2"],
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+
+# Add text labels for those genes mentioned above
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "pqsA", "logFC (Real)"
+    ]
+    - 0.9,
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsA", "padj_log10"]
+    - 0.2,
+    s="$pqsA$",
+)
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "nosZ", "logFC (Real)"
+    ]
+    + 0.2,
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "nosZ", "padj_log10"],
+    s="$nosZ$",
+)
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "pqsE", "logFC (Real)"
+    ]
+    + 0.2,
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsE", "padj_log10"],
+    s="$pqsE$",
+)
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "ccoP2", "logFC (Real)"
+    ]
+    + 0.2,
+    y=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "ccoP2", "padj_log10"
+    ],
+    s="$ccoP2$",
+)
+
 # Add traditional thresholds
 f1.axhline(-np.log10(0.05), c="black", lw=0.7, ls="--")
 f1.axvline(1, c="black", lw=0.7, ls="--")
@@ -367,6 +528,17 @@ cb = f1.figure.colorbar(sm)
 
 cb.ax.tick_params(labelsize=10)
 cb.set_label(label="z-score", size=12, fontname="Verdana")
+# -
+
+# Save
+f1.figure.savefig(
+    "cbrB_volcano_zscore_highlight.svg",
+    format="svg",
+    bbox_inches="tight",
+    transparent=True,
+    pad_inches=0,
+    dpi=300,
+)
 
 # +
 # Read template DE stats
@@ -392,6 +564,85 @@ f2 = sns.scatterplot(
     legend=False,
 )
 
+# Highlight specific common DEGs mentioned in the text
+f1 = sns.scatterplot(
+    data=template_summary_df[template_summary_df["Gene Name"] == "pqsA"],
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+f1 = sns.scatterplot(
+    data=template_summary_df[template_summary_df["Gene Name"] == "nosZ"],
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+f1 = sns.scatterplot(
+    data=template_summary_df[template_summary_df["Gene Name"] == "pqsE"],
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+f1 = sns.scatterplot(
+    data=template_summary_df[template_summary_df["Gene Name"] == "ccoP2"],
+    x="logFC (Real)",
+    y="padj_log10",
+    hue="Z score",
+    alpha=0.5,
+    edgecolor="black",
+    linewidth=1,
+    legend=False,
+)
+
+# Add text labels for those genes mentioned above
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "pqsA", "logFC (Real)"
+    ]
+    - 0.9,
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsA", "padj_log10"]
+    - 0.2,
+    s="$pqsA$",
+)
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "nosZ", "logFC (Real)"
+    ]
+    + 0.2,
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "nosZ", "padj_log10"],
+    s="$nosZ$",
+)
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "pqsE", "logFC (Real)"
+    ],
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsE", "padj_log10"]
+    - 0.3,
+    s="$pqsE$",
+)
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "ccoP2", "logFC (Real)"
+    ]
+    + 0.2,
+    y=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "ccoP2", "padj_log10"
+    ],
+    s="$ccoP2$",
+)
+
 # Add traditional thresholds
 f2.axhline(-np.log10(0.05), c="black", lw=0.7, ls="--")
 f2.axvline(1, c="black", lw=0.7, ls="--")
@@ -411,15 +662,6 @@ cb.ax.tick_params(labelsize=10)
 cb.set_label(label="z-score", size=12, fontname="Verdana")
 # -
 
-# Save
-f1.figure.savefig(
-    "cbrB_volcano_zscore_highlight.svg",
-    format="svg",
-    bbox_inches="tight",
-    transparent=True,
-    pad_inches=0,
-    dpi=300,
-)
 # Save
 f2.figure.savefig(
     "crc_volcano_zscore_highlight.svg",
