@@ -279,55 +279,53 @@ panel_5a = make_figure_panel(
     x_loc=30,
     y_loc=20,
 )
-panel_5b = make_figure_panel(
-    os.path.join(local_directory, "template_zscore_volcano_ArgR_E-GEOD-33245.svg"),
-    scale_x_input=0.8,
-    scale_y_input=0.8,
+panel_5b1 = make_figure_panel(
+    "../pseudomonas_analysis/cbrB_volcano_zscore_highlight.svg",
+    scale_x_input=1,
+    scale_y_input=1,
     x_loc=350,
     y_loc=10,
 )
-panel_5c = make_figure_panel(
-    os.path.join(local_directory, "template_traditional_volcano_ArgR_E-GEOD-33245.svg"),
-    scale_x_input=0.8,
-    scale_y_input=0.8,
+panel_5b2 = make_figure_panel(
+    "../pseudomonas_analysis/crc_volcano_zscore_highlight.svg",
+    scale_x_input=1,
+    scale_y_input=1,
     x_loc=750,
     y_loc=10,
 )
-panel_5d = make_figure_panel(
+panel_5c = make_figure_panel(
     "../pseudomonas_analysis/cbrB_crc_zscore_compare.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
     x_loc=350,
     y_loc=300,
 )
-panel_5e = make_figure_panel(
+panel_5d = make_figure_panel(
     os.path.join(local_directory, "WT-cbrB-EV-comp_10nM_Arg_crc.svg"),
     scale_x_input=2,
     scale_y_input=2,
-    x_loc=750,
+    x_loc=800,
     y_loc=300,
 )
 
 panel_5a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_5b_label = sg.TextElement(350, 20, "B", size=18, weight="bold", font="Verdana")
-panel_5c_label = sg.TextElement(750, 20, "C", size=18, weight="bold", font="Verdana")
-panel_5d_label = sg.TextElement(350, 300, "D", size=18, weight="bold", font="Verdana")
-panel_5e_label = sg.TextElement(750, 300, "E", size=18, weight="bold", font="Verdana")
+panel_5c_label = sg.TextElement(350, 300, "C", size=18, weight="bold", font="Verdana")
+panel_5d_label = sg.TextElement(800, 300, "D", size=18, weight="bold", font="Verdana")
 
 figure_5 = sg.SVGFigure("1200", "800")
 figure_5.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
         panel_5a,
-        panel_5b,
+        panel_5b1,
+        panel_5b2,
         panel_5c,
         panel_5d,
-        panel_5e,
         panel_5a_label,
         panel_5b_label,
         panel_5c_label,
         panel_5d_label,
-        panel_5e_label,
     ]
 )
 display(SVG(figure_5.to_str()))
