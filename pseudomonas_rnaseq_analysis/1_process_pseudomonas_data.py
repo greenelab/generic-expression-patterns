@@ -90,16 +90,6 @@ process.normalize_compendium(
     normalized_compendium_filename,
     scaler_filename,
 )
-"""process.process_raw_compendium_pseudomonas(
-    raw_compendium_filename,
-    processed_compendium_filename,
-    normalized_compendium_filename,
-    scaler_filename,
-)"""
-
-test = pd.read_csv(normalized_compendium_filename, sep="\t", index_col=0, header=0)
-
-test.head()
 
 
 # ## Get raw pseudomonas template experiment
