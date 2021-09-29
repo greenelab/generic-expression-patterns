@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_new] *
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_new-py
 # ---
 
 # # Test: Identify generic human genes on test set
@@ -31,6 +31,7 @@
 # %load_ext autoreload
 # %load_ext rpy2.ipython
 # %autoreload 2
+# %matplotlib inline
 
 import os
 import pandas as pd
@@ -56,6 +57,7 @@ params = utils.read_config(config_filename)
 local_dir = params["local_dir"]
 dataset_name = params["dataset_name"]
 NN_architecture = params["NN_architecture"]
+latent_dim = params["latent_dim"]
 num_runs = params["num_simulated"]
 project_id = params["project_id"]
 metadata_col_id = params["metadata_colname"]
@@ -84,7 +86,7 @@ metadata_filename = os.path.join(
 metadata_simulate_filename = os.path.join(
     base_dir, dataset_name, "data", "metadata", "recount2_metadata.tsv"
 )
-metadata_delimiter = ("\t",)
+metadata_delimiter = "\t"
 experiment_id_colname = "project"
 
 # Load pickled file
