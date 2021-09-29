@@ -104,6 +104,7 @@ os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
 simulate_expression_data.shift_template_experiment(
     normalized_compendium_filename,
     NN_architecture,
+    latent_dim,
     dataset_name,
     scaler,
     metadata_simulate_filename,
