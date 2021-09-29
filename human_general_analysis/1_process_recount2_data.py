@@ -8,7 +8,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression]
 #     language: python
 #     name: conda-env-generic_expression-py
 # ---
