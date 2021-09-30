@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_new] *
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_new-py
 # ---
 
 # # Process pseudomonas data
@@ -76,10 +76,10 @@ normalized_compendium_filename = params["normalized_compendium_filename"]
 # Output file: pickled scaler (generated during compendium normalization)
 scaler_filename = params["scaler_filename"]
 
-# Load metadata file with grouping assignments for samples
-sample_id_metadata_filename = os.path.join(
-    base_dir, dataset_name, "data", "metadata", f"{project_id}_process_samples.tsv"
-)
+# Load metadata file with mapping between experiments and associated samples
+metadata_filename = "data/metadata/SraRunTable.csv"
+metadata_delimiter = ","
+experiment_id_colname = "SRA_study"
 # -
 
 # ### Normalize compendium
@@ -91,101 +91,17 @@ process.normalize_compendium(
     scaler_filename,
 )
 
-
 # ## Get raw pseudomonas template experiment
 
-# +
-# The function to pull out the template experiment from the compendium in this environment's version of ponyo
-# doesn't allow us to pass in a metadata file and instead assumes a fixed set of metadata files.
-# To manually work around this, we will locally define the functions here
-def get_sample_ids_tmp(
-    metadata_filename, delimiter, experiment_colname, experiment_id, sample_id_colname
-):
-    """
-    Returns sample ids (found in gene expression df) associated with
-    a given list of experiment ids (found in the metadata)
-
-    Arguments
-    ----------
-    metadata_filename: str
-        Metadata file path. An example metadata file can be found
-        here: https://github.com/greenelab/ponyo/blob/master/human_tests/data/metadata/recount2_metadata.tsv
-
-    delimiter: str
-        Delimiter for metadata file
-
-    experiment_colname: str
-        Column header that contains the experiment ids
-
-    experiment_id: str
-        Experiment id selected to retrieve sample ids for
-
-    sample_id_colname: str
-        Column header that contains sample id that maps expression data
-        and metadata
-
-    """
-
-    # Read in metadata
-    metadata = pd.read_csv(metadata_filename, header=0, sep=delimiter, index_col=None)
-
-    # Set index column to experiment id column
-    metadata.set_index(experiment_colname, inplace=True)
-
-    # Select samples associated with experiment id
-    selected_metadata = metadata.loc[experiment_id]
-    sample_ids = list(selected_metadata[sample_id_colname])
-
-    return sample_ids
-
-
-def process_raw_template_pseudomonas_tmp(
+process.process_raw_template_pseudomonas(
     processed_compendium_filename,
     project_id,
     metadata_filename,
     metadata_delimiter,
-    experiment_colname,
-    metadata_colname,
-    raw_template_filename,
-):
-    """
-    Create processed pseudomonas template data file based on
-    processed compendium file (`compendium_filename`),
-    drop sample rows if needed, and save updated
-    template data on disk.
-    """
-
-    # Get sample ids associated with selected project id
-    sample_ids = get_sample_ids_tmp(
-        metadata_filename,
-        metadata_delimiter,
-        experiment_colname,
-        project_id,
-        metadata_colname,
-    )
-
-    # Get samples from experiment id
-    processed_compendium = pd.read_csv(
-        processed_compendium_filename, header=0, index_col=0, sep="\t"
-    )
-    template_data = processed_compendium.loc[sample_ids]
-
-    template_data.to_csv(raw_template_filename, sep="\t")
-
-
-# +
-metadata_filename = "data/metadata/SraRunTable.csv"
-
-process_raw_template_pseudomonas_tmp(
-    processed_compendium_filename,
-    project_id,
-    metadata_filename,
-    ",",
-    "SRA_study",
+    experiment_id_colname,
     metadata_colname,
     raw_template_filename,
 )
-# -
 
 test2 = pd.read_csv(raw_template_filename, sep="\t", index_col=0, header=0)
 
