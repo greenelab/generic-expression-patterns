@@ -57,9 +57,11 @@ This approach allows investigators to distinguish common DEGs from context speci
 
 ## Usage
 
-**How to run notebooks from generic-expression-patterns**
+**How to reproduce the results and figures of the paper**
 
 *Operating Systems:* Mac OS, Linux (Note: bioconda libraries not available in Windows)
+*Note: *While the trends will be consistent, you may get slightly different resulting statistics and the plots may not look exactly the same as the paper.
+Despite our best efforts to set seeds and version of python packages there is still some randomness we’re unable to control in the simulation process.
 
 In order to run this simulation on your own gene expression data the following steps should be performed:
 
