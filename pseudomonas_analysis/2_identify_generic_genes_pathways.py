@@ -9,9 +9,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_new] *
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_new-py
 # ---
 
 # # Identify generic genes and pathways
@@ -41,6 +41,7 @@
 # %load_ext autoreload
 # %load_ext rpy2.ipython
 # %autoreload 2
+# %matplotlib inline
 
 import os
 import sys
@@ -73,6 +74,7 @@ params = utils.read_config(config_filename)
 local_dir = params["local_dir"]
 dataset_name = params["dataset_name"]
 NN_architecture = params["NN_architecture"]
+latent_dim = params["latent_dim"]
 num_runs = params["num_simulated"]
 project_id = params["project_id"]
 metadata_col_id = params["metadata_colname"]
@@ -95,6 +97,13 @@ sample_id_metadata_filename = os.path.join(
 metadata_filename = os.path.join(
     base_dir, dataset_name, "data", "metadata", f"{project_id}_groups.tsv"
 )
+
+# Load metadata file with mapping between experiments and associated samples
+metadata_simulate_filename = os.path.join(
+    base_dir, dataset_name, "data", "metadata", "sample_annotations.tsv"
+)
+metadata_delimiter = "\t"
+experiment_id_colname = "experiment"
 
 # Load pickled file
 scaler = pickle.load(open(scaler_filename, "rb"))
@@ -127,18 +136,21 @@ pathway_summary_filename = os.path.join(
 #   - template_normalized_data_SRP012656_test.txt
 # in which "<n>" is an integer in the range of [0, num_runs-1]
 os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
-for run_id in range(num_runs):
-    simulate_expression_data.shift_template_experiment(
-        normalized_compendium_filename,
-        project_id,
-        metadata_col_id,
-        NN_architecture,
-        dataset_name,
-        scaler,
-        local_dir,
-        base_dir,
-        run_id,
-    )
+simulate_expression_data.shift_template_experiment(
+    normalized_compendium_filename,
+    NN_architecture,
+    latent_dim,
+    dataset_name,
+    scaler,
+    metadata_simulate_filename,
+    metadata_delimiter,
+    experiment_id_colname,
+    metadata_col_id,
+    project_id,
+    local_dir,
+    base_dir,
+    num_runs,
+)
 
 # ### Process template and simulated data
 #
