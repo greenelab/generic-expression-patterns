@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ---
 # jupyter:
 #   jupytext:
@@ -13,45 +14,57 @@
 #     name: conda-env-generic_expression_new-py
 # ---
 
-# # Application: new experiment
+# # Identify generic genes and pathways
 #
-# This notebook allows users to find common and specific genes in their experiment of interest using an *existing* VAE model
+# This notebook allows users to find common and specific genes in their experiment of interest using their newly trained VAE model.
 #
 # This notebook will generate a `generic_gene_summary_<experiment id>.tsv` file that contains z-scores per gene that indicates how specific a gene is the experiment in question.
 
+# +
 # %load_ext autoreload
 # %load_ext rpy2.ipython
 # %autoreload 2
+# %matplotlib inline
 
 import os
+import sys
+import glob
 import pandas as pd
-import seaborn as sns
 import numpy as np
-import matplotlib.pyplot as plt
-from ponyo import utils
-from generic_expression_patterns_modules import (
-    process,
-    new_experiment_process,
-    stats,
-    ranking,
-)
+import seaborn as sns
+import pickle
+import scipy.stats as ss
+from keras.models import load_model
+from rpy2.robjects import pandas2ri
+from ponyo import utils, simulate_expression_data
+from generic_expression_patterns_modules import process, stats, ranking
+
+pandas2ri.activate()
+
+np.random.seed(123)
+# -
 
 # ## User inputs needed
 #
-# User needs to define the following in the [config file](../configs/config_new_experiment.tsv):
+# User needs to define the following in the [config file](../configs/config_new_model_experiment.tsv):
 #
 # 1. Directory on your local machine to store intermediate and output data files generated (`local_dir`). Make sure to end with `\`.
 # 2. Template experiment (`raw_template_filename`). This is the experiment you are interested in studying.
-# 3. Training compendium used to train VAE, including unnormalized gene mapped version (`mapped_compendium_filename`) and normalized version (`normalized_compendium_filename`). Links to these datasets can be found in the README.
+# 3. Training compendium used to train VAE, including unnormalized gene mapped version (`mapped_compendium_filename`) and normalized version (`normalized_compendium_filename`). These files should have been generated from the previous notebook.
 # 4. Scaler transform (`scaler_filename`) used to normalize the training compendium. This can be found in the `data/` directory within the analysis folder.
-# 5. Directory (`vae_model_dir`) containing trained VAE model (.h5 files).
-# 6. Size of existing models latent dimension (`latent_dim`).
-# 7. Experiment id (`project_id`) to label newly create simulated experiments.
-# 8. The number of experiments to simulate (`num_simulated`)
-# 9. Minimum average read count to filter data by (`count_threshold`)
-# 10. Name of column header (`rank_genes_by`) from DE association statistic results. This column will be use to rank genes. Select "logFC", "P.Value", "adj.P.Val", "t" if using Limma. Select "log2FoldChange", "pvalue", "padj" if using DESeq.
-# 11. `DE_logFC_name` is either "logFC" (Limma) or "log2FoldChange" (DESeq). This is used for plotting volcano plots.
-# 12. `DE_pvalue_name` is either "adj.P.Val" (Limma) or "padj" (DESeq). This is used for plotting volcano plots.
+# 5. Directory (`vae_model_dir`) containing trained VAE model (.h5 files) from the previous notebook.
+# 6. Size of latent dimension (`latent_dim`).
+# 7. File that maps experiment ids to the associated sample ids (`experiment_to_sample_filename`)
+# 8. The delimiter used in the 'experiment_to_sample_filename' file (`metadata_delimiter`)
+# 9. The column header/name that contains the experiment ids (`experiment_id_colname`)
+# 10. Experiment id (`project_id`) to label newly create simulated experiments.
+# 11. The column header/name in the metadatathat contains the sample ids (`sample_id_colname`)
+# 12. The number of experiments to simulate (`num_simulated`)
+# 13. Differential expression method to use: either 'limma' or 'desesq' (`DE_method`)
+# 14. Minimum average read count to filter data by (`count_threshold`)
+# 15. Name of column header (`rank_genes_by`) from DE association statistic results. This column will be use to rank genes. Select "logFC", "P.Value", "adj.P.Val", "t" if using Limma. Select "log2FoldChange", "pvalue", "padj" if using DESeq.
+# 16. `DE_logFC_name` is either "logFC" (Limma) or "log2FoldChange" (DESeq). This is used for plotting volcano plots.
+# 17. `DE_pvalue_name` is either "adj.P.Val" (Limma) or "padj" (DESeq). This is used for plotting volcano plots.
 #
 # The remaining parameters within the `config` file specify filenames that are intermediate data files that will be generated when SOPHIE runs.
 #
@@ -66,136 +79,99 @@ from generic_expression_patterns_modules import (
 base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 config_filename = os.path.abspath(
-    os.path.join(base_dir, "configs", "config_new_experiment.tsv")
+    os.path.join(base_dir, "configs", "config_new_model_experiment.tsv")
 )
-
 params = utils.read_config(config_filename)
 
 # +
-# Load config params
-
-# Local directory to store intermediate files
+# Load params
 local_dir = params["local_dir"]
-
-# Number of simulated experiments to generate
-num_runs = params["num_simulated"]
-
-# Directory containing trained VAE model
-vae_model_dir = params["vae_model_dir"]
-
-# Dimension of latent space used in VAE model
+dataset_name = params["dataset_name"]
+NN_architecture = params["NN_architecture"]
 latent_dim = params["latent_dim"]
-
-# ID for template experiment
-# This ID will be used to label new simulated experiments
+num_runs = params["num_simulated"]
+metadata_simulate_filename = params["experiment_to_sample_filename"]
+metadata_delimiter = params["metadata_delimiter"]
+experiment_id_colname = params["experiment_id_colname"]
 project_id = params["project_id"]
-
-# Template experiment filename
-template_filename = params["raw_template_filename"]
-mapped_template_filename = params["mapped_template_filename"]
-normalized_template_filename = params["normalized_template_filename"]
+metadata_col_id = params["sample_id_colname"]
+raw_template_filename = params["raw_template_filename"]
 processed_template_filename = params["processed_template_filename"]
-
-# Training dataset used for existing VAE model
-mapped_compendium_filename = params["mapped_compendium_filename"]
-
-# Normalized compendium filename
 normalized_compendium_filename = params["normalized_compendium_filename"]
-
-# Scaler transform used to scale compendium data into 0-1 range for training
 scaler_filename = params["scaler_filename"]
-
-# Test statistic used to rank genes by
+method = params["DE_method"]
 col_to_rank_genes = params["rank_genes_by"]
-
-# Minimum mean count per gene
-count_threshold = params["count_threshold"]
-
-# Column headers to use to make summary statistic table
 logFC_name = params["DE_logFC_name"]
 pvalue_name = params["DE_pvalue_name"]
 
-# Pathway DB
-pathway_DB_filename = params["pathway_DB_filename"]
-
-# +
-# Load metadata files
-
-# Load metadata file with processing information
+# Load metadata file with grouping assignments for samples
 sample_id_metadata_filename = os.path.join(
-    "data", "metadata", f"{project_id}_process_samples.tsv"
+    base_dir, dataset_name, "data", "metadata", f"{project_id}_process_samples.tsv"
 )
 
 # Load metadata file with grouping assignments for samples
-metadata_filename = os.path.join("data", "metadata", f"{project_id}_groups.tsv")
-# -
-
-# Output filename
-gene_summary_filename = f"generic_gene_summary_{project_id}.tsv"
-
-# ## Map template experiment to same feature space as training compendium
-#
-# In order to simulate a new gene expression experiment, we will need to encode this experiment into the learned latent space. This requires that the feature space (i.e. genes) in the template experiment match the features in the compendium used to train the VAE model. These cells process the template experiment to be of the expected input format:
-# * Template data is expected to be a matrix that is sample x gene
-# * Template experiment is expected to have the same genes as the compendium experiment. Genes that are in the template experiment but not in the compendium are removed. Genes that are in the compendium but missing in the template experiment are added and the gene expression value is set to the median gene expression value of that gene across the samples in the compendium.
-
-# +
-# Template experiment needs to be of the form sample x gene
-template_filename_only = template_filename.split("/")[-1].split(".")[0]
-transposed_template_filename = os.path.join(
-    local_dir, template_filename_only + "_transposed.txt"
+metadata_filename = os.path.join(
+    base_dir, dataset_name, "data", "metadata", f"{project_id}_groups.tsv"
 )
 
-new_experiment_process.transpose_save(template_filename, transposed_template_filename)
+# Load pickled file
+scaler = pickle.load(open(scaler_filename, "rb"))
+
+# Percentile threshold to identify generic genes
+percentile_threshold = 80.0
 # -
 
-new_experiment_process.process_template_experiment(
-    transposed_template_filename,
-    mapped_compendium_filename,
-    scaler_filename,
-    mapped_template_filename,
-    normalized_template_filename,
+# Output files
+gene_summary_filename = os.path.join(
+    base_dir, dataset_name, f"generic_gene_summary_{project_id}.tsv"
 )
 
-# ## Simulate experiments based on template experiment
+# ## Simulate experiments using selected template experiment
+# Workflow:
 #
-# Embed template experiment into learned latent space and linearly shift template experiment to different locations of the latent space to create new experiments
+# 1. Get the gene expression data for the selected template experiment
+# 2. Encode this experiment into a latent space using the trained VAE model
+# 3. Linearly shift the encoded template experiment in the latent space
+# 4. Decode the samples. This results in a new experiment
+# 5. Repeat steps 1-4 to get multiple simulated experiments
 
+# Simulate multiple experiments
+# This step creates the following files in "<local_dir>/pseudo_experiment/" directory:
+#   - selected_simulated_data_SRP012656_<n>.txt
+#   - selected_simulated_encoded_data_SRP012656_<n>.txt
+#   - template_normalized_data_SRP012656_test.txt
+# in which "<n>" is an integer in the range of [0, num_runs-1]
 os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
+simulate_expression_data.shift_template_experiment(
+    normalized_compendium_filename,
+    NN_architecture,
+    latent_dim,
+    dataset_name,
+    scaler,
+    metadata_simulate_filename,
+    metadata_delimiter,
+    experiment_id_colname,
+    metadata_col_id,
+    project_id,
+    local_dir,
+    base_dir,
+    num_runs,
+)
 
 # +
-# Simulate experiments based on template experiment
-normalized_compendium_data = pd.read_csv(
-    normalized_compendium_filename, sep="\t", index_col=0, header=0
-)
-normalized_template_data = pd.read_csv(
-    normalized_template_filename, sep="\t", index_col=0, header=0
+simulated_filename = os.path.join(
+    local_dir, "pseudo_experiment", f"selected_simulated_data_{project_id}_1.txt"
 )
 
-for run_id in range(num_runs):
-    new_experiment_process.embed_shift_template_experiment(
-        normalized_compendium_data,
-        normalized_template_data,
-        vae_model_dir,
-        project_id,
-        scaler_filename,
-        local_dir,
-        latent_dim,
-        run_id,
-    )
+test = pd.read_csv(simulated_filename, sep="\t", index_col=0, header=0)
 # -
 
-# ## Process template and simulated experiments
-#
-# * Remove samples not required for comparison
-# * Make sure ordering of samples matches metadata for proper comparison
-# * Make sure values are cast as integers if using DESeq
-# * Filter lowly expressed genes if using DESeq
+test.head()
 
-if "human_general_analysis" in vae_model_dir:
-    method = "deseq"
-else:
-    method = "limma"
+# ## Process template and simulated data
+#
+# * Remove samples not required for comparison.
+# * Make sure ordering of samples matches metadata for proper comparison
 
 # +
 if not os.path.exists(sample_id_metadata_filename):
@@ -251,9 +227,6 @@ else:
 # -
 
 # ## Differential expression analysis
-#
-# * If data is RNA-seq then use DESeq2 (using human_general_analysis model)
-# * If data is microarray then use Limma (using human_cancer_analysis, pseudomonas_analysis models)
 
 # Create subdirectory: "<local_dir>/DE_stats/"
 os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
@@ -323,15 +296,12 @@ os.makedirs(os.path.join(local_dir, "DE_stats"), exist_ok=True)
 # -
 
 # ## Rank genes
-#
-# Genes are ranked by their "generic-ness" - how frequently these genes are changed across the simulated experiments using user-specific test statistic provided in the `col_to_rank_genes` params (i.e. log2 fold change).
+# Genes are ranked by their "generic-ness" - how frequently these genes are changed across the simulated experiments using user-specific test statistic (i.e. log2 fold change).
 
-# +
 analysis_type = "DE"
 template_DE_stats_filename = os.path.join(
     local_dir, "DE_stats", f"DE_stats_template_data_{project_id}_real.txt"
 )
-
 template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_pathways(
     template_DE_stats_filename,
     local_dir,
@@ -342,7 +312,6 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
     logFC_name,
     pvalue_name,
 )
-# -
 
 # ## Summary table
 #
@@ -363,7 +332,6 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
 # For more information you can read [DESeq FAQs](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#pvaluesNA)
 
 # +
-# Get summary table
 summary_gene_ranks = ranking.generate_summary_table(
     template_DE_stats_filename,
     template_DE_stats,
@@ -374,12 +342,11 @@ summary_gene_ranks = ranking.generate_summary_table(
     params,
 )
 
-summary_gene_ranks.sort_values(by="Z score", ascending=False).head(10)
+summary_gene_ranks.sort_values(by="Z score", ascending=False).head()
 # -
 
+# Check if there is an NaN values, there should not be
 summary_gene_ranks.isna().any()
 
-summary_gene_ranks[summary_gene_ranks.isna().any(axis=1)]
-
-# Save
+# Create `gene_summary_filename`
 summary_gene_ranks.to_csv(gene_summary_filename, sep="\t")
