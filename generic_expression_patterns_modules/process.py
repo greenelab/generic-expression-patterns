@@ -361,8 +361,10 @@ def map_recount2_data(
 def process_raw_template_pseudomonas(
     processed_compendium_filename,
     project_id,
-    dataset_name,
-    metadata_colname,
+    metadata_filename,
+    metadata_delimiter,
+    experiment_id_colname,
+    sample_id_colname,
     raw_template_filename,
 ):
     """
@@ -374,7 +376,11 @@ def process_raw_template_pseudomonas(
 
     # Get sample ids associated with selected project id
     sample_ids = simulate_expression_data.get_sample_ids(
-        project_id, dataset_name, metadata_colname
+        metadata_filename,
+        metadata_delimiter,
+        experiment_id_colname,
+        project_id,
+        sample_id_colname,
     )
 
     # Get samples from experiment id

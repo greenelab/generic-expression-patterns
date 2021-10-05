@@ -9,9 +9,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_new] *
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_new-py
 # ---
 
 # # Identify generic genes and pathways
@@ -41,6 +41,7 @@
 # %load_ext autoreload
 # %load_ext rpy2.ipython
 # %autoreload 2
+# %matplotlib inline
 
 import os
 import sys
@@ -51,7 +52,7 @@ import glob
 import scipy.stats as ss
 from keras.models import load_model
 from rpy2.robjects import pandas2ri
-from ponyo import utils
+from ponyo import utils, simulate_expression_data
 from generic_expression_patterns_modules import process, stats, ranking
 
 pandas2ri.activate()
@@ -73,6 +74,7 @@ params = utils.read_config(config_filename)
 local_dir = params["local_dir"]
 dataset_name = params["dataset_name"]
 NN_architecture = params["NN_architecture"]
+latent_dim = params["latent_dim"]
 num_runs = params["num_simulated"]
 project_id = params["project_id"]
 metadata_col_id = params["metadata_colname"]
@@ -96,6 +98,13 @@ grp_metadata_filename = os.path.join(
     base_dir, dataset_name, "data", "metadata", f"{project_id}_groups.tsv"
 )
 
+# Load metadata file with mapping between experiments and associated samples
+metadata_simulate_filename = os.path.join(
+    base_dir, dataset_name, "data", "metadata", "experiment_sample_annotations.csv"
+)
+metadata_delimiter = ","
+experiment_id_colname = "Experiment id"
+
 # Load pickled file
 with open(scaler_filename, "rb") as scaler_fh:
     scaler = pickle.load(scaler_fh)
@@ -112,214 +121,7 @@ gene_summary_filename = os.path.join(
 pathway_summary_filename = os.path.join(
     base_dir, dataset_name, f"generic_pathway_summary_{project_id}.tsv"
 )
-
-
 # -
-
-# ## Need to customize code from ponyo
-#
-# The current simulation-related function in ponyo, `get_sample_ids` assumes that the user is using one of two different metadata files (one associated with the pseudomonas compendium and another associated with recount2). The compendium dataset we are using here has a slightly different format for their metadata file.
-#
-# Here we are temporarily writing our own function customized for this Powers et. al. dataset. But we will be updating ponyo to allow for different metadata files in the future. Issue in ponyo is [here](https://github.com/greenelab/ponyo/issues/18)
-
-def get_sample_ids(experiment_id, dataset_name, sample_id_colname):
-    """
-    Returns sample ids (found in gene expression df) associated with
-    a given list of experiment ids (found in the metadata)
-
-    Arguments
-    ----------
-    experiment_ids_file: str
-        File containing all cleaned experiment ids
-
-    dataset_name: str
-        Name for analysis directory. Either "Human" or "Pseudomonas"
-
-    sample_id_colname: str
-        Column header that contains sample id that maps expression data
-        and metadata
-
-    """
-    # Read in metadata
-    metadata = pd.read_csv(metadata_filename, header=0)
-    metadata.set_index("Experiment id", inplace=True)
-
-    selected_metadata = metadata.loc[experiment_id]
-    sample_ids = list(selected_metadata[sample_id_colname])
-
-    return sample_ids
-
-
-def shift_template_experiment_with_metadatafile(
-    normalized_data_file,
-    selected_experiment_id,
-    sample_id_colname,
-    NN_architecture,
-    dataset_name,
-    scaler,
-    local_dir,
-    base_dir,
-    run,
-    metadata_filename,
-):
-    """
-    Generate new simulated experiment using the selected_experiment_id as a template
-    experiment using the same workflow as `simulate_by_latent_transform`
-
-    This will return a file with a single simulated experiment following the workflow mentioned.
-    This function can be run multiple times to generate multiple simulated experiments from a
-    single selected_experiment_id.
-
-    Arguments
-    ----------
-    normalized_data_file: str
-        File containing normalized gene expression data
-
-        ------------------------------| PA0001 | PA0002 |...
-        05_PA14000-4-2_5-10-07_S2.CEL | 0.8533 | 0.7252 |...
-        54375-4-05.CEL                | 0.7789 | 0.7678 |...
-        ...                           | ...    | ...    |...
-
-    selected_experiment_id: str
-        Experiment id selected as template
-
-    sample_id_colname: str
-        Column header that contains sample id that maps expression data and metadata
-
-    NN_architecture: str
-        Name of neural network architecture to use.
-        Format 'NN_<intermediate layer>_<latent layer>'
-
-    dataset_name: str
-        Name for analysis directory. Either "Human" or "Pseudomonas"
-
-    scaler: minmax model
-        Model used to transform data into a different range
-
-    local_dir: str
-        Parent directory on local machine to store intermediate results
-
-    base_dir: str
-        Root directory containing analysis subdirectories
-
-    run: int
-        Simulation run
-
-    Returns
-    --------
-    simulated_data_file: str
-        File containing simulated gene expression data
-
-    """
-
-    # Files
-    NN_dir = os.path.join(base_dir, dataset_name, "models", NN_architecture)
-    latent_dim = NN_architecture.split("_")[-1]
-
-    model_encoder_file = glob.glob(os.path.join(NN_dir, "*_encoder_model.h5"))[0]
-
-    weights_encoder_file = glob.glob(os.path.join(NN_dir, "*_encoder_weights.h5"))[0]
-
-    model_decoder_file = glob.glob(os.path.join(NN_dir, "*_decoder_model.h5"))[0]
-
-    weights_decoder_file = glob.glob(os.path.join(NN_dir, "*_decoder_weights.h5"))[0]
-
-    # Load saved models
-    loaded_model = load_model(model_encoder_file, compile=False)
-    loaded_decode_model = load_model(model_decoder_file, compile=False)
-
-    loaded_model.load_weights(weights_encoder_file)
-    loaded_decode_model.load_weights(weights_decoder_file)
-
-    # Read data
-    normalized_data = pd.read_csv(normalized_data_file, header=0, sep="\t", index_col=0)
-
-    # Get corresponding sample ids
-    sample_ids = get_sample_ids(
-        selected_experiment_id, metadata_filename, sample_id_colname
-    )
-
-    # Gene expression data for selected samples
-    selected_data_df = normalized_data.loc[sample_ids]
-
-    # Encode selected experiment into latent space
-    data_encoded = loaded_model.predict_on_batch(selected_data_df)
-    data_encoded_df = pd.DataFrame(data_encoded, index=selected_data_df.index)
-
-    # Get centroid of original data
-    centroid = data_encoded_df.mean(axis=0)
-
-    # Add individual vectors(centroid, sample point) to new_centroid
-
-    # Encode original gene expression data into latent space
-    data_encoded_all = loaded_model.predict_on_batch(normalized_data)
-    data_encoded_all_df = pd.DataFrame(data_encoded_all, index=normalized_data.index)
-
-    data_encoded_all_df.head()
-
-    # Find a new location in the latent space by sampling from the latent space
-    encoded_means = data_encoded_all_df.mean(axis=0)
-    encoded_stds = data_encoded_all_df.std(axis=0)
-
-    latent_dim = int(latent_dim)
-    new_centroid = np.zeros(latent_dim)
-
-    for j in range(latent_dim):
-        new_centroid[j] = np.random.normal(encoded_means[j], encoded_stds[j])
-
-    shift_vec_df = new_centroid - centroid
-    # print(shift_vec_df)
-
-    simulated_data_encoded_df = data_encoded_df.apply(
-        lambda x: x + shift_vec_df, axis=1
-    )
-
-    # Decode simulated data into raw gene space
-    simulated_data_decoded = loaded_decode_model.predict_on_batch(
-        simulated_data_encoded_df
-    )
-
-    simulated_data_decoded_df = pd.DataFrame(
-        simulated_data_decoded,
-        index=simulated_data_encoded_df.index,
-        columns=selected_data_df.columns,
-    )
-
-    # Un-normalize the data in order to run DE analysis downstream
-    simulated_data_scaled = scaler.inverse_transform(simulated_data_decoded_df)
-
-    simulated_data_scaled_df = pd.DataFrame(
-        simulated_data_scaled,
-        columns=simulated_data_decoded_df.columns,
-        index=simulated_data_decoded_df.index,
-    )
-
-    # Save template data for visualization validation
-    test_file = os.path.join(
-        local_dir,
-        "pseudo_experiment",
-        "template_normalized_data_" + selected_experiment_id + "_test.txt",
-    )
-
-    selected_data_df.to_csv(test_file, float_format="%.3f", sep="\t")
-
-    # Save
-    out_file = os.path.join(
-        local_dir,
-        "pseudo_experiment",
-        "selected_simulated_data_" + selected_experiment_id + "_" + str(run) + ".txt",
-    )
-
-    simulated_data_scaled_df.to_csv(out_file, float_format="%.3f", sep="\t")
-
-    out_encoded_file = os.path.join(
-        local_dir,
-        "pseudo_experiment",
-        f"selected_simulated_encoded_data_{selected_experiment_id}_{run}.txt",
-    )
-
-    simulated_data_encoded_df.to_csv(out_encoded_file, float_format="%.3f", sep="\t")
-
 
 # ### Simulate experiments using selected template experiment
 #
@@ -330,11 +132,6 @@ def shift_template_experiment_with_metadatafile(
 # 4. Decode the samples. This results in a new experiment
 # 5. Repeat steps 1-4 to get multiple simulated experiments
 
-# Load metadata file with experiment to sample mapping
-metadata_filename = os.path.join(
-    base_dir, dataset_name, "data", "metadata", "experiment_sample_annotations.csv"
-)
-
 # Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:
 #   - selected_simulated_data_SRP012656_<n>.txt
@@ -342,19 +139,21 @@ metadata_filename = os.path.join(
 #   - template_normalized_data_SRP012656_test.txt
 # in which "<n>" is an integer in the range of [0, num_runs-1]
 os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
-for run_id in range(num_runs):
-    shift_template_experiment_with_metadatafile(
-        normalized_compendium_filename,
-        project_id,
-        metadata_col_id,
-        NN_architecture,
-        dataset_name,
-        scaler,
-        local_dir,
-        base_dir,
-        run_id,
-        metadata_filename,
-    )
+simulate_expression_data.shift_template_experiment(
+    normalized_compendium_filename,
+    NN_architecture,
+    latent_dim,
+    dataset_name,
+    scaler,
+    metadata_simulate_filename,
+    metadata_delimiter,
+    experiment_id_colname,
+    metadata_col_id,
+    project_id,
+    local_dir,
+    base_dir,
+    num_runs,
+)
 
 # ## Reverse transformation
 

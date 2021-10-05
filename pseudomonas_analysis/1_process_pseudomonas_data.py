@@ -14,10 +14,10 @@
 # ---
 
 # # Process pseudomonas data
-# This notebook trains a VAE on the PAO1 and PA14 RNA-seq compendia to support the analysis in https://github.com/greenelab/core-accessory-interactome
+# This notebook does the following:
 #
-# 1. Selects template experiment from the compendium
-# 2. Normalizes the gene expression data from the RNA-seq Pseudomonas compendium
+# 1. Selects template experiment from the Pseudomonas compendium created from [Tan et. al.](https://msystems.asm.org/content/1/1/e00025-15)
+# 2. Normalizes the gene expression data from the Pseudomonas compendium
 # 3. Train VAE on the normalized data
 
 # +
@@ -47,7 +47,7 @@ base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
 
 # Read in config variables
 config_filename = os.path.abspath(
-    os.path.join(base_dir, "configs", "config_pseudomonas_pa14_rnaseq.tsv")
+    os.path.join(base_dir, "configs", "config_pseudomonas_33245.tsv")
 )
 
 params = utils.read_config(config_filename)
@@ -66,10 +66,11 @@ shared_genes_filename = params["shared_genes_filename"]
 
 # Output files of pseudomonas template experiment data
 raw_template_filename = params["raw_template_filename"]
+# mapped_template_filename = params['mapped_template_filename']
 processed_template_filename = params["processed_template_filename"]
 
 # Output files of pseudomonas compendium data
-# raw_compendium_filename = params['raw_compendium_filename']
+raw_compendium_filename = params["raw_compendium_filename"]
 processed_compendium_filename = params["processed_compendium_filename"]
 normalized_compendium_filename = params["normalized_compendium_filename"]
 
@@ -77,15 +78,18 @@ normalized_compendium_filename = params["normalized_compendium_filename"]
 scaler_filename = params["scaler_filename"]
 
 # Load metadata file with mapping between experiments and associated samples
-metadata_filename = "data/metadata/SraRunTable.csv"
-metadata_delimiter = ","
-experiment_id_colname = "SRA_study"
+metadata_filename = os.path.join(
+    base_dir, dataset_name, "data", "metadata", "sample_annotations.tsv"
+)
+metadata_delimiter = "\t"
+experiment_id_colname = "experiment"
 # -
 
-# ### Normalize compendium
-# The compendium is MR normalized, but here we will 0-1 normalize it
+# ### Transpose raw pseudomonas compendium and normalize it
+# The compendium is from https://raw.githubusercontent.com/greenelab/adage/master/Data_collection_processing/Pa_compendium_02.22.2014.pcl
 
-process.normalize_compendium(
+process.process_raw_compendium_pseudomonas(
+    raw_compendium_filename,
     processed_compendium_filename,
     normalized_compendium_filename,
     scaler_filename,
@@ -102,12 +106,6 @@ process.process_raw_template_pseudomonas(
     metadata_colname,
     raw_template_filename,
 )
-
-test2 = pd.read_csv(raw_template_filename, sep="\t", index_col=0, header=0)
-
-test2.head()
-
-test2.shape
 
 # **Note:**
 # * We are training our VAE model using ALL the data in the compendium.

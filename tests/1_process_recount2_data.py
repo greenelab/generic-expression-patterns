@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression_PYTEST]
+#     display_name: Python [conda env:generic_expression_new] *
 #     language: python
-#     name: conda-env-generic_expression_PYTEST-py
+#     name: conda-env-generic_expression_new-py
 # ---
 
 # # Process recount2 data

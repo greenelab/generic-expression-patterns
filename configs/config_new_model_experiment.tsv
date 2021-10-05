@@ -8,8 +8,13 @@ normalized_compendium_filename	"/home/alexandra/Documents/Data/Generic_expressio
 scaler_filename	"../human_general_analysis/data/scaler_transform_human.pickle"
 vae_model_dir	"../human_general_analysis/models/NN_2500_30"
 latent_dim	30
+sample_to_experiment_filename	"/home/alexandra/Documents/Data/Generic_expression_patterns/sample_annotations.tsv"
+metadata_delimiter	"\t"
+experiment_id_colname	"experiment"
 project_id	"cis-gem-par-all"
+sample_id_colname	"sample"
 num_simulated	25
+DE_method	"desesq"
 count_threshold	None
 rank_genes_by	"log2FoldChange"
 DE_logFC_name	"log2FoldChange"

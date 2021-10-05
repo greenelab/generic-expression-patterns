@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_new] *
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_new-py
 # ---
 
 # # Process Crow et al. data
@@ -32,7 +32,7 @@ import pandas as pd
 import pickle
 import numpy as np
 import seaborn as sns
-from ponyo import utils, train_vae_modules
+from ponyo import utils, train_vae_modules, simulate_expression_data
 from generic_expression_patterns_modules import process
 
 # Set seeds to get reproducible VAE trained models
@@ -202,7 +202,6 @@ normalized_compendium.head(10)
 
 sns.displot(normalized_compendium["AA06"])
 
-
 # ### Select and process template data
 #
 # 1. Get gene expression associated with `project_id`, which was manually selected by the user and specified in the config file.
@@ -210,29 +209,18 @@ sns.displot(normalized_compendium["AA06"])
 # Note: The data is not normalized so that we can perform DE analysis in next notebook
 
 # +
-# Note: This is the only notebook using this function, so for now it is included here
-# Get sample ids associated with selected project id
-def get_sample_ids(experiment_id, mapping_filename):
-    """
-    Return sample ids for a given experiment id
-
-    """
-    # Read in metadata
-    metadata = pd.read_csv(mapping_filename, header=0)
-    metadata.set_index("Experiment id", inplace=True)
-
-    selected_metadata = metadata.loc[experiment_id]
-    sample_ids = list(selected_metadata[metadata_colname])
-
-    return sample_ids
-
-
 # metadata file with mapping from experiment to sample
 experiment_to_sample_metadata_filename = os.path.join(
     base_dir, dataset_name, "data", "metadata", "experiment_sample_annotations.csv"
 )
 
-sample_ids = get_sample_ids(project_id, experiment_to_sample_metadata_filename)
+sample_ids = simulate_expression_data.get_sample_ids(
+    experiment_to_sample_metadata_filename,
+    ",",
+    "Experiment id",
+    project_id,
+    metadata_colname,
+)
 
 # Get expression data
 template_mapped = mapped_compendium.loc[sample_ids]

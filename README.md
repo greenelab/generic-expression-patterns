@@ -57,9 +57,11 @@ This approach allows investigators to distinguish common DEGs from context speci
 
 ## Usage
 
-**How to run notebooks from generic-expression-patterns**
+**How to reproduce the results and figures of the paper**
 
 *Operating Systems:* Mac OS, Linux (Note: bioconda libraries not available in Windows)
+*Note: *While the trends will be consistent, you may get slightly different resulting statistics and the plots may not look exactly the same as the paper.
+Despite our best efforts to set seeds and version of python packages there is still some randomness we’re unable to control in the simulation process.
 
 In order to run this simulation on your own gene expression data the following steps should be performed:
 
@@ -71,6 +73,7 @@ First you need to set up your local repository:
 git clone https://github.com/greenelab/generic-expression-patterns.git
 ```
 Note: Git automatically detects the LFS-tracked files and clones them via http.
+
 4. Navigate into cloned repo by running the following command in the terminal:
 ```
 cd generic-expression-patterns
@@ -83,11 +86,13 @@ This bash script uses the linux environment. If you are using a mac, you will ne
 
 6. Navigate to either the `pseudomonas_analysis`, `human_general_analysis` or `human_cancer_analysis` directories and run the notebooks in order.
 
-*Note:* Running the `human_general_analysis/1_process_recount2_data.ipynb` notebook can take several days to run since the dataset is very large. If you would like to run only the analysis notebook (`human_general_analysis/2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations:
+*Note:* Running the `human_general_analysis/1_process_recount2_data.ipynb` notebook can take several days to run (this runtime was using a CPU) since the dataset is very large. If you would like to run only the analysis notebook (`human_general_analysis/2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations:
 * The normalized compendium data used for the analysis in the publication can be found [here](https://storage.googleapis.com/recount2/normalized_recount2_compendium.tsv).
 * The Hallmark pathway database can be found [here](human_general_analysis/data/metadata/hallmark_DB.gmt)
 * The processed template file can be found [here](human_general_analysis/data/processed_recount2_template.tsv)
 * The scaler file can be found [here](human_general_analysis/data/scaler_transform_human.pickle)
+
+The runtime for training the VAE on the other datasets (`human_cancer_analysis/`, `human_general_array_analysis/`, `pseudomonas_analysis/`) were on the order of hours.
 
 **How to analyze your own data using existing models**
 
@@ -101,6 +106,7 @@ First you need to set up your local repository:
 git clone https://github.com/greenelab/generic-expression-patterns.git
 ```
 Note: Git automatically detects the LFS-tracked files and clones them via http.
+
 4. Navigate into cloned repo by running the following command in the terminal:
 ```
 cd generic-expression-patterns
@@ -109,7 +115,7 @@ cd generic-expression-patterns
 ```bash
 bash install.sh
 ```
-6.  Navigate to `new_experiment_example/find_specific_genes_in_new_experiment.ipynb` to see an example of how to run you analyze your own dataset using existing models
+6.  Navigate to `new_experiment/find_specific_genes_in_new_experiment.ipynb` to see an example of how to run you analyze your own dataset using existing models
 7. Create a configuration and metadata files for your analysis following the instructions in the `find_specific_genes_in_new_experiment.ipynb` notebook and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`). Here are the links to the compendium data needed:
 
 * normalized recount2 can be found [here](https://storage.googleapis.com/recount2/normalized_recount2_compendium.tsv)
@@ -127,6 +133,32 @@ bash install.sh
 * Your input dataset should be generated using the same platform as the model you plan to use (i.e. RNA-seq or array)
 * Models available to use are: recount2 (human RNA-seq model found in `human_general_analysis/models`), Powers et. al. (human array model found in `human_cancer_analysis/models`), *P. aeruginosa* (*P. aeruginosa* array model found in `pseudomonas_analysis/models`)
 
+**How to train a new VAE model to analyze your own data**
+
+In order to run this simulation on your own gene expression data the following steps should be performed:
+
+First you need to set up your local repository:
+1. Download and install [github's large file tracker](https://git-lfs.github.com/).
+2. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+3. Clone the `generic-expression-patterns` repository by running the following command in the terminal:
+```
+git clone https://github.com/greenelab/generic-expression-patterns.git
+```
+Note: Git automatically detects the LFS-tracked files and clones them via http.
+
+4. Navigate into cloned repo by running the following command in the terminal:
+```
+cd generic-expression-patterns
+```
+5. Set up conda environment by running the following command in the terminal:
+```bash
+bash install.sh
+```
+6.  Navigate to `new_model_experiment/` directory to see an example notebooks for how to train a VAE on your compendium and then analyze your own dataset using that new model
+7. Create configuration and metadata files for your analysis following the instructions in the notebooks and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`).
+8. Run notebook
+
+_Note:_ Depending on the dataset, the model training can take up to several days to run on a CPU.
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking. The ** is only used if using `get_recount2_sra_subset` (in download_recount2_data.R).
 
@@ -140,7 +172,7 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | mapped_template_filename | str: Template gene expression data file after replacing gene ids in header. This is an intermediate file that gets generated.|
 | processed_template_filename | str: Template gene expression data file after removing samples and genes. This is an intermediate file that gets generated.|
 | raw_compendium_filename | str: Downloaded compendium gene expression data file|
-| mapped_compendium_filename | str: Compendium gene expression data file after replacing gene ids in header. This is an intermediate file that gets generated.|
+| mapped_compendium_filename or processed_compendium_filename | str: Compendium gene expression data file after replacing gene ids in header. This is an intermediate file that gets generated.|
 | normalized_compendium_filename | str: Normalized compendium gene expression data file. This is an intermediate file that gets generated.|
 | shared_genes_filename | str: Pickle file on your local machine where to write and store genes that will be examined. These genes are the intersection of genes in your dataset versus a reference to ensure that there are not Nans in downstream analysis. This is an intermediate file that gets generated.|
 | scaler_filename | str: Pickle file on your local machine where to write and store normalization transform to be used to process data for visualization. This is an intermediate file that gets generated.|
@@ -164,7 +196,10 @@ Note: Some of these parameters are required by the imported [ponyo](https://gith
 | validation_frac | float: Fraction of samples to use for validation in VAE training|
 | project_id | str:  Experiment id to use as a template experiment|
 | count_threshold | int: Minimum count threshold to use to filter RNA-seq data. Default is None|
-| metadata_colname | str:  Header of experiment metadata file to indicate column containing sample ids. This is used to extract gene expression data associated with project_id|
+| experiment_to_sample_filename | str:  File mapping experiment ids to sample ids|
+| metadata_delimiter | str:  Delimiter used in the metadata file that maps experiment id to sample ids|
+| experiment_id_colname | str:  Header of experiment-to-sample metadata file to indicate column containing experiment ids. This is used to extract gene expression data associated with project_id|
+| metadata_colname or sample_id_colname | str:   Header of experiment-to-sample metadata file to indicate column containing sample ids.This is used to extract gene expression data associated with project_id|
 | num_simulated| int: Simulate a compendia with these many experiments, created by shifting the template experiment these many times|
 | num_recount2_experiments_to_download** | int:  Number of recount2 experiments to download. Note this will not be needed when we update the training to use all of recount2|
 
