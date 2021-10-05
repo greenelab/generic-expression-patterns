@@ -153,7 +153,7 @@ cd generic-expression-patterns
 bash install.sh
 ```
 6.  Navigate to `new_model_experiment/` directory to see an example notebooks for how to train a VAE on your compendium and then analyze your own dataset using that new model
-7. Create a configuration and metadata files for your analysis following the instructions in the notebooks and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`).
+7. Create configuration and metadata files for your analysis following the instructions in the notebooks and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`).
 8. Run notebook
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking. The ** is only used if using `get_recount2_sra_subset` (in download_recount2_data.R).
