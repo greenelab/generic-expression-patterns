@@ -86,11 +86,13 @@ This bash script uses the linux environment. If you are using a mac, you will ne
 
 6. Navigate to either the `pseudomonas_analysis`, `human_general_analysis` or `human_cancer_analysis` directories and run the notebooks in order.
 
-*Note:* Running the `human_general_analysis/1_process_recount2_data.ipynb` notebook can take several days to run since the dataset is very large. If you would like to run only the analysis notebook (`human_general_analysis/2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations:
+*Note:* Running the `human_general_analysis/1_process_recount2_data.ipynb` notebook can take several days to run (this runtime was using a CPU) since the dataset is very large. If you would like to run only the analysis notebook (`human_general_analysis/2_identify_generic_genes_pathways.ipynb`) to generate the human analysis results found in the publication, you can update the config file to use the following file locations:
 * The normalized compendium data used for the analysis in the publication can be found [here](https://storage.googleapis.com/recount2/normalized_recount2_compendium.tsv).
 * The Hallmark pathway database can be found [here](human_general_analysis/data/metadata/hallmark_DB.gmt)
 * The processed template file can be found [here](human_general_analysis/data/processed_recount2_template.tsv)
 * The scaler file can be found [here](human_general_analysis/data/scaler_transform_human.pickle)
+
+The runtime for training the VAE on the other datasets (`human_cancer_analysis/`, `human_general_array_analysis/`, `pseudomonas_analysis/`) were on the order of hours.
 
 **How to analyze your own data using existing models**
 
@@ -155,6 +157,8 @@ bash install.sh
 6.  Navigate to `new_model_experiment/` directory to see an example notebooks for how to train a VAE on your compendium and then analyze your own dataset using that new model
 7. Create configuration and metadata files for your analysis following the instructions in the notebooks and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`).
 8. Run notebook
+
+_Note:_ Depending on the dataset, the model training can take up to several days to run on a CPU.
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking. The ** is only used if using `get_recount2_sra_subset` (in download_recount2_data.R).
 
