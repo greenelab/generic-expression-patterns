@@ -41,7 +41,7 @@ from generic_expression_patterns_modules import (
 # User needs to define the following in the [config file](../configs/config_new_experiment.tsv):
 #
 # 1. Directory on your local machine to store intermediate and output data files generated (`local_dir`). Make sure to end with `\`.
-# 2. Template experiment (`raw_template_filename`). This is the experiment you are interested in studying.
+# 2. Template experiment (`raw_template_filename`). This is the experiment you are interested in studying. This experiment is expected to be a matrix with samples as row and genes as columns (tab-delimited).
 # 3. Training compendium used to train VAE, including unnormalized gene mapped version (`mapped_compendium_filename`) and normalized version (`normalized_compendium_filename`). Links to these datasets can be found in the README.
 # 4. Scaler transform (`scaler_filename`) used to normalize the training compendium. This can be found in the `data/` directory within the analysis folder.
 # 5. Directory (`vae_model_dir`) containing trained VAE model (.h5 files).
@@ -58,8 +58,8 @@ from generic_expression_patterns_modules import (
 # The user also needs to provide metadata files:
 #
 # These files should be located in `data/metadata/` directory.
-# 1. `<experiment id>_process_samples.tsv` contains 2 columns (sample ids, label that indicates if the sample is kept or removed). See [example](data/metadata/cis-gem-par-KU1919_process_samples.tsv). **Note: This file is not required if the user wishes to use all the samples in the template experiment file.**
-# 2. `<experiment id>_groups.tsv` contains 2 columns: sample ids, group label to perform DE analysis. See [example](data/metadata/cis-gem-par-KU1919_groups.tsv)
+# 1. `<experiment id>_process_samples.tsv` contains 2 columns tab-delimited (sample ids, label that indicates if the sample is kept or removed). See [example](data/metadata/cis-gem-par-KU1919_process_samples.tsv). **Note: This file is not required if the user wishes to use all the samples in the template experiment file.**
+# 2. `<experiment id>_groups.tsv` contains 2 columns tab-delimited: sample ids, group label to perform DE analysis. See [example](data/metadata/cis-gem-par-KU1919_groups.tsv)
 
 # +
 # Read in config variables
@@ -351,6 +351,8 @@ template_DE_stats, simulated_DE_summary_stats = ranking.process_and_rank_genes_p
 # * (Simulated): Statistics across simulated experiments
 # * Number of experiments: Number of simulated experiments
 # * Z-score: High z-score indicates that gene is more changed in template compared to the null set of simulated experiments (high z-score = highly specific to template experiment)
+# * Percentile (simulated): percentile rank of the median(abs(log fold change)). So its the median absolute change for that gene across the 25 simulated experiments that is then converted to a percentile rank from 0 - 100. Where a higher percentile indicates that the gene was highly changed frequently and would suggest that the gene is more commonly DE.
+# * Percent DE (simulated): the fraction of the simulated experiments in which that gene was found to be DE using (log fold change > 1 and adjusted p-value < 0.05). _Note:_ you may find that many genes have a 0 fraction. This is because there is some compression that happens when pushing data through the VAE so the variance of the simulated experiments is lower compared to the real experiment. We are aware of this limitation in the VAE and are looking at how to improve the variance and biological signal captured by the VAE, however we were still able to demonstrate that for now the VAE is able to simulate realistic looking biological experiments in our previous [paper](https://academic.oup.com/gigascience/article/9/11/giaa117/5952607).
 #
 #
 # **Note:**
