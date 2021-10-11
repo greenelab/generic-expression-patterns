@@ -160,7 +160,7 @@ bash install.sh
 8. Run notebook
 
 **Note**:
-* Your input dataset should be a matrix that is sample x gene. The file should tab-delimited.
+* Your input dataset should be a matrix that is sample x gene. The file should be tab-delimited.
 * Depending on the dataset, the model training can take up to several days to run on a CPU.
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking. The ** is only used if using `get_recount2_sra_subset` (in download_recount2_data.R).
