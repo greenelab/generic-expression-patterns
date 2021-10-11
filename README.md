@@ -50,6 +50,7 @@ This approach allows investigators to distinguish common DEGs from context speci
 | [human_general_array_analysis](human_general_array_analysis) | This folder contains analysis notebooks to validate generic signals using [Crow et al](https://www.pnas.org/content/116/13/6491) dataset, which contains a heterogeneous set of human microarray experiments, to train VAE. |
 | [network_analysis](network_analysis) |  This folder contains analysis notebooks to examine the potential role of generic genes by looking at the clustering of generic genes within network communities.|
 | [new_experiment](new_experiment) |  This folder contains analysis notebooks to identify specific and generic signals using a new experiment and an existing VAE model|
+| [new_model_experiment](new_model_experiment) |  This folder contains analysis notebooks to identify specific and generic signals using a new experiment and training a new VAE model using your own compendium.|
 | [other_enrichment_methods](other_enrichment_methods) |  This folder contains analysis notebooks to apply different gene set enrichment methods. The default method used is GSEA.|
 | [pseudomonas_analysis](pseudomonas_analysis) |  This folder contains analysis notebooks to identify specific and generic signals using *P. aeruginosa* microarray dataset to train VAE |
 | [tests](tests) |  This folder contains notebooks to test the code in this repository. These notebooks run a small dataset across the analysis notebooks found in the `human_general_analysis` directory. |
@@ -158,7 +159,9 @@ bash install.sh
 7. Create configuration and metadata files for your analysis following the instructions in the notebooks and the definitions below. Configuration files should be in `config/` directory. Metadata files should be within your analysis directory (`data/metadata/`).
 8. Run notebook
 
-_Note:_ Depending on the dataset, the model training can take up to several days to run on a CPU.
+**Note**:
+* Your input dataset should be a matrix that is sample x gene. The file should be tab-delimited.
+* Depending on the dataset, the model training can take up to several days to run on a CPU.
 
 The tables lists parameters required to run the analysis in this repository. These will need to be updated to run your own analysis. The * indicates optional parameters if you are comparing the ranks of your genes/gene sets with some reference ranking. The ** is only used if using `get_recount2_sra_subset` (in download_recount2_data.R).
 

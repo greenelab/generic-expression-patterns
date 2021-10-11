@@ -38,8 +38,8 @@ from generic_expression_patterns_modules import process
 # User needs to define the following in the [config file](../configs/config_new_model_experiment.tsv):
 #
 # 1. Directory on your local machine to store intermediate and output data files generated (`local_dir`). Make sure to end with `\`.
-# 2. Template experiment (`raw_template_filename`). This is the experiment you are interested in studying.
-# 3. Training compendium used to train VAE (`processed_compendium_filename`). This dataset is expected to be a matrix with samples as row and genes as columns. Note: if using human gene ids from ensembl and you want to convert these to HGNC symbols, functions are available to do this in `generic_expression_patterns_modules/process_names.R` and `generic_expression_patterns_modules/process.py`. See [example](../human_general_analysis/1_process_recount2_data.ipynb)
+# 2. Template experiment (`raw_template_filename`). This is the experiment you are interested in studying. This experiment is expected to be a matrix with samples as row and genes as columns (tab-delimited).
+# 3. Training compendium used to train VAE (`processed_compendium_filename`). This dataset is expected to be a matrix with samples as row and genes as columns (tab-delimited). Note: if using human gene ids from ensembl and you want to convert these to HGNC symbols, functions are available to do this in `generic_expression_patterns_modules/process_names.R` and `generic_expression_patterns_modules/process.py`. See [example](../human_general_analysis/1_process_recount2_data.ipynb)
 # 4. Scaler transform (`scaler_filename`) used to normalize the training compendium. This can be found in the `data/` directory within the analysis folder.
 # 5. Directory (`vae_model_dir`) containing trained VAE model (.h5 files) from the previous notebook.
 # 6. Size of the latent dimension (`latent_dim`).
