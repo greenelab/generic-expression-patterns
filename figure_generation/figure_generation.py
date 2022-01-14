@@ -400,7 +400,7 @@ panel_S2a = make_figure_panel(
     y_loc=20,
 )
 panel_S2b = make_figure_panel(
-    "../compare_experiments/cross_context_venn.svg",
+    "../compare_experiments/cross_platform_venn.svg",
     scale_x_input=1,
     scale_y_input=1,
     x_loc=500,

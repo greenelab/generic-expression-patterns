@@ -94,7 +94,7 @@ sophie_all_bool = sophie_all_percentiles >= threshold
 sophie_all_counts = sophie_all_bool.sum(axis=1)
 
 # How consistent are the top 20% commonly changed genes
-sns.distplot(sophie_all_counts, kde=False)
+sns.distplot(sophie_all_counts, bins=np.arange(0, 4), kde=False)
 
 # ## Pairwise compare different context and platforms
 
