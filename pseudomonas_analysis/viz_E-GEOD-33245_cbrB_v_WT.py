@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_new] *
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_new-py
 # ---
 
 # # Plot for E-GEOD-33245 (cbrB vs WT)
@@ -19,6 +19,7 @@
 
 # +
 # %load_ext autoreload
+# %matplotlib inline
 
 import os
 import numpy as np
@@ -420,6 +421,7 @@ template_summary_df = pd.read_csv(
 # Take -log10 of adjusted p-value
 template_summary_df["padj_log10"] = -np.log10(template_summary_df["Adj P-value (Real)"])
 
+
 # Plot
 f1 = sns.scatterplot(
     data=template_summary_df,
@@ -517,6 +519,7 @@ f1.axvline(1, c="black", lw=0.7, ls="--")
 f1.axvline(-1, c="black", lw=0.7, ls="--")
 
 f1.set_ylabel(r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana")
+f1.set_xlabel(r"-log$_{2}$ Fold Change", fontsize=14, fontname="Verdana")
 f1.set_title("$cbrB$ vs WT", fontsize=14, fontname="Verdana")
 
 norm = plt.Normalize(
@@ -524,6 +527,7 @@ norm = plt.Normalize(
 )
 sm = plt.cm.ScalarMappable(cmap="rocket_r", norm=norm)
 sm.set_array([])
+
 cb = f1.figure.colorbar(sm)
 
 cb.ax.tick_params(labelsize=10)
@@ -649,6 +653,7 @@ f2.axvline(1, c="black", lw=0.7, ls="--")
 f2.axvline(-1, c="black", lw=0.7, ls="--")
 
 f2.set_ylabel(r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana")
+f2.set_xlabel(r"-log$_{2}$ Fold Change", fontsize=14, fontname="Verdana")
 f2.set_title("$crc$ vs WT", fontsize=14, fontname="Verdana")
 
 norm = plt.Normalize(

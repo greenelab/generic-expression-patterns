@@ -129,9 +129,14 @@ cross_platform_venn.get_patch_by_id("01").set_color("blue")
 cross_platform_venn.get_patch_by_id("01").set_edgecolor("none")
 cross_platform_venn.get_patch_by_id("01").set_alpha(0.3)
 
-plt.title("Same context, different platforms")
-# Does this make sense to show?
-# Font and colors
+plt.title("Same context, different platforms", fontsize=16, fontname="Verdana")
+for text in cross_platform_venn.set_labels:
+    text.set_fontsize(14)
+    text.set_fontname("Verdana")
+
+for text in cross_platform_venn.subset_labels:
+    text.set_fontsize(12)
+    text.set_fontname("Verdana")
 
 # Save figure
 matplotlib.pyplot.savefig(
@@ -156,7 +161,15 @@ cross_context_venn.get_patch_by_id("01").set_color("blue")
 cross_context_venn.get_patch_by_id("01").set_edgecolor("none")
 cross_context_venn.get_patch_by_id("01").set_alpha(0.3)
 
-plt.title("Different context, same platforms")
+plt.title("Different context, same platforms", fontsize=16, fontname="Verdana")
+
+for text in cross_context_venn.set_labels:
+    text.set_fontsize(14)
+    text.set_fontname("Verdana")
+
+for text in cross_context_venn.subset_labels:
+    text.set_fontsize(12)
+    text.set_fontname("Verdana")
 
 # Save figure
 matplotlib.pyplot.savefig(
