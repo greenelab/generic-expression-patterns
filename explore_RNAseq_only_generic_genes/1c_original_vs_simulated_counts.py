@@ -9,7 +9,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression]
 #     language: python
 #     name: conda-env-generic_expression-py
 # ---
@@ -393,25 +393,35 @@ def violin_plot_original_vs_simulated(
             )
             if i != 0:
                 axes[i].set_yticklabels([])
+            else:
+                axes[i].set_yticklabels(
+                    [
+                        "mean common DEG expression (template)",
+                        "mean common DEG expression (simulated)",
+                    ],
+                    fontsize=20,
+                )
 
             fig.text(
                 0.5,
-                0.0,
-                "log10(average expression)",
+                0.09,
+                r"log$_{10}$ (average expression)",
                 ha="center",
-                fontsize=16,
+                fontsize=24,
                 fontname="Verdana",
             )
             if if_rnaseq_only:
                 fig.suptitle(
                     "Average expression of RNA-seq only common DEGs",
-                    fontsize=16,
+                    fontsize=24,
+                    y=0.9,
                     fontname="Verdana",
                 )
             else:
                 fig.suptitle(
                     "Average expression of RNA-seq/array common DEGs",
-                    fontsize=16,
+                    fontsize=24,
+                    y=0.9,
                     fontname="Verdana",
                 )
 
@@ -456,25 +466,35 @@ def violin_plot_original_vs_simulated(
             )
             if i != 0:
                 axes[i].set_yticklabels([])
+            else:
+                axes[i].set_yticklabels(
+                    [
+                        "mean common DEG expression (template)",
+                        "mean common DEG expression (simulated)",
+                    ],
+                    fontsize=20,
+                )
 
             fig.text(
                 0.5,
-                0.0,
-                "log10(variance of expression)",
+                0.09,
+                r"log$_{10}$ (variance of expression)",
                 ha="center",
-                fontsize=16,
+                fontsize=24,
                 fontname="Verdana",
             )
             if if_rnaseq_only:
                 fig.suptitle(
                     "Variance of expression of RNA-seq only common DEGs",
-                    fontsize=16,
+                    fontsize=24,
+                    y=0.9,
                     fontname="Verdana",
                 )
             else:
                 fig.suptitle(
                     "Variance of expression of RNA-seq/array common DEGs",
-                    fontsize=16,
+                    fontsize=24,
+                    y=0.9,
                     fontname="Verdana",
                 )
     f.get_figure().savefig(

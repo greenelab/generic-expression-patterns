@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression] *
+#     display_name: Python [conda env:generic_expression_new] *
 #     language: python
-#     name: conda-env-generic_expression-py
+#     name: conda-env-generic_expression_new-py
 # ---
 
 # # Compare generic genes
@@ -20,6 +20,7 @@
 # +
 # %load_ext autoreload
 # %autoreload 2
+# %matplotlib inline
 
 import os
 from scipy import stats
@@ -131,8 +132,8 @@ fig = sns.jointplot(
 )
 
 fig.set_axis_labels(
-    f"Percentile in {project_id1}",
-    f"Percentile in {project_id1} different runs",
+    f"Percentile in {project_id1} seed 1",
+    f"Percentile in {project_id1} seed 2",
     fontsize=14,
     fontname="Verdana",
 )
