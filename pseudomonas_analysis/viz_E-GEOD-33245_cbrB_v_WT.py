@@ -242,7 +242,18 @@ cbrB_crc_df.loc[argR_genes, "gene group"] = "ArgR regulon"
 cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "cbrB", "gene group"] = "cbrB"
 cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "crc", "gene group"] = "crc"
 
+print(cbrB_crc_df.shape)
 cbrB_crc_df.head()
+
+# +
+# Drop cbrB and crc rows for plot
+drop_idx = cbrB_crc_df[
+    (cbrB_crc_df["gene group"] == "cbrB") | (cbrB_crc_df["gene group"] == "crc")
+].index
+
+
+cbrB_crc_df = cbrB_crc_df.drop(drop_idx)
+cbrB_crc_df.shape
 
 # +
 # Plot
@@ -267,7 +278,7 @@ h = sns.scatterplot(
 )
 
 # Highlight specific genes mentioned in the paper (cbrB, crc, argA, aotJQMP)
-h = sns.scatterplot(
+"""h = sns.scatterplot(
     data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "cbrB"],
     x="logFC (Real)_cbrB",
     y="diff z-score (cbrB-crc)",
@@ -286,7 +297,7 @@ h = sns.scatterplot(
     palette=["#facf5a"],
     linewidth=0,
     legend=False,
-)
+)"""
 h = sns.scatterplot(
     data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "argA"],
     x="logFC (Real)_cbrB",
@@ -344,7 +355,7 @@ h = sns.scatterplot(
 )
 
 # Add text labels for those genes mentioned above
-plt.text(
+"""plt.text(
     x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "cbrB", "logFC (Real)_cbrB"] + 0.1,
     y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "cbrB", "diff z-score (cbrB-crc)"]
     - 2,
@@ -384,6 +395,36 @@ plt.text(
     - 6,
     s="$aotP$",
 )
+"""
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "argA", "logFC (Real)_cbrB"],
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "argA", "diff z-score (cbrB-crc)"]
+    + 1,
+    s="$argA$",
+)
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotJ", "logFC (Real)_cbrB"] - 0.5,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotJ", "diff z-score (cbrB-crc)"],
+    s="$aotJ$",
+)
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotQ", "logFC (Real)_cbrB"] + 0.1,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotQ", "diff z-score (cbrB-crc)"],
+    s="$aotQ$",
+)
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotM", "logFC (Real)_cbrB"],
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotM", "diff z-score (cbrB-crc)"]
+    - 2,
+    s="$aotM$",
+)
+plt.text(
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotP", "logFC (Real)_cbrB"] - 0.5,
+    y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotP", "diff z-score (cbrB-crc)"]
+    - 2,
+    s="$aotP$",
+)
+
 
 # Add traditional thresholds
 h.axhline(0.0, c="black", lw=0.7, ls="--")
@@ -420,8 +461,16 @@ template_summary_df = pd.read_csv(
 
 # Take -log10 of adjusted p-value
 template_summary_df["padj_log10"] = -np.log10(template_summary_df["Adj P-value (Real)"])
+# -
 
+# Drop cbrB and crc rows for plotting
+print(template_summary_df.shape)
+template_summary_df.head()
 
+template_summary_df = template_summary_df.drop(drop_idx)
+print(template_summary_df.shape)
+
+# +
 # Plot
 f1 = sns.scatterplot(
     data=template_summary_df,
@@ -477,7 +526,7 @@ f1 = sns.scatterplot(
 )
 
 # Add text labels for those genes mentioned above
-plt.text(
+"""plt.text(
     x=template_summary_df.loc[
         template_summary_df["Gene Name"] == "pqsA", "logFC (Real)"
     ]
@@ -485,28 +534,63 @@ plt.text(
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsA", "padj_log10"]
     - 0.2,
     s="$pqsA$",
-)
+)"""
 plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "pqsA", "logFC (Real)"
+    ]
+    - 0.7,
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsA", "padj_log10"]
+    - 0.2,
+    s="$pqsA$",
+)
+"""plt.text(
     x=template_summary_df.loc[
         template_summary_df["Gene Name"] == "nosZ", "logFC (Real)"
     ]
     + 0.2,
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "nosZ", "padj_log10"],
     s="$nosZ$",
-)
+)"""
 plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "nosZ", "logFC (Real)"
+    ]
+    + 0.1,
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "nosZ", "padj_log10"],
+    s="$nosZ$",
+)
+"""plt.text(
     x=template_summary_df.loc[
         template_summary_df["Gene Name"] == "pqsE", "logFC (Real)"
     ]
     + 0.2,
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsE", "padj_log10"],
     s="$pqsE$",
-)
+)"""
 plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "pqsE", "logFC (Real)"
+    ]
+    + 0.15,
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsE", "padj_log10"],
+    s="$pqsE$",
+)
+"""plt.text(
     x=template_summary_df.loc[
         template_summary_df["Gene Name"] == "ccoP2", "logFC (Real)"
     ]
     + 0.2,
+    y=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "ccoP2", "padj_log10"
+    ],
+    s="$ccoP2$",
+)"""
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "ccoP2", "logFC (Real)"
+    ]
+    + 0.15,
     y=template_summary_df.loc[
         template_summary_df["Gene Name"] == "ccoP2", "padj_log10"
     ],
@@ -556,6 +640,13 @@ template_summary_df = pd.read_csv(
 # Take -log10 of adjusted p-value
 template_summary_df["padj_log10"] = -np.log10(template_summary_df["Adj P-value (Real)"])
 
+print(template_summary_df.shape)
+# -
+
+template_summary_df = template_summary_df.drop(drop_idx)
+print(template_summary_df.shape)
+
+# +
 # Plot
 f2 = sns.scatterplot(
     data=template_summary_df,
@@ -628,10 +719,19 @@ plt.text(
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "nosZ", "padj_log10"],
     s="$nosZ$",
 )
-plt.text(
+"""plt.text(
     x=template_summary_df.loc[
         template_summary_df["Gene Name"] == "pqsE", "logFC (Real)"
     ],
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsE", "padj_log10"]
+    - 0.3,
+    s="$pqsE$",
+)"""
+plt.text(
+    x=template_summary_df.loc[
+        template_summary_df["Gene Name"] == "pqsE", "logFC (Real)"
+    ]
+    - 0.7,
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsE", "padj_log10"]
     - 0.3,
     s="$pqsE$",

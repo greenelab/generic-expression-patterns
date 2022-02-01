@@ -273,7 +273,7 @@ figure_4.save("output/figure_4.svg")
 
 # Create panels for figure 5
 panel_5a = make_figure_panel(
-    os.path.join(local_directory, "cbrAB_simpler_arg_model.svg"),
+    "Fig-5A_cbrAB_simpler_arg_model.svg",
     scale_x_input=2,
     scale_y_input=2,
     x_loc=30,
@@ -283,37 +283,37 @@ panel_5b1 = make_figure_panel(
     "../pseudomonas_analysis/cbrB_volcano_zscore_highlight.svg",
     scale_x_input=1,
     scale_y_input=1,
-    x_loc=350,
+    x_loc=450,
     y_loc=10,
 )
 panel_5b2 = make_figure_panel(
     "../pseudomonas_analysis/crc_volcano_zscore_highlight.svg",
     scale_x_input=1,
     scale_y_input=1,
-    x_loc=750,
+    x_loc=850,
     y_loc=10,
 )
 panel_5c = make_figure_panel(
     "../pseudomonas_analysis/cbrB_crc_zscore_compare.svg",
     scale_x_input=1,
     scale_y_input=1,
-    x_loc=350,
+    x_loc=450,
     y_loc=300,
 )
 panel_5d = make_figure_panel(
     os.path.join(local_directory, "WT-cbrB-EV-comp_10nM_Arg_crc.svg"),
     scale_x_input=2,
     scale_y_input=2,
-    x_loc=900,
+    x_loc=1000,
     y_loc=300,
 )
 
 panel_5a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_5b_label = sg.TextElement(350, 20, "B", size=18, weight="bold", font="Verdana")
-panel_5c_label = sg.TextElement(350, 300, "C", size=18, weight="bold", font="Verdana")
-panel_5d_label = sg.TextElement(900, 300, "D", size=18, weight="bold", font="Verdana")
+panel_5b_label = sg.TextElement(450, 20, "B", size=18, weight="bold", font="Verdana")
+panel_5c_label = sg.TextElement(450, 300, "C", size=18, weight="bold", font="Verdana")
+panel_5d_label = sg.TextElement(1000, 300, "D", size=18, weight="bold", font="Verdana")
 
-figure_5 = sg.SVGFigure("1300", "700")
+figure_5 = sg.SVGFigure("1500", "700")
 figure_5.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),

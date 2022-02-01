@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="fig5A_cbrAB_simpler_arg_model.svg">
+  <defs
+     id="defs2">
+    <style
+       id="style2">.cls-1,.cls-15{fill:#facf5a;}.cls-1,.cls-12,.cls-13,.cls-15,.cls-16,.cls-3,.cls-6{stroke:#231f20;}.cls-1,.cls-12,.cls-13,.cls-15,.cls-16,.cls-2,.cls-3,.cls-4,.cls-6{stroke-miterlimit:10;}.cls-1{opacity:0.38;}.cls-2,.cls-4{fill:#f2b4b4;stroke:#ed1c24;}.cls-2{opacity:0.66;}.cls-3{fill:#d9d9d9;}.cls-5,.cls-8{font-size:20px;}.cls-5{fill:#ed1c24;}.cls-10,.cls-18,.cls-5,.cls-8{font-family:Verdana;}.cls-12,.cls-13,.cls-6{fill:none;}.cls-13,.cls-6{stroke-width:2px;}.cls-10,.cls-17,.cls-18,.cls-7,.cls-8{fill:#231f20;}.cls-10,.cls-17,.cls-9{font-size:10px;}.cls-11{letter-spacing:-0.02em;}.cls-13{stroke-dasharray:5.76 5.76;}.cls-14{fill:#58595b;}.cls-16{fill:#888;stroke-width:0.75px;}.cls-17{font-family:Verdana-Italic, Verdana;font-style:italic;}.cls-18{font-size:16px;}</style>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="-77.142857"
+     inkscape:cy="560"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1001"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g988"
+       transform="matrix(0.69583242,0,0,0.69583242,-3.5110471,1.7402414)">
+      <rect
+         id="rect6"
+         rx="2.96"
+         height="14.01"
+         width="123.31"
+         y="236.75"
+         x="135.19"
+         class="cls-1"
+         style="opacity:0.38000022;fill:#facf5a;stroke:#231f20;stroke-miterlimit:10" />
+      <rect
+         id="rect8"
+         rx="2.77"
+         height="14.01"
+         width="108.08"
+         y="138.05"
+         x="139.92"
+         class="cls-2"
+         style="opacity:0.66000001;fill:#f2b4b4;stroke:#ed1c24;stroke-miterlimit:10" />
+      <ellipse
+         id="ellipse10"
+         ry="28.67"
+         rx="43.919998"
+         cy="29.17"
+         cx="188.03"
+         class="cls-3"
+         style="fill:#d9d9d9;stroke:#231f20;stroke-miterlimit:10" />
+      <rect
+         id="rect12"
+         rx="10.33"
+         height="41.16"
+         width="72.059998"
+         y="92.050003"
+         x="153.35001"
+         class="cls-4"
+         style="fill:#f2b4b4;stroke:#ed1c24;stroke-miterlimit:10" />
+      <text
+         id="text14"
+         transform="translate(164.19,119.34)"
+         class="cls-5"
+         style="font-size:20px;font-family:Verdana;fill:#ed1c24">CbrB</text>
+      <line
+         id="line16"
+         y2="80.739998"
+         x2="187.74001"
+         y1="60.43"
+         x1="187.74001"
+         class="cls-6"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10" />
+      <path
+         id="path18"
+         transform="translate(-26.69,-29.8)"
+         d="m 214.42,117.54 a 35.13,35.13 0 0 0 -5.51,-9.92 l 5.51,2 5.52,-2 a 35.41,35.41 0 0 0 -5.52,9.92 z"
+         class="cls-7"
+         inkscape:connector-curvature="0"
+         style="fill:#231f20" />
+      <text
+         id="text24"
+         transform="translate(162.42,25.39)"
+         class="cls-8"
+         style="font-size:20px;font-family:Verdana;fill:#231f20">CbrA<tspan
+   id="tspan22"
+   class="cls-9"
+   style="font-size:10px">
+  <tspan
+     id="tspan20"
+     y="12"
+     x="-14.58">(sensor kinase)</tspan>
+</tspan>
+</text>
+      <text
+         id="text30"
+         transform="translate(141.69,148.43)"
+         class="cls-10"
+         style="font-size:10px;font-family:Verdana;fill:#231f20">(t<tspan
+   id="tspan26"
+   y="0"
+   x="8.4799995"
+   class="cls-11"
+   style="letter-spacing:-0.02em">r</tspan>
+<tspan
+   id="tspan28"
+   y="0"
+   x="12.57">anscription factor)</tspan>
+</text>
+      <line
+         id="line32"
+         y2="134.28"
+         x2="252.97"
+         y1="134.28"
+         x1="125.04"
+         class="cls-12"
+         style="fill:none;stroke:#231f20;stroke-miterlimit:10" />
+      <text
+         id="text34"
+         transform="translate(125.84,129.72)"
+         class="cls-10"
+         style="font-size:10px;font-family:Verdana;fill:#231f20">DNA</text>
+      <line
+         id="line36"
+         y2="162.62"
+         x2="187.74001"
+         y1="158.62"
+         x1="187.74001"
+         class="cls-6"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10" />
+      <line
+         id="line38"
+         y2="177.02"
+         x2="187.74001"
+         y1="168.38"
+         x1="187.74001"
+         class="cls-13"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10;stroke-dasharray:5.76, 5.76" />
+      <line
+         id="line40"
+         y2="183.89999"
+         x2="187.74001"
+         y1="179.89999"
+         x1="187.74001"
+         class="cls-6"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10" />
+      <rect
+         id="rect42"
+         height="1.54"
+         width="10.01"
+         y="183.13"
+         x="182.73"
+         class="cls-7"
+         style="fill:#231f20" />
+      <path
+         id="path44"
+         transform="translate(-26.69,-29.8)"
+         d="m 178.31,241.79 a 22.39,22.39 0 0 0 19,2.43 55.26,55.26 0 0 0 9.33,-4.58 32.9,32.9 0 0 1 10.06,-3.89 28.54,28.54 0 0 1 20.76,4.3 c 3,2 5.85,4.1 9.19,5.45 a 32,32 0 0 0 9.89,2.17 c 8.08,0.55 16.15,-1.19 24,-3 0.79,-0.18 0.46,-1.39 -0.33,-1.21 -7,1.62 -14.13,3.15 -21.35,3 a 33.45,33.45 0 0 1 -10.32,-1.64 c -3.5,-1.19 -6.47,-3.26 -9.51,-5.3 a 30.41,30.41 0 0 0 -18.76,-5.48 28.4,28.4 0 0 0 -9.54,2.14 c -3.23,1.35 -6.17,3.25 -9.27,4.85 a 23.58,23.58 0 0 1 -11.48,3 20.9,20.9 0 0 1 -11,-3.34 c -0.67,-0.44 -1.3,0.64 -0.63,1.08 z"
+         class="cls-14"
+         inkscape:connector-curvature="0"
+         style="fill:#58595b" />
+      <circle
+         id="circle46"
+         r="17.07"
+         cy="211.11"
+         cx="188.52"
+         class="cls-15"
+         style="fill:#facf5a;stroke:#231f20;stroke-miterlimit:10" />
+      <text
+         id="text48"
+         transform="translate(170.64,216.82)"
+         class="cls-8"
+         style="font-size:20px;font-family:Verdana;fill:#231f20">Crc</text>
+      <text
+         id="text54"
+         transform="translate(136.19,246.97)"
+         class="cls-10"
+         style="font-size:10px;font-family:Verdana;fill:#231f20">(t<tspan
+   id="tspan50"
+   y="0"
+   x="8.4799995"
+   class="cls-11"
+   style="letter-spacing:-0.02em">r</tspan>
+<tspan
+   id="tspan52"
+   y="0"
+   x="12.57">anslational repressor)</tspan>
+</text>
+      <circle
+         id="circle56"
+         r="3.3199999"
+         cy="305.22"
+         cx="173.42999"
+         class="cls-16"
+         style="fill:#888888;stroke:#231f20;stroke-width:0.75px;stroke-miterlimit:10" />
+      <circle
+         id="circle58"
+         r="3.3199999"
+         cy="292.32001"
+         cx="186.75999"
+         class="cls-16"
+         style="fill:#888888;stroke:#231f20;stroke-width:0.75px;stroke-miterlimit:10" />
+      <text
+         id="text60"
+         transform="translate(124.6,207.79)"
+         class="cls-10"
+         style="font-size:10px;font-family:Verdana;fill:#231f20">mRNA</text>
+      <circle
+         id="circle62"
+         r="3.3199999"
+         cy="298.67001"
+         cx="175.35001"
+         class="cls-16"
+         style="fill:#888888;stroke:#231f20;stroke-width:0.75px;stroke-miterlimit:10" />
+      <circle
+         id="circle64"
+         r="3.3199999"
+         cy="293.85001"
+         cx="180.22"
+         class="cls-16"
+         style="fill:#888888;stroke:#231f20;stroke-width:0.75px;stroke-miterlimit:10" />
+      <path
+         id="path66"
+         transform="translate(-26.69,-29.8)"
+         d="m 177.34,350.3 c 2.16,-2.8 5.36,-4.47 8.47,-6 9.44,-4.55 20.27,-8.48 29.78,-4.67 a 9,9 0 0 1 5.12,4.29 10.58,10.58 0 0 1 0.76,3.41 36.77,36.77 0 0 1 -0.65,11.21 c -0.5,2.35 -1.48,4.95 -3.62,5.87 -1.53,0.65 -3.22,0.25 -4.83,0 -11.89,-2.1 -19.77,4.35 -30.66,6.19 -11.4,1.93 -10.15,-12.79 -4.37,-20.3 z"
+         class="cls-3"
+         inkscape:connector-curvature="0"
+         style="fill:#d9d9d9;stroke:#231f20;stroke-miterlimit:10" />
+      <path
+         id="path68"
+         transform="translate(-26.69,-29.8)"
+         d="m 179.35,386.8 c 1.48,-0.31 2.4,-1.57 3.37,-2.62 4.16,-4.49 11.2,-6.06 17.72,-5.48 6.52,0.58 12.71,3 18.77,5.43 a 9.84,9.84 0 0 0 5,-11.33 c -1.31,-4.28 -5.94,-7.61 -10.78,-7.73 -4.43,-0.12 -8.4,2.11 -12.59,3.31 -4.19,1.2 -9,1.35 -13.45,2.09 -4.77,0.78 -9.68,2.25 -11.8,6.34 -1.35,2.54 -1.76,11.13 3.76,9.99 z"
+         class="cls-3"
+         inkscape:connector-curvature="0"
+         style="fill:#d9d9d9;stroke:#231f20;stroke-miterlimit:10" />
+      <path
+         id="path70"
+         transform="translate(-26.69,-29.8)"
+         d="m 229.87,358.63 a 8.74,8.74 0 0 1 3.56,-0.07 10,10 0 0 1 5.25,3.13"
+         class="cls-6"
+         inkscape:connector-curvature="0"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10" />
+      <polygon
+         id="polygon72"
+         points="214.01,334.43 209.66,332.06 211.8,331.72 212.56,329.7 "
+         class="cls-7"
+         style="fill:#231f20" />
+      <text
+         id="text76"
+         transform="translate(218.95,213.22)"
+         class="cls-17"
+         style="font-style:italic;font-size:10px;font-family:Verdana-Italic, Verdana;fill:#231f20">catabolism/<tspan
+   id="tspan74"
+   y="12"
+   x="0">transport genes</tspan>
+</text>
+      <path
+         id="path78"
+         transform="translate(-26.69,-29.8)"
+         d="m 161.63,371.67 c 16.2,1.52 31.78,-4.13 47.7,-6 a 73,73 0 0 1 11.92,-0.52 c 4.12,0.19 8.43,0.68 12.19,2.48 3.33,1.6 6,4.14 9.55,5.42 a 17.84,17.84 0 0 0 9.46,0.86 12.46,12.46 0 0 0 4.75,-2 28.92,28.92 0 0 0 4.33,-4.38 22.55,22.55 0 0 1 11.05,-6.63 0.63,0.63 0 0 0 -0.33,-1.21 23.91,23.91 0 0 0 -9.24,4.7 c -2.84,2.35 -4.73,5.83 -8.15,7.45 a 14.73,14.73 0 0 1 -10.28,0.43 c -3.69,-1.07 -6.41,-3.5 -9.72,-5.3 a 28.5,28.5 0 0 0 -11,-2.87 66.14,66.14 0 0 0 -11.94,0.06 c -7.86,0.7 -15.58,2.44 -23.32,4 -8.9,1.74 -17.94,3.17 -27,2.32 -0.8,-0.08 -0.8,1.17 0,1.25 z"
+         class="cls-14"
+         inkscape:connector-curvature="0"
+         style="fill:#58595b" />
+      <line
+         id="line80"
+         y2="274"
+         x2="187.74001"
+         y1="258.48001"
+         x1="187.74001"
+         class="cls-6"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10" />
+      <rect
+         id="rect82"
+         height="1.54"
+         width="10.01"
+         y="273.23001"
+         x="182.73"
+         class="cls-7"
+         style="fill:#231f20" />
+      <text
+         id="text90"
+         y="-29.799999"
+         x="-26.690001"
+         class="cls-10"
+         style="font-size:10px;font-family:Verdana;fill:#231f20">
+        <tspan
+           id="tspan84"
+           y="300.29001"
+           x="193.32001">t</tspan>
+        <tspan
+           id="tspan86"
+           y="300.29001"
+           x="197.25999"
+           class="cls-11"
+           style="letter-spacing:-0.02em">r</tspan>
+        <tspan
+           id="tspan88"
+           y="300.29001"
+           x="201.35001">ansporters/enzymes</tspan>
+      </text>
+      <text
+         id="text96"
+         transform="translate(199.19,353.62)"
+         class="cls-10"
+         style="font-size:10px;font-family:Verdana;fill:#231f20">(t<tspan
+   id="tspan92"
+   y="0"
+   x="8.4799995"
+   class="cls-11"
+   style="letter-spacing:-0.02em">r</tspan>
+<tspan
+   id="tspan94"
+   y="0"
+   x="12.57">anslation)</tspan>
+</text>
+      <text
+         id="text100"
+         transform="translate(16.59,212.15)"
+         class="cls-18"
+         style="font-size:16px;font-family:Verdana;fill:#231f20">Arginine <tspan
+   id="tspan98"
+   y="19.200001"
+   x="-11.38">Catabolism</tspan>
+</text>
+      <line
+         id="line102"
+         y2="182.32001"
+         x2="49.740002"
+         y1="140.83"
+         x1="49.740002"
+         class="cls-6"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10" />
+      <path
+         id="path104"
+         transform="translate(-26.69,-29.8)"
+         d="m 76.43,219.13 a 35,35 0 0 0 -5.52,-9.92 l 5.52,2 5.51,-2 a 35.24,35.24 0 0 0 -5.51,9.92 z"
+         class="cls-7"
+         inkscape:connector-curvature="0"
+         style="fill:#231f20" />
+      <line
+         id="line106"
+         y2="140.83"
+         x2="49.740002"
+         y1="140.83"
+         x1="110.09"
+         class="cls-6"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10" />
+      <line
+         id="line108"
+         y2="298.54999"
+         x2="49.740002"
+         y1="298.54999"
+         x1="164.8"
+         class="cls-6"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10" />
+      <line
+         id="line110"
+         y2="245.09"
+         x2="49.740002"
+         y1="298.54999"
+         x1="49.740002"
+         class="cls-6"
+         style="fill:none;stroke:#231f20;stroke-width:2px;stroke-miterlimit:10" />
+      <path
+         id="path112"
+         transform="translate(-26.69,-29.8)"
+         d="m 76.43,267.9 a 35,35 0 0 0 5.57,9.91 l -5.52,-2 -5.52,2 a 35,35 0 0 0 5.47,-9.91 z"
+         class="cls-7"
+         inkscape:connector-curvature="0"
+         style="fill:#231f20" />
+    </g>
+  </g>
+</svg>
