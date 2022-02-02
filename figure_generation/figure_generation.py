@@ -159,32 +159,32 @@ figure_2.save("output/figure_2.svg")
 # Note: panel 3B was created in google slides and then exported from inkscape
 panel_3a = make_figure_panel(
     "../human_cancer_analysis/pathway_ranking_padj.svg",
-    scale_x_input=1,
-    scale_y_input=1,
+    scale_x_input=1.3,
+    scale_y_input=1.3,
     x_loc=30,
     y_loc=10,
 )
 panel_3b = make_figure_panel(
     "Fig-4C-extendable workflow.svg",
-    scale_x_input=3,
-    scale_y_input=3,
-    x_loc=30,
-    y_loc=300,
+    scale_x_input=4.5,
+    scale_y_input=4.5,
+    x_loc=600,
+    y_loc=30,
 )
 panel_3c = make_figure_panel(
     "../other_enrichment_methods/enrichment_corr_plot.svg",
     scale_x_input=1.5,
     scale_y_input=1.5,
-    x_loc=750,
-    y_loc=300,
+    x_loc=30,
+    y_loc=400,
 )
 
 
 panel_3a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_3b_label = sg.TextElement(10, 300, "B", size=18, weight="bold", font="Verdana")
-panel_3c_label = sg.TextElement(700, 300, "C", size=18, weight="bold", font="Verdana")
+panel_3b_label = sg.TextElement(600, 30, "B", size=18, weight="bold", font="Verdana")
+panel_3c_label = sg.TextElement(30, 400, "C", size=18, weight="bold", font="Verdana")
 
-figure_3 = sg.SVGFigure("1400", "900")
+figure_3 = sg.SVGFigure("1600", "1000")
 figure_3.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
