@@ -247,6 +247,9 @@ cbrB_crc_df.head()
 
 # +
 # Drop cbrB and crc rows for plot
+# Note: The knockout genes (cbrB and crc) were removed from the volcano plots below since
+# they are "outliers" and the scaling for the z-score could be illustrated more clearly.
+
 drop_idx = cbrB_crc_df[
     (cbrB_crc_df["gene group"] == "cbrB") | (cbrB_crc_df["gene group"] == "crc")
 ].index
@@ -463,7 +466,7 @@ template_summary_df = pd.read_csv(
 template_summary_df["padj_log10"] = -np.log10(template_summary_df["Adj P-value (Real)"])
 # -
 
-# Drop cbrB and crc rows for plotting
+# Drop cbrB and crc rows for plotting -- see comment above for reason
 print(template_summary_df.shape)
 template_summary_df.head()
 
