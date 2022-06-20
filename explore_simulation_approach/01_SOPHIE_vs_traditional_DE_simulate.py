@@ -46,10 +46,6 @@ num_generic_genes = 100
 num_specific_genes = 10
 num_experiments = 90
 
-# Range of counts
-min_expression = 0
-max_expression = 1000
-
 # params for distribution for scaler used to shift generic and specific genes
 mean_scaler = 0
 var_scaler = 10
@@ -97,8 +93,6 @@ print(generic_gene_ids)
 def run_make_experiment(
     num_samples,
     num_genes,
-    min_expression,
-    max_expression,
     sample_ids,
     all_gene_ids,
     generic_gene_ids,
@@ -109,13 +103,9 @@ def run_make_experiment(
     experiment_data = {}
     for sample in range(num_samples):
 
-        # sample_profile = np.zeros(num_genes)
-        # for j in range(num_genes):
-        #    sample_profile[j] = random.randint(min_expression, max_expression)
-
         # Randomly select a different probability for each sample
         p = random.uniform(0.0, 1.0)
-        sample_profile = np.random.negative_binomial(100, p, num_genes)
+        sample_profile = np.random.negative_binomial(1000, p, num_genes)
 
         # Create dictionary to define dataframe
         experiment_data[sample_ids[sample]] = sample_profile
@@ -146,8 +136,6 @@ def make_experiments(
     num_experiments,
     num_samples,
     num_genes,
-    mean_expression,
-    var_expression,
     sample_ids,
     all_gene_ids,
     generic_gene_ids,
@@ -175,8 +163,6 @@ def make_experiments(
         experiment_df = run_make_experiment(
             num_samples,
             num_genes,
-            mean_expression,
-            var_expression,
             sample_ids,
             all_gene_ids,
             generic_gene_ids,
@@ -203,8 +189,6 @@ for i in range(10):
         1,
         num_samples,
         num_genes,
-        min_expression,
-        max_expression,
         sample_ids,
         gene_ids,
         generic_gene_ids,
@@ -233,8 +217,6 @@ compendium, compendium_specific_ids = make_experiments(
     num_experiments,
     num_samples,
     num_genes,
-    min_expression,
-    max_expression,
     sample_ids,
     gene_ids,
     generic_gene_ids,

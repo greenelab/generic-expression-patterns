@@ -410,6 +410,9 @@ with open(generic_gene_ids_filename, "rb") as generic_fh:
 sophie_specific_mean = summary_gene_ranks_sorted.loc[specific_gene_ids, "rank"].mean()
 trad_specific_mean = trad_de_stats_sorted.loc[specific_gene_ids, "rank"].mean()
 
+print(sophie_specific_mean)
+print(trad_specific_mean)
+
 summary_gene_ranks_sorted.loc[specific_gene_ids, "rank"]
 
 trad_de_stats_sorted.loc[specific_gene_ids, "rank"]
@@ -417,6 +420,9 @@ trad_de_stats_sorted.loc[specific_gene_ids, "rank"]
 # Get mean of generic gene ranks
 sophie_generic_mean = summary_gene_ranks_sorted.loc[generic_gene_ids, "rank"].mean()
 trad_generic_mean = trad_de_stats_sorted.loc[generic_gene_ids, "rank"].mean()
+
+print(sophie_generic_mean)
+print(trad_generic_mean)
 
 summary_gene_ranks_sorted.loc[generic_gene_ids, "rank"]
 

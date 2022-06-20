@@ -13,14 +13,9 @@
 #     name: conda-env-generic_expression-py
 # ---
 
-# # Evaluation
+# # Train VAE
 #
-# How often do regular differential expression analysis vs sophie prioritize the specific vs generic genes?
-#
-# 1. Simulate 1 template perturbation experiment using the technique above
-# 2. Apply SOPHIE to get ranking of specific and generic genes based on their z-score.
-# 3. Apply traditional DE analysis and get ranking of specific and generic genes based on their log fold change value
-# 4. Compare the difference in ranking between specific and generic genes using SOPHIE vs traditional metrics.
+# Train VAE on simulated compendium
 
 # +
 # %load_ext autoreload
