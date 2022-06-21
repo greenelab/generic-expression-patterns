@@ -190,7 +190,7 @@ input_data_UMAPencoded_df.head()
 # Plot
 fig = ggplot(input_data_UMAPencoded_df, aes(x="1", y="2"))
 fig += geom_point(aes(color="strain type"), alpha=0.2)
-fig += labs(x="UMAP 1", y="UMAP 2", title="UMAP of *Pa* compendium")
+fig += labs(x="UMAP 1", y="UMAP 2", title="UMAP of encoded *Pa* compendium")
 fig += theme_bw()
 fig += theme(
     legend_title_align="center",
