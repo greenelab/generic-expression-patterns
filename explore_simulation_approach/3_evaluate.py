@@ -340,7 +340,7 @@ summary_gene_ranks_sorted = summary_gene_ranks.sort_values(
 
 # Add ranking based on Z-score
 summary_gene_ranks_sorted["rank"] = summary_gene_ranks_sorted["Z score"].rank(
-    ascending=False
+    ascending=True
 )
 
 summary_gene_ranks_sorted.head(10)
@@ -387,7 +387,7 @@ trad_de_stats_sorted = trad_de_stats.sort_values(by="log2FoldChange", ascending=
 
 # Add ranking based on log2FoldChange
 trad_de_stats_sorted["rank"] = trad_de_stats_sorted["log2FoldChange"].rank(
-    ascending=False
+    ascending=True
 )
 
 trad_de_stats_sorted.head(10)

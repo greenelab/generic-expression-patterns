@@ -14,6 +14,10 @@
 # ---
 
 # # Plot
+#
+# This notebook plots the distribution of differences in mean ranks using 8 template experiments
+#
+# *Note: There were 10 template experiments but for one of the experiments DESeq didn't successfully run due to the distribution of data between samples being too similar
 
 # %load_ext autoreload
 # %autoreload 2
@@ -21,6 +25,28 @@ import pandas as pd
 import seaborn as sns
 
 mean_diff_sophie = [
+    11.45999999999998,
+    63.17999999999995,
+    -38.05000000000007,
+    -180.85000000000002,
+    -20.860000000000014,
+    52.52000000000004,
+    47.93000000000001,
+    -74.08000000000004,
+]
+
+mean_diff_trad = [
+    -140.90999999999997,
+    -34.6400000000001,
+    -128.58000000000004,
+    61.35000000000002,
+    -125.88,
+    -62.710000000000036,
+    -262.26000000000005,
+    -169.8,
+]
+
+"""mean_diff_sophie = [
     -11.45999999999998,
     -63.18000000000001,
     38.05000000000001,
@@ -30,9 +56,9 @@ mean_diff_sophie = [
     -52.52000000000004,
     -47.930000000000064,
     74.08000000000004,
-]
+]"""
 
-mean_diff_trad = [
+"""mean_diff_trad = [
     140.91000000000003,
     34.639999999999986,
     128.57999999999998,
@@ -42,7 +68,7 @@ mean_diff_trad = [
     62.710000000000036,
     262.25999999999993,
     169.8,
-]
+]"""
 
 # Make dataframe
 mean_diff = pd.DataFrame(
@@ -61,6 +87,7 @@ fig = sns.swarmplot(
     y="value",
     # notch=True,
     palette=["#2c7fb8", "lightgrey"],
+    size=10,
 )
 fig.set_xlabel(None)
 fig.set_xticklabels(["SOPHIE", "Traditional"], fontsize=14, fontname="Verdana")
