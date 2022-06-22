@@ -59,39 +59,31 @@ def make_figure_panel(filename, scale_x_input, scale_y_input, x_loc, y_loc):
 panel_1a = make_figure_panel(
     "Fig-1A-SOPHIE workflow.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
-panel_1b_left = make_figure_panel(
-    "../pseudomonas_analysis/pa_raw_clustering.svg",
-    scale_x_input=0.6,
-    scale_y_input=0.6,
-    x_loc=30,
-    y_loc=500,
-)
-panel_1b_right = make_figure_panel(
+panel_1b = make_figure_panel(
     "../pseudomonas_analysis/pa_vae_clustering.svg",
-    scale_x_input=0.6,
-    scale_y_input=0.6,
-    x_loc=260,
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=30,
     y_loc=500,
 )
 panel_1c = make_figure_panel(
     "../human_general_array_analysis/gene_ranking_logFC.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
-    x_loc=600,
+    x_loc=500,
     y_loc=500,
 )
 
 panel_1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_1b_label = sg.TextElement(10, 500, "B", size=18, weight="bold", font="Verdana")
-panel_1c_label = sg.TextElement(600, 500, "C", size=18, weight="bold", font="Verdana")
+panel_1c_label = sg.TextElement(500, 500, "C", size=18, weight="bold", font="Verdana")
 
-figure_1 = sg.SVGFigure("1000", "900")
+figure_1 = sg.SVGFigure("900", "900")
 figure_1.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
         panel_1a,
-        panel_1b_left,
-        panel_1b_right,
+        panel_1b,
         panel_1c,
         panel_1a_label,
         panel_1b_label,

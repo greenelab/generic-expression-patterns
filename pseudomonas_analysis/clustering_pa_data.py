@@ -123,11 +123,8 @@ input_data_UMAPencoded_df.head()
 
 # Colors
 marker_colors = {
-    # "Clinical Isolate": "#89A45E",
     "PA14": "#EF8B46",
-    # "PAK": "#EF8B46",
     "PAO1": "#C6A9B5",
-    # "NA": "#D8DAEB",
     "other": "#808080",
 }
 
@@ -139,7 +136,7 @@ fig1 += scale_color_manual(values=marker_colors)
 fig1 += labs(x="UMAP 1", y="UMAP 2", title="Pa compendium in gene space")
 fig1 += theme_bw()
 fig1 += theme(
-    figure_size=(6, 10),
+    # figure_size=(6, 10),
     legend_title_align="center",
     plot_background=element_rect(fill="white"),
     legend_key=element_rect(fill="white", colour="white"),
@@ -209,7 +206,7 @@ fig2 += scale_color_manual(values=marker_colors)
 fig2 += labs(x="UMAP 1", y="UMAP 2", title="Pa compendium in VAE space")
 fig2 += theme_bw()
 fig2 += theme(
-    figure_size=(6, 10),
+    # figure_size=(6, 10),
     legend_title_align="center",
     plot_background=element_rect(fill="white"),
     legend_key=element_rect(fill="white", colour="white"),
