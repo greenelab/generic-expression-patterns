@@ -48,6 +48,7 @@ from plotnine import (
     element_rect,
     element_line,
     coords,
+    options,
 )
 
 from numpy.random import seed
@@ -118,14 +119,27 @@ input_data_UMAPencoded_df = pd.DataFrame(
 input_data_UMAPencoded_df["strain type"] = raw_pa_compendium["strain type"]
 
 input_data_UMAPencoded_df.head()
+# -
+
+# Colors
+marker_colors = {
+    # "Clinical Isolate": "#89A45E",
+    "PA14": "#EF8B46",
+    # "PAK": "#EF8B46",
+    "PAO1": "#C6A9B5",
+    # "NA": "#D8DAEB",
+    "other": "#808080",
+}
 
 # +
 # Plot
-fig = ggplot(input_data_UMAPencoded_df, aes(x="1", y="2"))
-fig += geom_point(aes(color="strain type"), alpha=0.2)
-fig += labs(x="UMAP 1", y="UMAP 2", title="UMAP of *Pa* compendium")
-fig += theme_bw()
-fig += theme(
+fig1 = ggplot(input_data_UMAPencoded_df, aes(x="1", y="2"))
+fig1 += geom_point(aes(color="strain type"), alpha=0.2, size=3, stroke=0.8)
+fig1 += scale_color_manual(values=marker_colors)
+fig1 += labs(x="UMAP 1", y="UMAP 2", title="Pa compendium in gene space")
+fig1 += theme_bw()
+fig1 += theme(
+    figure_size=(6, 10),
     legend_title_align="center",
     plot_background=element_rect(fill="white"),
     legend_key=element_rect(fill="white", colour="white"),
@@ -135,10 +149,11 @@ fig += theme(
     axis_text=element_text(family="sans-serif", size=12),
     axis_title=element_text(family="sans-serif", size=15),
 )
-fig += guides(colour=guide_legend(override_aes={"alpha": 1}))
-# fig += scale_color_manual(['#ff6666', '#add8e6'])
+fig1 += guides(colour=guide_legend(override_aes={"alpha": 1}))
 
-print(fig)
+print(fig1)
+
+fig1.save("pa_raw_clustering.svg", format="svg", dpi=300)
 
 # +
 # Load model
@@ -188,11 +203,13 @@ input_data_UMAPencoded_df.head()
 
 # +
 # Plot
-fig = ggplot(input_data_UMAPencoded_df, aes(x="1", y="2"))
-fig += geom_point(aes(color="strain type"), alpha=0.2)
-fig += labs(x="UMAP 1", y="UMAP 2", title="UMAP of encoded *Pa* compendium")
-fig += theme_bw()
-fig += theme(
+fig2 = ggplot(input_data_UMAPencoded_df, aes(x="1", y="2"))
+fig2 += geom_point(aes(color="strain type"), alpha=0.2, size=3, stroke=0.8)
+fig2 += scale_color_manual(values=marker_colors)
+fig2 += labs(x="UMAP 1", y="UMAP 2", title="Pa compendium in VAE space")
+fig2 += theme_bw()
+fig2 += theme(
+    figure_size=(6, 10),
     legend_title_align="center",
     plot_background=element_rect(fill="white"),
     legend_key=element_rect(fill="white", colour="white"),
@@ -202,7 +219,8 @@ fig += theme(
     axis_text=element_text(family="sans-serif", size=12),
     axis_title=element_text(family="sans-serif", size=15),
 )
-fig += guides(colour=guide_legend(override_aes={"alpha": 1}))
-# fig += scale_color_manual(['#ff6666', '#add8e6'])
+fig2 += guides(colour=guide_legend(override_aes={"alpha": 1}))
 
-print(fig)
+print(fig2)
+
+fig2.save("pa_vae_clustering.svg", format="svg", dpi=300)
