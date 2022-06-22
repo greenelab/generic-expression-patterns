@@ -25,6 +25,34 @@ import pandas as pd
 import seaborn as sns
 
 mean_diff_sophie = [
+    18.279999999999973,
+    157.5999999999999,
+    -52.280000000000086,
+    -73.39999999999998,
+    -77.68999999999994,
+    5.712121212121247,
+    5.5,
+    -121.57999999999993,
+    187.05000000000007,
+]
+
+mean_diff_trad = [
+    -146.63,
+    97.46000000000004,
+    -2.7000000000000455,
+    -6.919999999999959,
+    -92.82999999999993,
+    -81.4353535353535,
+    -192.5,
+    -256.09000000000003,
+    54.049999999999955,
+]
+
+# +
+# Sample level
+# -
+
+"""mean_diff_sophie = [
     11.45999999999998,
     63.17999999999995,
     -38.05000000000007,
@@ -33,9 +61,9 @@ mean_diff_sophie = [
     52.52000000000004,
     47.93000000000001,
     -74.08000000000004,
-]
+]"""
 
-mean_diff_trad = [
+"""mean_diff_trad = [
     -140.90999999999997,
     -34.6400000000001,
     -128.58000000000004,
@@ -44,7 +72,7 @@ mean_diff_trad = [
     -62.710000000000036,
     -262.26000000000005,
     -169.8,
-]
+]"""
 
 """mean_diff_sophie = [
     -11.45999999999998,
@@ -80,6 +108,7 @@ mean_diff
 # Melt dataframe to use coloring in boxplot
 mean_diff_melt = pd.melt(mean_diff)
 
+# +
 # Plot coverage distribution given list of generic coverage, specific coverage
 fig = sns.swarmplot(
     data=mean_diff_melt,
@@ -98,3 +127,5 @@ fig.set_title(
     fontsize=16,
     fontname="Verdana",
 )
+
+fig.figure.savefig("validate_sophie_vs_trad.svg", format="svg", dpi=300)
