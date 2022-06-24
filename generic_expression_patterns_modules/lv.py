@@ -455,11 +455,17 @@ def plot_dist_weights(
         palette=["#81448e", "lightgrey"],
     )
     L = plt.legend()
-    L.get_texts()[0].set_text("common")
+    L.get_texts()[0].set_text("Common")
+    L.get_texts()[1].set_text("Other")
 
     fig.set_xlabel("Weight", fontsize=14, fontname="Verdana")
-    fig.set_ylabel("Gene", fontsize=14, fontname="Verdana")
+    fig.set_ylabel("Gene symbol", fontsize=14, fontname="Verdana")
     fig.set_title(f"Weight distribution for {LV_id}", fontsize=14, fontname="Verdana")
+
+    for label in fig.get_yticklabels():
+        label.set_style("italic")
+
+    plt.xlim(0, 7)
 
     fig.figure.savefig(
         out_filename,

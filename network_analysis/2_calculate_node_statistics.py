@@ -94,15 +94,15 @@ centrality_fig = sns.boxplot(
 
 centrality_fig.set_xlabel(None)
 centrality_fig.set_xticklabels(
-    ["other genes", "common DEGs"], fontsize=14, fontname="Verdana"
+    ["Other genes", "Common DEGs"], fontsize=16, fontname="Verdana"
 )
 centrality_fig.set_ylabel(
-    textwrap.fill("Degree of genes", width=30), fontsize=14, fontname="Verdana"
+    textwrap.fill("Degree of genes", width=30), fontsize=16, fontname="Verdana"
 )
 centrality_fig.tick_params(labelsize=14)
 centrality_fig.set_title(
     "Degree distribution of common DEGs/other genes",
-    fontsize=16,
+    fontsize=18,
     fontname="Verdana",
     pad=10,
 )
@@ -114,11 +114,16 @@ plt.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=col)
 plt.text(
     (x1 + x2) * 0.5,
     y + h + 3,
-    f"p-value = {format(pvalue, '.3g')}",
+    f"P-value = {format(pvalue, '.3g')}",
     ha="center",
     va="bottom",
     color=col,
+    size=14,
 )
+
+plt.ylim(0, 250)
+
+centrality_fig.grid(False)
 
 # Save
 centrality_fig.figure.savefig(
