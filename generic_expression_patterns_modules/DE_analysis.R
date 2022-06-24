@@ -133,6 +133,8 @@ get_DE_stats_DESeq <- function(metadata_file,
     metadata <- metadata[order(match(rownames(metadata), colnames(expression_data))), ]
   }
 
+  # Set group variable as a factor to avoid implying a linear relationship
+  # between conditions: https://support.bioconductor.org/p/78516/
   metadata$group <- factor(metadata$group)
 
   group <- interaction(metadata$group)
