@@ -8,7 +8,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression_new] *
+#     display_name: Python [conda env:generic_expression_new]
 #     language: python
 #     name: conda-env-generic_expression_new-py
 # ---
@@ -269,6 +269,7 @@ h = sns.scatterplot(
     palette=["lightgrey"],
     linewidth=0,
     legend=False,
+    s=70,
 )
 h = sns.scatterplot(
     data=cbrB_crc_df[cbrB_crc_df["gene group"] == "ArgR regulon"],
@@ -278,6 +279,7 @@ h = sns.scatterplot(
     alpha=0.5,
     palette=["red"],
     linewidth=0,
+    s=70,
 )
 
 # Highlight specific genes mentioned in the paper (cbrB, crc, argA, aotJQMP)
@@ -311,6 +313,7 @@ h = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 h = sns.scatterplot(
     data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "aotJ"],
@@ -322,6 +325,7 @@ h = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 h = sns.scatterplot(
     data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "aotQ"],
@@ -333,6 +337,7 @@ h = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 h = sns.scatterplot(
     data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "aotM"],
@@ -344,6 +349,7 @@ h = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 h = sns.scatterplot(
     data=cbrB_crc_df[cbrB_crc_df["Gene Name"] == "aotP"],
@@ -355,6 +361,7 @@ h = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 
 # Add text labels for those genes mentioned above
@@ -404,28 +411,33 @@ plt.text(
     y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "argA", "diff z-score (cbrB-crc)"]
     + 1,
     s="$argA$",
+    size=12,
 )
 plt.text(
-    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotJ", "logFC (Real)_cbrB"] - 0.5,
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotJ", "logFC (Real)_cbrB"] - 0.7,
     y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotJ", "diff z-score (cbrB-crc)"],
     s="$aotJ$",
+    size=12,
 )
 plt.text(
     x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotQ", "logFC (Real)_cbrB"] + 0.1,
     y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotQ", "diff z-score (cbrB-crc)"],
     s="$aotQ$",
+    size=12,
 )
 plt.text(
     x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotM", "logFC (Real)_cbrB"],
     y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotM", "diff z-score (cbrB-crc)"]
     - 2,
     s="$aotM$",
+    size=12,
 )
 plt.text(
-    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotP", "logFC (Real)_cbrB"] - 0.5,
+    x=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotP", "logFC (Real)_cbrB"] - 0.7,
     y=cbrB_crc_df.loc[cbrB_crc_df["Gene Name"] == "aotP", "diff z-score (cbrB-crc)"]
-    - 2,
+    - 3,
     s="$aotP$",
+    size=12,
 )
 
 
@@ -434,11 +446,20 @@ h.axhline(0.0, c="black", lw=0.7, ls="--")
 h.axvline(1, c="black", lw=0.7, ls="--")
 h.axvline(-1, c="black", lw=0.7, ls="--")
 
-# Move location of legend
-plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.0)
+plt.xlim(-4, 4)
+plt.ylim(-20, 20)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
-h.set_xlabel(r"log$_{2}$ Fold Change", fontsize=14, fontname="Verdana")
-h.set_ylabel("cbrB z-score - crc z-score", fontsize=14, fontname="Verdana")
+# Make axis thicker
+for _, s in h.spines.items():
+    s.set_linewidth(1.5)
+
+# Move location of legend
+plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.0, fontsize=12)
+
+h.set_xlabel(r"Log$_{2}$ FC", fontsize=16, fontname="Verdana")
+h.set_ylabel("cbrB z-score - crc z-score", fontsize=16, fontname="Verdana")
 # -
 
 # Save
@@ -484,6 +505,7 @@ f1 = sns.scatterplot(
     palette="rocket_r",
     linewidth=0,
     legend=False,
+    s=70,
 )
 
 # Highlight specific common DEGs mentioned in the text
@@ -496,6 +518,7 @@ f1 = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 f1 = sns.scatterplot(
     data=template_summary_df[template_summary_df["Gene Name"] == "nosZ"],
@@ -506,6 +529,7 @@ f1 = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 f1 = sns.scatterplot(
     data=template_summary_df[template_summary_df["Gene Name"] == "pqsE"],
@@ -516,6 +540,7 @@ f1 = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 f1 = sns.scatterplot(
     data=template_summary_df[template_summary_df["Gene Name"] == "ccoP2"],
@@ -526,6 +551,7 @@ f1 = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 
 # Add text labels for those genes mentioned above
@@ -546,6 +572,7 @@ plt.text(
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsA", "padj_log10"]
     - 0.2,
     s="$pqsA$",
+    size=12,
 )
 """plt.text(
     x=template_summary_df.loc[
@@ -562,6 +589,7 @@ plt.text(
     + 0.1,
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "nosZ", "padj_log10"],
     s="$nosZ$",
+    size=12,
 )
 """plt.text(
     x=template_summary_df.loc[
@@ -578,6 +606,7 @@ plt.text(
     + 0.15,
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsE", "padj_log10"],
     s="$pqsE$",
+    size=12,
 )
 """plt.text(
     x=template_summary_df.loc[
@@ -594,10 +623,10 @@ plt.text(
         template_summary_df["Gene Name"] == "ccoP2", "logFC (Real)"
     ]
     + 0.15,
-    y=template_summary_df.loc[
-        template_summary_df["Gene Name"] == "ccoP2", "padj_log10"
-    ],
+    y=template_summary_df.loc[template_summary_df["Gene Name"] == "ccoP2", "padj_log10"]
+    - 0.2,
     s="$ccoP2$",
+    size=12,
 )
 
 # Add traditional thresholds
@@ -605,9 +634,18 @@ f1.axhline(-np.log10(0.05), c="black", lw=0.7, ls="--")
 f1.axvline(1, c="black", lw=0.7, ls="--")
 f1.axvline(-1, c="black", lw=0.7, ls="--")
 
-f1.set_ylabel(r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana")
-f1.set_xlabel(r"-log$_{2}$ Fold Change", fontsize=14, fontname="Verdana")
-f1.set_title("$cbrB$ vs WT", fontsize=14, fontname="Verdana")
+f1.set_ylabel(r"-Log$_{10}$ (FDR adjusted p-value)", fontsize=16, fontname="Verdana")
+f1.set_xlabel(r"-Log$_{2}$ FC (cbrB/WT)", fontsize=16, fontname="Verdana")
+# f1.set_title("$cbrB$ vs WT", fontsize=14, fontname="Verdana")
+
+plt.xlim(-4, 4)
+plt.ylim(0, 4)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+
+# Make axis thicker
+for _, s in f1.spines.items():
+    s.set_linewidth(1.5)
 
 norm = plt.Normalize(
     template_summary_df["Z score"].min(), template_summary_df["Z score"].max()
@@ -617,7 +655,7 @@ sm.set_array([])
 
 cb = f1.figure.colorbar(sm)
 
-cb.ax.tick_params(labelsize=10)
+cb.ax.tick_params(labelsize=12)
 cb.set_label(label="z-score", size=12, fontname="Verdana")
 # -
 
@@ -660,10 +698,11 @@ f2 = sns.scatterplot(
     palette="rocket_r",
     linewidth=0,
     legend=False,
+    s=70,
 )
 
 # Highlight specific common DEGs mentioned in the text
-f1 = sns.scatterplot(
+f2 = sns.scatterplot(
     data=template_summary_df[template_summary_df["Gene Name"] == "pqsA"],
     x="logFC (Real)",
     y="padj_log10",
@@ -672,8 +711,9 @@ f1 = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
-f1 = sns.scatterplot(
+f2 = sns.scatterplot(
     data=template_summary_df[template_summary_df["Gene Name"] == "nosZ"],
     x="logFC (Real)",
     y="padj_log10",
@@ -682,8 +722,9 @@ f1 = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
-f1 = sns.scatterplot(
+f2 = sns.scatterplot(
     data=template_summary_df[template_summary_df["Gene Name"] == "pqsE"],
     x="logFC (Real)",
     y="padj_log10",
@@ -692,8 +733,9 @@ f1 = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
-f1 = sns.scatterplot(
+f2 = sns.scatterplot(
     data=template_summary_df[template_summary_df["Gene Name"] == "ccoP2"],
     x="logFC (Real)",
     y="padj_log10",
@@ -702,6 +744,7 @@ f1 = sns.scatterplot(
     edgecolor="black",
     linewidth=1,
     legend=False,
+    s=70,
 )
 
 # Add text labels for those genes mentioned above
@@ -709,10 +752,11 @@ plt.text(
     x=template_summary_df.loc[
         template_summary_df["Gene Name"] == "pqsA", "logFC (Real)"
     ]
-    - 0.9,
+    - 1.4,
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsA", "padj_log10"]
-    - 0.2,
+    - 0.15,
     s="$pqsA$",
+    size=12,
 )
 plt.text(
     x=template_summary_df.loc[
@@ -721,6 +765,7 @@ plt.text(
     + 0.2,
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "nosZ", "padj_log10"],
     s="$nosZ$",
+    size=12,
 )
 """plt.text(
     x=template_summary_df.loc[
@@ -734,10 +779,11 @@ plt.text(
     x=template_summary_df.loc[
         template_summary_df["Gene Name"] == "pqsE", "logFC (Real)"
     ]
-    - 0.7,
+    - 1.2,
     y=template_summary_df.loc[template_summary_df["Gene Name"] == "pqsE", "padj_log10"]
-    - 0.3,
+    - 0.4,
     s="$pqsE$",
+    size=12,
 )
 plt.text(
     x=template_summary_df.loc[
@@ -748,6 +794,7 @@ plt.text(
         template_summary_df["Gene Name"] == "ccoP2", "padj_log10"
     ],
     s="$ccoP2$",
+    size=12,
 )
 
 # Add traditional thresholds
@@ -755,9 +802,18 @@ f2.axhline(-np.log10(0.05), c="black", lw=0.7, ls="--")
 f2.axvline(1, c="black", lw=0.7, ls="--")
 f2.axvline(-1, c="black", lw=0.7, ls="--")
 
-f2.set_ylabel(r"-log$_{10}$ (FDR adjusted p-value)", fontsize=14, fontname="Verdana")
-f2.set_xlabel(r"-log$_{2}$ Fold Change", fontsize=14, fontname="Verdana")
-f2.set_title("$crc$ vs WT", fontsize=14, fontname="Verdana")
+f2.set_ylabel(r"-Log$_{10}$ (FDR adjusted p-value)", fontsize=16, fontname="Verdana")
+f2.set_xlabel(r"-Log$_{2}$ FC (crc/WT)", fontsize=16, fontname="Verdana")
+# f2.set_title("$crc$ vs WT", fontsize=14, fontname="Verdana")
+
+plt.xlim(-4, 6)
+plt.ylim(-0, 5)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+
+# Make axis thicker
+for _, s in f2.spines.items():
+    s.set_linewidth(1.5)
 
 norm = plt.Normalize(
     template_summary_df["Z score"].min(), template_summary_df["Z score"].max()
@@ -766,7 +822,7 @@ sm = plt.cm.ScalarMappable(cmap="rocket_r", norm=norm)
 sm.set_array([])
 cb = f2.figure.colorbar(sm)
 
-cb.ax.tick_params(labelsize=10)
+cb.ax.tick_params(labelsize=12)
 cb.set_label(label="z-score", size=12, fontname="Verdana")
 # -
 
