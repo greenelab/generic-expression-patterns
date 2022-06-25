@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression_new] *
+#     display_name: Python [conda env:generic_expression] *
 #     language: python
-#     name: conda-env-generic_expression_new-py
+#     name: conda-env-generic_expression-py
 # ---
 
 # # Expression of Crow data
@@ -227,11 +227,11 @@ recount2_expression_mean.head()
 # Format df for plotting
 recount2_expression_mean_toplot = pd.DataFrame(
     data={
-        "all genes": np.log10(recount2_expression_mean),
-        "common in RNAseq and array": np.log10(
+        "All genes": np.log10(recount2_expression_mean),
+        "Common in RNAseq and array": np.log10(
             recount2_expression_mean[correlated_genes]
         ),
-        "common in only RNAseq": np.log10(recount2_expression_mean[uncorrelated_genes]),
+        "Common in only RNAseq": np.log10(recount2_expression_mean[uncorrelated_genes]),
     }
 )
 
@@ -250,9 +250,14 @@ f = sns.violinplot(
 )
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=16)
+plt.xlim(-2, 6)
+
+# Make axis thicker
+for _, s in f.spines.items():
+    s.set_linewidth(1.5)
 
 f.set_title("Average recount2 expression", fontsize=18)
-f.set_xlabel(r"log$_{10}$ (average expression)", fontsize=16)
+f.set_xlabel(r"Log$_{10}$ (average expression)", fontsize=16)
 # -
 
 f.get_figure().savefig(
@@ -268,9 +273,9 @@ f.get_figure().savefig(
 # Format df for plotting
 crow_expression_mean_toplot = pd.DataFrame(
     data={
-        "all genes": np.log10(crow_expression_mean),
-        "common in RNAseq and array": np.log10(crow_expression_mean[correlated_genes]),
-        "common only in RNAseq": np.log10(crow_expression_mean[uncorrelated_genes]),
+        "All genes": np.log10(crow_expression_mean),
+        "Common in RNAseq and array": np.log10(crow_expression_mean[correlated_genes]),
+        "Common only in RNAseq": np.log10(crow_expression_mean[uncorrelated_genes]),
     }
 )
 
@@ -289,9 +294,14 @@ g = sns.violinplot(
 )
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=16)
+plt.xlim(-1, 4)
+
+# Make axis thicker
+for _, s in g.spines.items():
+    s.set_linewidth(1.5)
 
 g.set_title("Average array (Crow et. al.) expression", fontsize=18)
-g.set_xlabel(r"log$_{10}$ (average expression)", fontsize=16)
+g.set_xlabel(r"Log$_{10}$ (average expression)", fontsize=16)
 # -
 
 g.get_figure().savefig(

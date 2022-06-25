@@ -9,7 +9,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression]
+#     display_name: Python [conda env:generic_expression] *
 #     language: python
 #     name: conda-env-generic_expression-py
 # ---
@@ -323,7 +323,7 @@ scatter_plot_original_vs_simulated(
 # * We already know that the before expression of RNA-seq generic genes is low, what about after we simulate?
 # * How does the mean expression of array/RNA-seq generic genes change after simulation? How does the variance change?
 
-# +
+"""
 # There are many 0 values throwing warning message
 np.seterr(divide="ignore")
 
@@ -359,10 +359,10 @@ def violin_plot_original_vs_simulated(
                 # Format mean df for plotting
                 mean_dist = pd.DataFrame(
                     data={
-                        "mean of RNAseq common DEGs (template)": np.log10(
+                        "RNAseq common DEGs (template)": np.log10(
                             template_df[gene_list].mean()
                         ),
-                        "mean of RNAseq common DEGs (simulated)": np.log10(
+                        "RNAseq common DEGs (simulated)": np.log10(
                             simulated[gene_list].mean()
                         ),
                     }
@@ -373,10 +373,10 @@ def violin_plot_original_vs_simulated(
                 # Format mean df for plotting
                 mean_dist = pd.DataFrame(
                     data={
-                        "mean of array/RNAseq common DEGs (template)": np.log10(
+                        "Array/RNAseq common DEGs (template)": np.log10(
                             template_df[gene_list].mean()
                         ),
-                        "mean of array/RNAseq common DEGs (simulated)": np.log10(
+                        "Array/RNAseq common DEGs (simulated)": np.log10(
                             simulated[gene_list].mean()
                         ),
                     }
@@ -391,36 +391,46 @@ def violin_plot_original_vs_simulated(
             f = sns.violinplot(
                 data=mean_dist_processed, palette=colors, orient="h", ax=axes[i]
             )
+            # Make axis thicker
+            for _, s in f.spines.items():
+                s.set_linewidth(1.5)
+
+            axes[i].set_xlim(-4, 6)
             if i != 0:
                 axes[i].set_yticklabels([])
             else:
                 axes[i].set_yticklabels(
                     [
-                        "mean common DEG expression (template)",
-                        "mean common DEG expression (simulated)",
+                        "Common DEG expression (template)",
+                        "Common DEG expression (simulated)",
                     ],
-                    fontsize=20,
+                    fontsize=30,
                 )
-
+            if i < 20:
+                axes[i].set_xticklabels(
+                    axes[i].get_xticklabels(),
+                    fontsize=50,
+                    color="r"
+                )
             fig.text(
                 0.5,
                 0.09,
-                r"log$_{10}$ (average expression)",
+                r"Log$_{10}$ (average expression)",
                 ha="center",
-                fontsize=24,
+                size=30,
                 fontname="Verdana",
             )
             if if_rnaseq_only:
                 fig.suptitle(
                     "Average expression of RNA-seq only common DEGs",
-                    fontsize=24,
+                    size=30,
                     y=0.9,
                     fontname="Verdana",
                 )
             else:
                 fig.suptitle(
                     "Average expression of RNA-seq/array common DEGs",
-                    fontsize=24,
+                    size=30,
                     y=0.9,
                     fontname="Verdana",
                 )
@@ -446,10 +456,10 @@ def violin_plot_original_vs_simulated(
                 # Format var df for plotting
                 var_dist = pd.DataFrame(
                     data={
-                        "variance of array/RNAseq common DEGs (template)": np.log10(
+                        "Array/RNAseq common DEGs (template)": np.log10(
                             template_df[gene_list].var()
                         ),
-                        "variance of array/RNAseq common DEGs (simulated)": np.log10(
+                        "Array/RNAseq common DEGs (simulated)": np.log10(
                             simulated[gene_list].var()
                         ),
                     }
@@ -464,40 +474,195 @@ def violin_plot_original_vs_simulated(
             f = sns.violinplot(
                 data=var_dist_processed, palette=colors, orient="h", ax=axes[i]
             )
+            # Make axis thicker
+            for _, s in f.spines.items():
+                s.set_linewidth(1.5)
+
+            axes[i].set_xlim(-4, 6)
             if i != 0:
                 axes[i].set_yticklabels([])
             else:
                 axes[i].set_yticklabels(
                     [
-                        "mean common DEG expression (template)",
-                        "mean common DEG expression (simulated)",
+                        "Common DEG expression (template)",
+                        "Common DEG expression (simulated)",
                     ],
-                    fontsize=20,
+                    fontsize=30,
+                )
+            if i < 20:
+                axes[i].set_xticklabels(
+                    axes[i].get_xticklabels(),
+                    fontsize=16
                 )
 
             fig.text(
                 0.5,
                 0.09,
-                r"log$_{10}$ (variance of expression)",
+                r"Log$_{10}$ (variance of expression)",
                 ha="center",
-                fontsize=24,
+                size=30,
                 fontname="Verdana",
             )
             if if_rnaseq_only:
                 fig.suptitle(
                     "Variance of expression of RNA-seq only common DEGs",
-                    fontsize=24,
+                    size=30,
                     y=0.9,
                     fontname="Verdana",
                 )
             else:
                 fig.suptitle(
                     "Variance of expression of RNA-seq/array common DEGs",
-                    fontsize=24,
+                    size=30,
                     y=0.9,
                     fontname="Verdana",
                 )
+
     f.get_figure().savefig(
+        f"violin_plot_{stats_name}_{gene_group_name}.svg",
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )"""
+
+# +
+# There are many 0 values throwing warning message
+np.seterr(divide="ignore")
+
+
+def sns_violin_plot_original_vs_simulated(
+    ncols,
+    nrows,
+    fig_width,
+    fig_height,
+    num_simulated,
+    template_df,
+    gene_list,
+    if_rnaseq_only,
+    if_mean,
+):
+    concat_df = []
+    for i in range(num_simulated):
+        # Get simulated filename
+        simulated_filename = os.path.join(
+            simulated_dir, f"selected_simulated_data_{project_id}_{i}_processed.txt"
+        )
+
+        # Read simulated experiment
+        simulated = pd.read_csv(simulated_filename, sep="\t", index_col=0, header=0)
+
+        if if_mean:
+            stats_name = "mean_expression"
+            if if_rnaseq_only:
+                gene_group_name = "RNAseq_only"
+                # Format mean df for plotting
+                mean_dist = pd.DataFrame(
+                    data={
+                        "RNAseq common DEGs (template)": np.log10(
+                            template_df[gene_list].mean()
+                        ),
+                        "RNAseq common DEGs (simulated)": np.log10(
+                            simulated[gene_list].mean()
+                        ),
+                    }
+                )
+                colors = ["lightgrey", "#add8e6"]
+                title = "Average expression of RNA-seq only common DEGs"
+            else:
+                gene_group_name = "RNAseq_array"
+                # Format mean df for plotting
+                mean_dist = pd.DataFrame(
+                    data={
+                        "Array/RNAseq common DEGs (template)": np.log10(
+                            template_df[gene_list].mean()
+                        ),
+                        "Array/RNAseq common DEGs (simulated)": np.log10(
+                            simulated[gene_list].mean()
+                        ),
+                    }
+                )
+                colors = ["lightgrey", "#2c7fb8"]
+                title = "Average expression of RNA-seq/array common DEGs"
+
+            # Remove NA genes (i.e. genes not in gene list)
+            # Drop -inf values
+            mean_dist_processed = (
+                mean_dist.replace([np.inf, -np.inf], np.nan).dropna().melt()
+            )
+            mean_dist_processed["simulation"] = i
+            concat_df.append(mean_dist_processed)
+
+        else:
+            stats_name = "var_expression"
+            if if_rnaseq_only:
+                gene_group_name = "RNAseq_only"
+                # Format var df for plotting
+                var_dist = pd.DataFrame(
+                    data={
+                        "RNAseq common DEGs (template)": np.log10(
+                            template_df[gene_list].var()
+                        ),
+                        "RNAseq common DEGs (simulated)": np.log10(
+                            simulated[gene_list].var()
+                        ),
+                    }
+                )
+                colors = ["lightgrey", "#add8e6"]
+                title = "Variance of expression of RNA-seq only common DEGs"
+            else:
+                gene_group_name = "RNAseq_array"
+                # Format var df for plotting
+                var_dist = pd.DataFrame(
+                    data={
+                        "Array/RNAseq common DEGs (template)": np.log10(
+                            template_df[gene_list].var()
+                        ),
+                        "Array/RNAseq common DEGs (simulated)": np.log10(
+                            simulated[gene_list].var()
+                        ),
+                    }
+                )
+                colors = ["lightgrey", "#2c7fb8"]
+                title = "Variance of expression of RNA-seq/array common DEGs"
+
+            # Remove NA genes (i.e. genes not in gene list)
+            # Drop -inf values
+            var_dist_processed = (
+                var_dist.replace([np.inf, -np.inf], np.nan).dropna().melt()
+            )
+            var_dist_processed["simulation"] = i
+            concat_df.append(var_dist_processed)
+    concat_df = pd.concat(concat_df)
+
+    #     return concat_df
+    g = sns.FacetGrid(concat_df, col="simulation", col_wrap=ncols)
+    g.map(sns.violinplot, "value", "variable", palette=colors, orient="h")
+    g.set_axis_labels("", "")
+    g.set_titles(col_template="", row_template="")
+    g.set_yticklabels(size=15)
+    # g.set(yticks=[])
+    g.set_xticklabels(size=15)
+    g.tight_layout()
+
+    for i in g.axes_dict:
+        if i != 0:
+            _ = plt.setp(g.axes_dict[i].get_yticklabels(), visible=False)
+
+    _ = g.fig.text(
+        0.5,
+        -0.02,
+        r"Log$_{10}$ (average expression)",
+        ha="center",
+        size=20,
+        fontname="Verdana",
+    )
+
+    plt.subplots_adjust(top=0.95)
+    _ = g.fig.suptitle(title, size=20, fontname="Verdana")
+
+    g.fig.savefig(
         f"violin_plot_{stats_name}_{gene_group_name}.svg",
         format="svg",
         bbox_inches="tight",
@@ -510,7 +675,7 @@ def violin_plot_original_vs_simulated(
 # -
 
 # Compare distribution of mean gene expression for RNA-seq only generic genes
-violin_plot_original_vs_simulated(
+sns_violin_plot_original_vs_simulated(
     ncols=5,
     nrows=5,
     fig_width=25,
@@ -523,7 +688,7 @@ violin_plot_original_vs_simulated(
 )
 
 # Compare distribution of variance gene expression for RNA-seq only generic genes
-violin_plot_original_vs_simulated(
+sns_violin_plot_original_vs_simulated(
     ncols=5,
     nrows=5,
     fig_width=20,
@@ -536,7 +701,7 @@ violin_plot_original_vs_simulated(
 )
 
 # Compare distribution of mean gene expression for RNA-seq/array generic genes
-violin_plot_original_vs_simulated(
+sns_violin_plot_original_vs_simulated(
     ncols=5,
     nrows=5,
     fig_width=25,
@@ -549,7 +714,7 @@ violin_plot_original_vs_simulated(
 )
 
 # Compare distribution of variance gene expression for RNA-seq/array generic genes
-violin_plot_original_vs_simulated(
+sns_violin_plot_original_vs_simulated(
     ncols=5,
     nrows=5,
     fig_width=20,
