@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression_new] *
+#     display_name: Python [conda env:generic_expression] *
 #     language: python
-#     name: conda-env-generic_expression_new-py
+#     name: conda-env-generic_expression-py
 # ---
 
 # # Figure generation
@@ -60,26 +60,34 @@ panel_1a = make_figure_panel(
     "Fig-1A-SOPHIE workflow.svg", scale_x_input=4, scale_y_input=4, x_loc=30, y_loc=10
 )
 panel_1b = make_figure_panel(
-    "../human_general_array_analysis/gene_ranking_logFC.svg",
+    "../pseudomonas_analysis/pa_vae_clustering.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
     x_loc=30,
     y_loc=500,
 )
+panel_1c = make_figure_panel(
+    "../human_general_array_analysis/gene_ranking_logFC.svg",
+    scale_x_input=0.7,
+    scale_y_input=0.7,
+    x_loc=500,
+    y_loc=500,
+)
 
 panel_1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_1b_label = sg.TextElement(10, 500, "B", size=18, weight="bold", font="Verdana")
+panel_1c_label = sg.TextElement(500, 500, "C", size=18, weight="bold", font="Verdana")
 
-figure_1 = sg.SVGFigure("850", "850")
+figure_1 = sg.SVGFigure("900", "800")
 figure_1.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
         panel_1a,
         panel_1b,
-        # panel_1c,
+        panel_1c,
         panel_1a_label,
         panel_1b_label,
-        # panel_1c_label,
+        panel_1c_label,
     ]
 )
 display(SVG(figure_1.to_str()))
@@ -116,23 +124,23 @@ panel_2d = make_figure_panel(
     scale_x_input=0.77,
     scale_y_input=0.77,
     x_loc=30,
-    y_loc=400,
+    y_loc=350,
 )
 panel_2e = make_figure_panel(
     "../compare_experiments/concordance_between_diff_recount2_templates.svg",
     scale_x_input=0.77,
     scale_y_input=0.77,
     x_loc=400,
-    y_loc=400,
+    y_loc=350,
 )
 
 panel_2a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_2b_label = sg.TextElement(400, 20, "B", size=18, weight="bold", font="Verdana")
 panel_2c_label = sg.TextElement(800, 20, "C", size=18, weight="bold", font="Verdana")
-panel_2d_label = sg.TextElement(30, 400, "D", size=18, weight="bold", font="Verdana")
-panel_2e_label = sg.TextElement(400, 400, "E", size=18, weight="bold", font="Verdana")
+panel_2d_label = sg.TextElement(30, 340, "D", size=18, weight="bold", font="Verdana")
+panel_2e_label = sg.TextElement(400, 340, "E", size=18, weight="bold", font="Verdana")
 
-figure_2 = sg.SVGFigure("1200", "750")
+figure_2 = sg.SVGFigure("1200", "650")
 figure_2.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -159,8 +167,8 @@ figure_2.save("output/figure_2.svg")
 # Note: panel 3B was created in google slides and then exported from inkscape
 panel_3a = make_figure_panel(
     "../human_cancer_analysis/pathway_ranking_padj.svg",
-    scale_x_input=1.3,
-    scale_y_input=1.3,
+    scale_x_input=1.2,
+    scale_y_input=1.2,
     x_loc=30,
     y_loc=10,
 )
@@ -173,18 +181,18 @@ panel_3b = make_figure_panel(
 )
 panel_3c = make_figure_panel(
     "../other_enrichment_methods/enrichment_corr_plot.svg",
-    scale_x_input=1.5,
-    scale_y_input=1.5,
-    x_loc=30,
-    y_loc=400,
+    scale_x_input=1.2,
+    scale_y_input=1.2,
+    x_loc=150,
+    y_loc=350,
 )
 
 
 panel_3a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_3b_label = sg.TextElement(600, 30, "B", size=18, weight="bold", font="Verdana")
-panel_3c_label = sg.TextElement(30, 400, "C", size=18, weight="bold", font="Verdana")
+panel_3c_label = sg.TextElement(30, 350, "C", size=18, weight="bold", font="Verdana")
 
-figure_3 = sg.SVGFigure("1600", "1000")
+figure_3 = sg.SVGFigure("1600", "900")
 figure_3.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
@@ -273,7 +281,7 @@ figure_4.save("output/figure_4.svg")
 
 # Create panels for figure 5
 panel_5a = make_figure_panel(
-    "Fig-5A_cbrAB_simpler_arg_model.svg",
+    "Fig-5A.svg",
     scale_x_input=2,
     scale_y_input=2,
     x_loc=30,
@@ -284,34 +292,34 @@ panel_5b1 = make_figure_panel(
     scale_x_input=1,
     scale_y_input=1,
     x_loc=450,
-    y_loc=10,
+    y_loc=30,
 )
 panel_5b2 = make_figure_panel(
     "../pseudomonas_analysis/crc_volcano_zscore_highlight.svg",
     scale_x_input=1,
     scale_y_input=1,
-    x_loc=850,
-    y_loc=10,
+    x_loc=900,
+    y_loc=30,
 )
 panel_5c = make_figure_panel(
     "../pseudomonas_analysis/cbrB_crc_zscore_compare.svg",
     scale_x_input=1,
     scale_y_input=1,
     x_loc=450,
-    y_loc=300,
+    y_loc=350,
 )
 panel_5d = make_figure_panel(
-    os.path.join(local_directory, "WT-cbrB-EV-comp_10nM_Arg_crc.svg"),
+    os.path.join("Fig-5D.svg"),
     scale_x_input=2,
     scale_y_input=2,
     x_loc=1000,
-    y_loc=300,
+    y_loc=350,
 )
 
 panel_5a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_5b_label = sg.TextElement(450, 20, "B", size=18, weight="bold", font="Verdana")
 panel_5c_label = sg.TextElement(450, 300, "C", size=18, weight="bold", font="Verdana")
-panel_5d_label = sg.TextElement(1000, 300, "D", size=18, weight="bold", font="Verdana")
+panel_5d_label = sg.TextElement(1000, 350, "D", size=18, weight="bold", font="Verdana")
 
 figure_5 = sg.SVGFigure("1500", "700")
 figure_5.append(
@@ -338,35 +346,35 @@ figure_5.save("output/figure_5.svg")
 # Create panels for Supplement 1
 panel_S1a = make_figure_panel(
     "../explore_RNAseq_only_generic_genes/array_expression_dist_gene_groups_highlight.svg",
-    scale_x_input=0.9,
-    scale_y_input=0.9,
+    scale_x_input=0.8,
+    scale_y_input=0.8,
     x_loc=30,
     y_loc=20,
 )
 panel_S1b = make_figure_panel(
     "../explore_RNAseq_only_generic_genes/recount2_expression_dist_gene_groups_highlight.svg",
-    scale_x_input=0.9,
-    scale_y_input=0.9,
-    x_loc=600,
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=550,
     y_loc=10,
 )
 panel_S1c = make_figure_panel(
     "../explore_RNAseq_only_generic_genes/violin_plot_mean_expression_RNAseq_only.svg",
-    scale_x_input=0.6,
-    scale_y_input=0.6,
+    scale_x_input=0.8,
+    scale_y_input=0.8,
     x_loc=30,
     y_loc=300,
 )
 panel_S1d = make_figure_panel(
     "../explore_RNAseq_only_generic_genes/violin_plot_mean_expression_RNAseq_array.svg",
-    scale_x_input=0.6,
-    scale_y_input=0.6,
+    scale_x_input=0.8,
+    scale_y_input=0.8,
     x_loc=30,
     y_loc=1200,
 )
 
 panel_S1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_S1b_label = sg.TextElement(600, 20, "B", size=18, weight="bold", font="Verdana")
+panel_S1b_label = sg.TextElement(550, 20, "B", size=18, weight="bold", font="Verdana")
 panel_S1c_label = sg.TextElement(10, 300, "C", size=18, weight="bold", font="Verdana")
 panel_S1d_label = sg.TextElement(30, 1200, "D", size=18, weight="bold", font="Verdana")
 
@@ -479,23 +487,23 @@ panel_S4d = make_figure_panel(
     scale_x_input=0.77,
     scale_y_input=0.77,
     x_loc=30,
-    y_loc=400,
+    y_loc=350,
 )
 panel_S4e = make_figure_panel(
     "../human_general_array_analysis/gene_ranking_logFC_100.svg",
     scale_x_input=0.77,
     scale_y_input=0.77,
     x_loc=400,
-    y_loc=400,
+    y_loc=350,
 )
 
 panel_S4a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_S4b_label = sg.TextElement(400, 20, "B", size=18, weight="bold", font="Verdana")
 panel_S4c_label = sg.TextElement(800, 20, "C", size=18, weight="bold", font="Verdana")
-panel_S4d_label = sg.TextElement(30, 400, "D", size=18, weight="bold", font="Verdana")
-panel_S4e_label = sg.TextElement(400, 400, "E", size=18, weight="bold", font="Verdana")
+panel_S4d_label = sg.TextElement(30, 350, "D", size=18, weight="bold", font="Verdana")
+panel_S4e_label = sg.TextElement(400, 350, "E", size=18, weight="bold", font="Verdana")
 
-figure_S4 = sg.SVGFigure("1200", "750")
+figure_S4 = sg.SVGFigure("1200", "700")
 figure_S4.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),

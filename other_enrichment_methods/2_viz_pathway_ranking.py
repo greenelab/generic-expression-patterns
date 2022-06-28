@@ -581,7 +581,10 @@ f = sns.heatmap(
     cmap=sns.diverging_palette(20, 220, n=200),
     square=True,
 )
-f.set_title("Correlation between pathway enrichment methods", pad=15)
+f.figure.axes[-1].set_ylabel("Correlation between methods", size=12)
+
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
 # -
 
 ## save generated SVG files

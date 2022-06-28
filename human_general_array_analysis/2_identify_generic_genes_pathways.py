@@ -9,7 +9,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression_new] *
+#     display_name: Python [conda env:generic_expression_new]
 #     language: python
 #     name: conda-env-generic_expression_new-py
 # ---
@@ -289,6 +289,8 @@ summary_gene_ranks = ranking.generate_summary_table(
 
 summary_gene_ranks.head()
 # -
+
+summary_gene_ranks.loc["CTDSP1"]
 
 # Check if there is an NaN values, there should not be
 summary_gene_ranks.isna().any()

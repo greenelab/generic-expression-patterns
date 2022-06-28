@@ -201,13 +201,19 @@ x1, x2 = 0, 1  # columns 'Sat' and 'Sun' (first column: 0, see plt.xticks())
 y, h, col = all_coverage_df["nonzero LV coverage"].max() + 30, 30, "k"
 plt.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=col)
 plt.text(
-    (x1 + x2) * 0.5, y + h + 10, "p-value = 0.239", ha="center", va="bottom", color=col
+    (x1 + x2) * 0.5,
+    y + h + 10,
+    "P-value = 0.239",
+    ha="center",
+    va="bottom",
+    color=col,
+    size=12,
 )
 
 nonzero_fig.set(ylim=(0, 800))
 nonzero_fig.set_xlabel(None)
 nonzero_fig.set_xticklabels(
-    ["common DEGs", "other genes"], fontsize=14, fontname="Verdana"
+    ["Common DEGs", "Other genes"], fontsize=14, fontname="Verdana"
 )
 nonzero_fig.set_ylabel(
     textwrap.fill("Number of LVs", width=30), fontsize=14, fontname="Verdana"
@@ -233,16 +239,17 @@ plt.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=col)
 plt.text(
     (x1 + x2) * 0.5,
     y + h + 5,
-    "p-value = 6.31e-119",
+    "P-value = 6.31e-119",
     ha="center",
     va="bottom",
     color=col,
+    size=12,
 )
 
 highweight_fig.set(ylim=(0, 150))
 highweight_fig.set_xlabel(None)
 highweight_fig.set_xticklabels(
-    ["common DEGs", "other genes"], fontsize=14, fontname="Verdana"
+    ["Common DEGs", "Other genes"], fontsize=14, fontname="Verdana"
 )
 highweight_fig.set_ylabel(
     textwrap.fill("Number of LVs", width=30), fontsize=14, fontname="Verdana"

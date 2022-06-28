@@ -8,7 +8,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression_new] *
+#     display_name: Python [conda env:generic_expression_new]
 #     language: python
 #     name: conda-env-generic_expression_new-py
 # ---
@@ -131,15 +131,27 @@ fig = sns.jointplot(
     marginal_kws={"color": "white", "edgecolor": "white"},
 )
 
+# Make axis thicker
+for _, s in fig.fig.axes[0].spines.items():
+    s.set_linewidth(1.5)
+
+# Remove marginal axes
+fig.fig.axes[1].set_visible(False)
+fig.fig.axes[2].set_visible(False)
+
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
+
 fig.set_axis_labels(
     f"Percentile in {project_id1} seed 1",
     f"Percentile in {project_id1} seed 2",
-    fontsize=14,
+    fontsize=20,
     fontname="Verdana",
 )
 cbar_ax = fig.fig.add_axes([0.9, 0.25, 0.05, 0.4])  # x, y, width, height
 cb = plt.colorbar(cax=cbar_ax)
-cb.set_label("Number of genes")
+cb.set_label("Number of genes", fontsize=12)
+cb.ax.tick_params(labelsize=12)
 
 output_figure_filename = "concordance_between_same_recount2_templates.svg"
 fig.savefig(
@@ -216,16 +228,28 @@ fig = sns.jointplot(
     marginal_kws={"color": "white", "edgecolor": "white"},
 )
 
+# Make axis thicker
+for _, s in fig.fig.axes[0].spines.items():
+    s.set_linewidth(1.5)
+
+# Remove marginal axes
+fig.fig.axes[1].set_visible(False)
+fig.fig.axes[2].set_visible(False)
+
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
+
 fig.set_axis_labels(
     f"Percentile in {project_id1}",
     f"Percentile in {project_id2}",
-    fontsize=14,
+    fontsize=20,
     fontname="Verdana",
 )
 
 cbar_ax = fig.fig.add_axes([0.9, 0.25, 0.05, 0.4])  # x, y, width, height
 cb = plt.colorbar(cax=cbar_ax)
-cb.set_label("Number of genes")
+cb.set_label("Number of genes", fontsize=12)
+cb.ax.tick_params(labelsize=12)
 
 output_figure_filename = "concordance_between_diff_recount2_templates.svg"
 fig.savefig(

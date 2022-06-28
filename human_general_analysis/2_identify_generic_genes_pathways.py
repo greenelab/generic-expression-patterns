@@ -9,7 +9,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.9.1+dev
 #   kernelspec:
-#     display_name: Python [conda env:generic_expression_new] *
+#     display_name: Python [conda env:generic_expression_new]
 #     language: python
 #     name: conda-env-generic_expression_new-py
 # ---
@@ -137,7 +137,7 @@ pathway_summary_filename = os.path.join(
 # 4. Decode the samples. This results in a new experiment
 # 5. Repeat steps 1-4 to get multiple simulated experiments
 
-# Simulate multiple experiments
+"""# Simulate multiple experiments
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -158,7 +158,7 @@ simulate_expression_data.shift_template_experiment(
     local_dir,
     base_dir,
     num_runs,
-)
+)"""
 
 # ### Process template and simulated experiments
 #
@@ -167,8 +167,7 @@ simulate_expression_data.shift_template_experiment(
 # * Make sure values are cast as integers for using DESeq
 # * Filter lowly expressed genes for using DESeq
 
-# +
-if not os.path.exists(sample_id_metadata_filename):
+"""if not os.path.exists(sample_id_metadata_filename):
     sample_id_metadata_filename = None
 
 stats.process_samples_for_DESeq(
@@ -194,8 +193,7 @@ for i in range(num_runs):
         out_simulated_filename,
         count_threshold,
         sample_id_metadata_filename,
-    )
-# -
+    )"""
 
 # ### Differential expression analysis
 #

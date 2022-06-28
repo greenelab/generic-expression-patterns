@@ -528,17 +528,29 @@ def compare_gene_ranking(
         marginal_kws={"color": "white", "edgecolor": "white"},
     )
 
+    # Make axis thicker
+    for _, s in fig.fig.axes[0].spines.items():
+        s.set_linewidth(1.5)
+
+    # Remove marginal axes
+    fig.fig.axes[1].set_visible(False)
+    fig.fig.axes[2].set_visible(False)
+
+    plt.yticks(fontsize=15)
+    plt.xticks(fontsize=15)
+
     if ref_rank_col == "DE_Prior_Rank":
         fig.set_axis_labels(
-            "SOPHIE", "DE prior (Crow et al. 2019)", fontsize=14, fontname="Verdana"
+            "SOPHIE", "Manual curation", fontsize=20, fontname="Verdana"
         )
     elif ref_rank_col == "prop DEGs":
         fig.set_axis_labels(
-            r"SOPHIE (${\it{P. aeruginosa}}$ compendium)", "GAPE (Stanton lab, 2021)", fontsize=14, fontname="Verdana"
+            r"SOPHIE (${\it{P. aeruginosa}}$ compendium)", "Manual curation", fontsize=20, fontname="Verdana"
         )
     cbar_ax = fig.fig.add_axes([.9, .25, .05, .4])  # x, y, width, height
     cb = plt.colorbar(cax=cbar_ax)
-    cb.set_label('Number of genes')
+    cb.set_label('Number of genes', fontsize=12)
+    cb.ax.tick_params(labelsize=12)
 
     fig.savefig(
         output_figure_filename,
@@ -651,10 +663,17 @@ def compare_pathway_ranking(summary_df, reference_filename, output_figure_filena
 
     # add text annotation
     print(correlations)
-    plt.text(60, 98, "R^2 = " + str(round(correlations['r'], 3)), horizontalalignment='left', size='medium', color='black')
+    plt.text(0, 98, "R^2 = " + str(round(correlations['r'], 3)), horizontalalignment='left', size=14, color='black')
 
-    fig.set_xlabel("SOPHIE", fontsize=14, fontname="Verdana")
-    fig.set_ylabel("Powers et al. 2018", fontsize=14, fontname="Verdana")
+    plt.yticks(fontsize=15)
+    plt.xticks(fontsize=15)
+
+    # Make axis thicker
+    for _, s in fig.spines.items():
+        s.set_linewidth(1.5)
+
+    fig.set_xlabel("SOPHIE", fontsize=20, fontname="Verdana")
+    fig.set_ylabel("Manual curation", fontsize=20, fontname="Verdana")
 
     fig.figure.savefig(
         output_figure_filename,

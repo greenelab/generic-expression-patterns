@@ -180,14 +180,17 @@ communities_fig.legend(
 )
 communities_fig.set_title(
     textwrap.fill(
-        "Number of communities, common DEGs vs. {} degree-matched samples".format(
-            NUM_NODE_SAMPLES
-        ),
+        r"Number of communities, common DEGs $\it{vs.}$ 1000 degree-matched samples",
         width=40,
     ),
     fontsize=16,
     fontname="Verdana",
 )
+
+plt.xlim(20, 180)
+plt.ylim(0, 180)
+
+communities_fig.grid(False)
 
 # Save
 communities_fig.figure.savefig(
