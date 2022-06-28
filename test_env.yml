@@ -25,7 +25,8 @@ dependencies:
 - conda-forge::plotnine=0.5.1
 - conda-forge::rpy2=3.4.3
 - conda-forge::r-gsa
-
+- conda-forge::jupyter
+- conda-forge::libiconv=1.15
 - pip=19.2.1
 - pip:
   - matplotlib==3.0.0
