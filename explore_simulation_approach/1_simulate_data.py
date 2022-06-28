@@ -34,8 +34,8 @@ np.random.seed(1)
 # ## Create simulated data
 #
 # 1. Each perturbation experiment has 8 samples (4 perturbed vs 4 control) with 1000 genes. Create initial expression profiles for 4 samples by drawing from a gaussian with a mean/sd for each gene.
-# 2. Say that there are 100 generic genes. The generic genes will have the same scalar value added for the “perturbed” samples
-# 3. Each perturbation experiment will have 10 “specific” genes perturbed in addition to the “generic” ones. Select specific genes randomly . Then the specific genes will have the same scalar value added for the “perturbed” samples
+# 2. Say that there are 100 generic genes selected from the 1000 genes. The generic genes will have the some scalar value added for the “perturbed” samples
+# 3. Each perturbation experiment will have 10 “specific” genes are randomly selected from the remaining 900 non-generic genes. Then the specific genes will have the some scalar value added for the “perturbed” samples
 # 4. Repeat this process 90 times to get 90 experiments
 
 # User params

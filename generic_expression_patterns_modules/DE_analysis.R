@@ -139,11 +139,6 @@ get_DE_stats_DESeq <- function(metadata_file,
 
   group <- interaction(metadata$group)
 
-  #mm <- model.matrix(~0 + group)
-  #print(mm)
-
-  #print(as.formula(~group))
-
   # Note about DESeq object
   # Different function calls to create DESeq object depending on the input data.
   # These objects are then passed into [DESeq](https://www.rdocumentation.org/packages/DESeq2/versions/1.12.3/topics/DESeq).

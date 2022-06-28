@@ -182,7 +182,7 @@ data_encoded = loaded_model.predict_on_batch(raw_pa_compendium_numeric)
 data_encoded_df = pd.DataFrame(data_encoded, index=raw_pa_compendium_numeric.index)
 
 # +
-# UMAP embedding of original input data
+# UMAP embedding of VAE encoded data
 
 # pca = PCA(n_components=2)
 # model = pca.fit(data_encoded_df)

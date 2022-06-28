@@ -99,6 +99,9 @@ mean_diff_trad = [
 ]"""
 
 # Make dataframe
+# Each row in `mean_diff` is a different template experiment.
+# The generic genes are the same across template experiment,
+# but their rankings and therefore their mean may differ between template experiments.
 mean_diff = pd.DataFrame(
     data={"sophie rank diff": mean_diff_sophie, "traditional rank diff": mean_diff_trad}
 )

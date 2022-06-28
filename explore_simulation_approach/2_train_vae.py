@@ -31,7 +31,7 @@ from rpy2.robjects import pandas2ri
 from ponyo import utils, train_vae_modules, simulate_expression_data
 from generic_expression_patterns_modules import (
     process,
-    new_experiment_process,  # REMOVE
+    new_experiment_process,
     stats,
     ranking,
 )
@@ -95,7 +95,6 @@ template_process_samples_filename = params["template_process_samples_filename"]
 template_DE_grouping_filename = params["template_DE_grouping_filename"]
 
 # Statistic to use to rank genes or pathways by
-# Choices are {} FILL IN
 col_to_rank_genes = params["rank_genes_by"]
 
 # Pickle files saving specific and generic gene ids

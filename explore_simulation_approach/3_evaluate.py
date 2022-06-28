@@ -396,6 +396,8 @@ trad_de_stats_sorted.head(10)
 #
 # 1. mean rank of specific genes - mean rank of generic genes for template experiment
 # 2. We will need to re-run this notebook for each template experiment and then plot the distribution of difference scores
+#
+# We want to compare the mean ranking of specific genes vs the mean ranking of generic genes. If the mean difference is large then yes, that would indicate that there is a difference between the specific and generic genes that we can detect. In addition to the difference we want the specific genes to be higher ranked compared to the generic ones, so we want to see a large positive value if the method is performing better.
 
 # +
 # Load pickled file
