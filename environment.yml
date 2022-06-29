@@ -31,6 +31,8 @@ dependencies:
 - conda-forge::libiconv=1.15
 - conda-forge::r-biocmanager
 - conda-forge::r-gsa
+- conda-forge::gxx_linux-64
+- conda-forge::grpcio-tools
 
 - pip=19.2.1
 - pip:
