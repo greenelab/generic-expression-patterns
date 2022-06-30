@@ -26,9 +26,13 @@ import pickle
 import numpy as np
 import pandas as pd
 import random
+import seaborn as sns
 from ponyo import utils
 
 np.random.seed(1)
+
+# +
+## Need to make sure there is a consistent difference in all experiments in the compendium
 # -
 
 # ## Create simulated data
@@ -44,6 +48,10 @@ num_samples = 8
 num_generic_genes = 100
 num_specific_genes = 10
 num_experiments = 90
+
+"""p = random.uniform(0.0, 1.0)
+print(p)
+np.random.negative_binomial(5, p)"""
 
 # +
 # Read in config variables
@@ -117,7 +125,7 @@ def run_make_experiment(
         # Randomly select a different success probability for each gene so that
         # each gene has a different rate at which its expressed
         p = random.uniform(0.0, 1.0)
-        gene_profile = np.random.negative_binomial(10, p, num_samples)
+        gene_profile = np.random.negative_binomial(5, p, num_samples)
 
         # Create dictionary to define dataframe
         experiment_data[f"G_{gene}"] = gene_profile
@@ -168,9 +176,9 @@ def make_experiments(
         specific_gene_id_lst.append(specific_gene_ids)
 
         # Randomly select scaler for generic and specific genes from the same distribution
-        p = random.uniform(0.0, 1.0)
-        generic_scaler = np.random.negative_binomial(10, p)
-        specific_scaler = np.random.negative_binomial(10, p)
+        p = random.uniform(0.0, 0.7)
+        generic_scaler = np.random.negative_binomial(20, p)
+        specific_scaler = np.random.negative_binomial(20, p)
 
         experiment_df = run_make_experiment(
             num_samples,
@@ -219,9 +227,50 @@ for i in range(10):
 print(template_experiment.shape)
 template_experiment.head(8)
 
-template_experiment[generic_gene_ids]
-
 template_specific_gene_ids[0]
+
+# ## Check template experiment
+#
+# We want to verify that we have a good differential expression signal - i.e. control and perturb samples separate based on specific and common genes
+
+i = 0
+
+template_filename = f"/home/alexandra/Documents/Data/Generic_expression_patterns/reviewer_experiment/raw_template_{i}.tsv"
+
+template_specific_gene_ids_filename = f"/home/alexandra/Documents/Data/Generic_expression_patterns/reviewer_experiment/template_specific_gene_ids_{i}.pickle"
+
+template_experiment = pd.read_csv(template_filename, sep="\t", index_col=0, header=0)
+
+with open(template_specific_gene_ids_filename, "rb") as specific_fh:
+    specific_gene_ids = pickle.load(specific_fh)
+
+# Get NA genes
+all_gene_ids = template_experiment.columns
+all_gene_ids_tmp = all_gene_ids.difference(template_specific_gene_ids[0])
+na_gene_ids = all_gene_ids_tmp.difference(generic_gene_ids)
+
+# Template data subsets
+template_specific_df = template_experiment[template_specific_gene_ids[0]]
+template_common_df = template_experiment[generic_gene_ids]
+template_na_df = template_experiment[na_gene_ids]
+
+print(template_specific_df.shape)
+template_specific_df
+
+print(template_common_df.shape)
+template_common_df
+
+print(template_na_df.shape)
+template_na_df
+
+f = sns.clustermap(template_specific_df.T, cmap="viridis")
+f.fig.suptitle("Template experiment specific genes")
+
+f = sns.clustermap(template_common_df.T, cmap="viridis")
+f.fig.suptitle("Template experiment common genes")
+
+f = sns.clustermap(template_na_df.T, cmap="viridis")
+f.fig.suptitle("Template experiment NA genes")
 
 # ## Make compendium
 

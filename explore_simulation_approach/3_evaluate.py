@@ -26,6 +26,7 @@
 # %load_ext autoreload
 # %autoreload 2
 # %load_ext rpy2.ipython
+# %matplotlib inline
 import os
 import pickle
 import pandas as pd
@@ -36,7 +37,7 @@ from rpy2.robjects import pandas2ri
 from ponyo import utils, train_vae_modules, simulate_expression_data
 from generic_expression_patterns_modules import (
     process,
-    new_experiment_process,  # REMOVE
+    new_experiment_process,
     stats,
     ranking,
 )
@@ -392,12 +393,82 @@ trad_de_stats_sorted["rank"] = trad_de_stats_sorted["log2FoldChange"].rank(
 
 trad_de_stats_sorted.head(10)
 
+# ## Check signal in simulation experiment
+
+i = 9
+
+simulated_filename = os.path.join(
+    local_dir,
+    "pseudo_experiment",
+    f"selected_simulated_data_{project_id}_{i}.txt",
+)
+
+simulated_data = pd.read_csv(simulated_filename, sep="\t", index_col=0, header=0)
+
+print(simulated_data.shape)
+simulated_data.head()
+
+# +
+# Get common genes
+# Get specific genes
+
+# Load pickled file
+with open(template_specific_gene_ids_filename, "rb") as specific_fh:
+    specific_gene_ids = pickle.load(specific_fh)
+
+with open(generic_gene_ids_filename, "rb") as generic_fh:
+    generic_gene_ids = pickle.load(generic_fh)
+# -
+
+# Get NA genes
+all_gene_ids = simulated_data.columns
+all_gene_ids_tmp = all_gene_ids.difference(specific_gene_ids)
+na_gene_ids = all_gene_ids_tmp.difference(generic_gene_ids)
+
+# Simulated data subsets
+simulated_specific_df = simulated_data[specific_gene_ids]
+simulated_common_df = simulated_data[generic_gene_ids]
+simulated_na_df = simulated_data[na_gene_ids]
+
+print(simulated_specific_df.shape)
+simulated_specific_df
+
+print(simulated_common_df.shape)
+simulated_common_df
+
+print(simulated_na_df.shape)
+simulated_na_df
+
+f = sns.clustermap(simulated_specific_df.T, cmap="viridis")
+f.fig.suptitle("Simulated experiment specific genes")
+
+f = sns.clustermap(simulated_common_df.T, cmap="viridis")
+f.fig.suptitle("Simulated experiment common genes")
+
+f = sns.clustermap(simulated_na_df.T, cmap="viridis")
+f.fig.suptitle("Simulated experiment NA genes")
+
 # ## Compare
 #
-# 1. mean rank of specific genes - mean rank of generic genes for template experiment
-# 2. We will need to re-run this notebook for each template experiment and then plot the distribution of difference scores
-#
-# We want to compare the mean ranking of specific genes vs the mean ranking of generic genes. If the mean difference is large then yes, that would indicate that there is a difference between the specific and generic genes that we can detect. In addition to the difference we want the specific genes to be higher ranked compared to the generic ones, so we want to see a large positive value if the method is performing better.
+# Let's compare how the ranking of genes changes between SOPHIE and traditional methods. If SOPHIE was better able to distinguish between common vs specific genes then we would expect the ranking of specific genes to increase using SOPHIE and decrease for common genes.
+
+# ### Clean up data for plotting
+
+# Remove rows where the gene ranking is NaN due to the gene having a baseMean of 0
+trad_na_rows = trad_de_stats_sorted[trad_de_stats_sorted["rank"].isna()].index
+sophie_na_rows = summary_gene_ranks_sorted[
+    summary_gene_ranks_sorted["rank"].isna()
+].index
+
+trad_de_stats_sorted_processed = trad_de_stats_sorted.drop(trad_na_rows)
+summary_gene_ranks_sorted_processed = summary_gene_ranks_sorted.drop(sophie_na_rows)
+
+print(trad_de_stats_sorted_processed.shape)
+print(summary_gene_ranks_sorted_processed.shape)
+
+# Get ranking
+sophie_rank = summary_gene_ranks_sorted_processed["rank"].to_frame("sophie rank")
+trad_rank = trad_de_stats_sorted_processed["rank"].to_frame("traditional rank")
 
 # +
 # Load pickled file
@@ -408,32 +479,144 @@ with open(generic_gene_ids_filename, "rb") as generic_fh:
     generic_gene_ids = pickle.load(generic_fh)
 # -
 
-# Get mean of specific gene ranks
+# Add label for gene type
+sophie_rank["gene type"] = "NA"
+sophie_rank.loc[specific_gene_ids, "gene type"] = "specific"
+sophie_rank.loc[generic_gene_ids, "gene type"] = "common"
+
+print(sophie_rank.shape)
+sophie_rank.head()
+
+print(trad_rank.shape)
+trad_rank.head()
+
+sophie_trad_rank = sophie_rank.merge(trad_rank, left_index=True, right_index=True)
+
+sophie_trad_rank = sophie_trad_rank.reset_index()
+
+print(sophie_trad_rank.shape)
+sophie_trad_rank.head()
+
+sophie_trad_rank_melt = pd.melt(
+    sophie_trad_rank,
+    id_vars=["index", "gene type"],
+    value_vars=["sophie rank", "traditional rank"],
+)
+
+print(sophie_trad_rank_melt.shape)
+sophie_trad_rank_melt.head()
+
+sophie_trad_rank_melt[sophie_trad_rank_melt["gene type"] == "specific"]
+
+fig = sns.catplot(
+    x="variable",
+    y="value",
+    data=sophie_trad_rank_melt,
+    hue="gene type",
+    join=True,
+    palette=["blue", "red", "grey"],
+    hue_order=["common", "specific", "NA"],
+    order=["traditional rank", "sophie rank"],
+    dodge=True,
+    kind="point",
+)
+plt.title("Summarize ranking", fontsize=16)
+plt.xlabel("")
+plt.ylabel("Gene ranking", fontsize=14)
+
+fig = sns.catplot(
+    x="variable",
+    y="value",
+    data=sophie_trad_rank_melt[sophie_trad_rank_melt["gene type"] == "specific"],
+    hue="index",
+    join=True,
+    # palette=["blue", "red", "grey"],
+    # hue_order=["common", "specific", "NA"],
+    order=["traditional rank", "sophie rank"],
+    # dodge=True,
+    kind="point",
+    legend=False,
+)
+plt.title("Specific gene ranking", fontsize=16)
+plt.xlabel("")
+plt.ylabel("Gene ranking", fontsize=14)
+
+fig = sns.catplot(
+    x="variable",
+    y="value",
+    data=sophie_trad_rank_melt[sophie_trad_rank_melt["gene type"] == "common"],
+    hue="index",
+    join=True,
+    # palette=plot_color_gradients("sequential","blues"),
+    # hue_order=["common", "specific", "NA"],
+    order=["traditional rank", "sophie rank"],
+    # dodge=True,
+    kind="point",
+    legend=False,
+)
+plt.title("Common gene ranking", fontsize=16)
+plt.xlabel("")
+plt.ylabel("Gene ranking", fontsize=14)
+
+sns.catplot(
+    x="variable",
+    y="value",
+    data=sophie_trad_rank_melt,
+    hue="gene type",
+    # join=True,
+    palette=["blue", "red", "grey"],
+    hue_order=["common", "specific", "NA"],
+    order=["traditional rank", "sophie rank"],
+    dodge=True,
+    kind="swarm",
+)
+
+# ## Compare
+#
+# 1. mean rank of specific genes - mean rank of generic genes for template experiment
+# 2. We will need to re-run this notebook for each template experiment and then plot the distribution of difference scores
+#
+# We want to compare the mean ranking of specific genes vs the mean ranking of generic genes. If the mean difference is large then yes, that would indicate that there is a difference between the specific and generic genes that we can detect. In addition to the difference we want the specific genes to be higher ranked compared to the generic ones, so we want to see a large positive value if the method is performing better.
+
+"""# Load pickled file
+with open(template_specific_gene_ids_filename, "rb") as specific_fh:
+    specific_gene_ids = pickle.load(specific_fh)
+
+with open(generic_gene_ids_filename, "rb") as generic_fh:
+    generic_gene_ids = pickle.load(generic_fh)"""
+
+""" # Get mean of specific gene ranks
 sophie_specific_mean = summary_gene_ranks_sorted.loc[specific_gene_ids, "rank"].mean()
-trad_specific_mean = trad_de_stats_sorted.loc[specific_gene_ids, "rank"].mean()
+trad_specific_mean = trad_de_stats_sorted.loc[specific_gene_ids, "rank"].mean()"""
 
-print(sophie_specific_mean)
-print(trad_specific_mean)
-
-summary_gene_ranks_sorted.loc[specific_gene_ids, "rank"]
-
-trad_de_stats_sorted.loc[specific_gene_ids, "rank"]
-
-# Get mean of generic gene ranks
-sophie_generic_mean = summary_gene_ranks_sorted.loc[generic_gene_ids, "rank"].mean()
-trad_generic_mean = trad_de_stats_sorted.loc[generic_gene_ids, "rank"].mean()
-
-print(sophie_generic_mean)
-print(trad_generic_mean)
-
-summary_gene_ranks_sorted.loc[generic_gene_ids, "rank"]
-
-trad_de_stats_sorted.loc[generic_gene_ids, "rank"]
+"""print(sophie_specific_mean)
+print(trad_specific_mean)"""
 
 # +
-# Difference
+# summary_gene_ranks_sorted.loc[specific_gene_ids, "rank"]
+
+# +
+# trad_de_stats_sorted.loc[specific_gene_ids, "rank"]
+
+# +
+# Get mean of generic gene ranks
+# sophie_generic_mean = summary_gene_ranks_sorted.loc[generic_gene_ids, "rank"].mean()
+# trad_generic_mean = trad_de_stats_sorted.loc[generic_gene_ids, "rank"].mean()
+
+# +
+# print(sophie_generic_mean)
+# print(trad_generic_mean)
+
+# +
+# summary_gene_ranks_sorted.loc[generic_gene_ids, "rank"]
+
+# +
+# trad_de_stats_sorted.loc[generic_gene_ids, "rank"]
+# -
+
+"""# Difference
 diff_sophie = sophie_specific_mean - sophie_generic_mean
 diff_trad = trad_specific_mean - trad_generic_mean
 
 print("sophie difference: ", diff_sophie)
-print("traditional difference: ", diff_trad)
+print("traditional difference: ", diff_trad)"""

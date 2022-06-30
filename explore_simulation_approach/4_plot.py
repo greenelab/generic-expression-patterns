@@ -21,8 +21,47 @@
 
 # %load_ext autoreload
 # %autoreload 2
+# %matplotlib inline
+import os
 import pandas as pd
 import seaborn as sns
+from ponyo import utils
+import pickle
+
+# ## Visualize the simulated data
+
+# +
+# Read in config variables
+base_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
+
+config_filename = "config_sophie_vs_trad.tsv"
+
+params = utils.read_config(config_filename)
+
+# +
+# Load config params
+
+# Local directory to store intermediate files
+local_dir = params["local_dir"]
+
+#
+dataset_name = params["dataset_name"]
+
+# File containing un-normalized template experiment
+raw_template_filename = params["raw_template_filename"]
+
+# ID for template experiment to be selected
+project_id = params["project_id"]
+
+# Identifier for simulated experiment
+i = 0
+
+# Pickle files saving specific and generic gene ids
+template_specific_gene_ids_filename = params["template_specific_gene_ids_filename"]
+generic_gene_ids_filename = "generic_gene_ids.pickle"
+# -
+
+# ## STOP
 
 mean_diff_sophie = [
     18.279999999999973,
@@ -111,8 +150,7 @@ mean_diff
 # Melt dataframe to use coloring in boxplot
 mean_diff_melt = pd.melt(mean_diff)
 
-# +
-# Plot coverage distribution given list of generic coverage, specific coverage
+"""# Plot coverage distribution given list of generic coverage, specific coverage
 fig = sns.swarmplot(
     data=mean_diff_melt,
     x="variable",
@@ -131,4 +169,4 @@ fig.set_title(
     fontname="Verdana",
 )
 
-fig.figure.savefig("validate_sophie_vs_trad.svg", format="svg", dpi=300)
+fig.figure.savefig("validate_sophie_vs_trad.svg", format="svg", dpi=300)"""
