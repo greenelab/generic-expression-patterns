@@ -73,21 +73,47 @@ panel_1c = make_figure_panel(
     x_loc=500,
     y_loc=500,
 )
+panel_1d_all = make_figure_panel(
+    "../explore_simulation_approach/sophie_vs_trad_summary.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=30,
+    y_loc=800,
+)
+panel_1d_specific = make_figure_panel(
+    "../explore_simulation_approach/sophie_vs_trad_specific.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=400,
+    y_loc=800,
+)
+panel_1d_common = make_figure_panel(
+    "../explore_simulation_approach/sophie_vs_trad_common.svg",
+    scale_x_input=0.8,
+    scale_y_input=0.8,
+    x_loc=650,
+    y_loc=800,
+)
 
 panel_1a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
 panel_1b_label = sg.TextElement(10, 500, "B", size=18, weight="bold", font="Verdana")
 panel_1c_label = sg.TextElement(500, 500, "C", size=18, weight="bold", font="Verdana")
+panel_1d_label = sg.TextElement(10, 800, "D", size=18, weight="bold", font="Verdana")
 
-figure_1 = sg.SVGFigure("900", "800")
+figure_1 = sg.SVGFigure("950", "1100")
 figure_1.append(
     [
         etree.Element("rect", {"width": "100%", "height": "100%", "fill": "white"}),
         panel_1a,
         panel_1b,
         panel_1c,
+        panel_1d_all,
+        panel_1d_specific,
+        panel_1d_common,
         panel_1a_label,
         panel_1b_label,
         panel_1c_label,
+        panel_1d_label,
     ]
 )
 display(SVG(figure_1.to_str()))
