@@ -28,10 +28,12 @@
 # %load_ext rpy2.ipython
 # %matplotlib inline
 import os
+import glob
 import pickle
 import pandas as pd
 import seaborn as sns
 import numpy as np
+from keras.models import load_model
 import matplotlib.pyplot as plt
 from rpy2.robjects import pandas2ri
 from ponyo import utils, train_vae_modules, simulate_expression_data
@@ -101,7 +103,6 @@ template_process_samples_filename = params["template_process_samples_filename"]
 template_DE_grouping_filename = params["template_DE_grouping_filename"]
 
 # Statistic to use to rank genes or pathways by
-# Choices are {} FILL IN
 col_to_rank_genes = params["rank_genes_by"]
 
 # Pickle files saving specific and generic gene ids
@@ -125,8 +126,6 @@ processed_template_filename = params["processed_template_filename"]
 output_filename = params["output_filename"]
 # -
 
-# ## SOPHIE
-
 # Process template
 new_experiment_process.process_template_experiment(
     raw_template_filename,
@@ -136,6 +135,38 @@ new_experiment_process.process_template_experiment(
     normalized_template_filename,
 )
 
+# ## Quick check
+
+# +
+# Check that normalized and applying scaler generate the same data
+
+normalized_template_filename = params["normalized_template_filename"]
+
+normalized_template = pd.read_csv(
+    normalized_template_filename, sep="\t", index_col=0, header=0
+)
+normalized_template.head(10)
+
+# +
+# Load scaler file
+scaler_transform = pickle.load(open(scaler_filename, "rb"))
+
+template_experiment = pd.read_csv(
+    raw_template_filename, sep="\t", index_col=0, header=0
+)
+
+template_experiment_scaled = scaler_transform.transform(template_experiment)
+
+template_experiment_scaled_df = pd.DataFrame(
+    template_experiment_scaled,
+    columns=template_experiment.columns,
+    index=template_experiment.index,
+)
+template_experiment_scaled_df.head(10)
+# -
+
+# ## Simulate data
+
 # +
 # Simulate multiple experiments UPDATE COMMENT
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:
@@ -144,15 +175,9 @@ new_experiment_process.process_template_experiment(
 #   - template_normalized_data_SRP012656_test.txt
 # in which "<n>" is an integer in the range of [0, num_runs-1]
 
-# REMOVE LATER
-# dataset_name = "pre_model_unseen_template"
-# Load pickled file
-scaler = pickle.load(open(scaler_filename, "rb"))
-
 # Update simulated dir
 os.makedirs(os.path.join(local_dir, "pseudo_experiment"), exist_ok=True)
 
-# Update to take in file to be consisten
 normalized_compendium = pd.read_csv(
     normalized_compendium_filename, header=0, sep="\t", index_col=0
 )
@@ -172,6 +197,71 @@ for run_id in range(num_runs):
         latent_dim,
         run_id,
     )
+# -
+
+# ## Quick check
+
+# +
+i = 0
+simulated_encoded_filename = os.path.join(
+    local_dir,
+    "pseudo_experiment",
+    f"selected_simulated_encoded_data_{project_id}_{i}.txt",
+)
+
+simulated_data_encoded_df = pd.read_csv(
+    simulated_encoded_filename, sep="\t", index_col=0, header=0
+)
+simulated_data_encoded_df.head()
+# -
+
+simulated_filename = os.path.join(
+    local_dir,
+    "pseudo_experiment",
+    f"selected_simulated_data_{project_id}_{i}.txt",
+)
+simulated_experiment = pd.read_csv(simulated_filename, sep="\t", index_col=0, header=0)
+
+# +
+simulated_experiment_scaled = scaler_transform.transform(simulated_experiment)
+
+simulated_experiment_scaled_df = pd.DataFrame(
+    simulated_experiment_scaled,
+    columns=simulated_experiment.columns,
+    index=simulated_experiment.index,
+)
+
+# +
+# Files
+model_encoder_filename = glob.glob(os.path.join(vae_model_dir, "*_encoder_model.h5"))[0]
+
+weights_encoder_filename = glob.glob(
+    os.path.join(vae_model_dir, "*_encoder_weights.h5")
+)[0]
+
+model_decoder_filename = glob.glob(os.path.join(vae_model_dir, "*_decoder_model.h5"))[0]
+
+weights_decoder_filename = glob.glob(
+    os.path.join(vae_model_dir, "*_decoder_weights.h5")
+)[0]
+
+# Load saved models
+loaded_model = load_model(model_encoder_filename)
+loaded_decode_model = load_model(model_decoder_filename)
+
+loaded_model.load_weights(weights_encoder_filename)
+loaded_decode_model.load_weights(weights_decoder_filename)
+# -
+
+# Encode simulated experiment into VAE space
+# Since encoder and decorder are not symmetric, we cannot expect the above and below df to be the same
+simulated_data_encoded = loaded_model.predict_on_batch(simulated_experiment_scaled_df)
+simulated_data_encoded_df_take2 = pd.DataFrame(
+    simulated_data_encoded, index=simulated_experiment_scaled_df.index
+)
+simulated_data_encoded_df_take2.head()
+
+# ## SOPHIE
 
 # +
 ## Update simulated dir
@@ -393,61 +483,6 @@ trad_de_stats_sorted["rank"] = trad_de_stats_sorted["log2FoldChange"].rank(
 
 trad_de_stats_sorted.head(10)
 
-# ## Check signal in simulation experiment
-
-i = 9
-
-simulated_filename = os.path.join(
-    local_dir,
-    "pseudo_experiment",
-    f"selected_simulated_data_{project_id}_{i}.txt",
-)
-
-simulated_data = pd.read_csv(simulated_filename, sep="\t", index_col=0, header=0)
-
-print(simulated_data.shape)
-simulated_data.head()
-
-# +
-# Get common genes
-# Get specific genes
-
-# Load pickled file
-with open(template_specific_gene_ids_filename, "rb") as specific_fh:
-    specific_gene_ids = pickle.load(specific_fh)
-
-with open(generic_gene_ids_filename, "rb") as generic_fh:
-    generic_gene_ids = pickle.load(generic_fh)
-# -
-
-# Get NA genes
-all_gene_ids = simulated_data.columns
-all_gene_ids_tmp = all_gene_ids.difference(specific_gene_ids)
-na_gene_ids = all_gene_ids_tmp.difference(generic_gene_ids)
-
-# Simulated data subsets
-simulated_specific_df = simulated_data[specific_gene_ids]
-simulated_common_df = simulated_data[generic_gene_ids]
-simulated_na_df = simulated_data[na_gene_ids]
-
-print(simulated_specific_df.shape)
-simulated_specific_df
-
-print(simulated_common_df.shape)
-simulated_common_df
-
-print(simulated_na_df.shape)
-simulated_na_df
-
-f = sns.clustermap(simulated_specific_df.T, cmap="viridis")
-f.fig.suptitle("Simulated experiment specific genes")
-
-f = sns.clustermap(simulated_common_df.T, cmap="viridis")
-f.fig.suptitle("Simulated experiment common genes")
-
-f = sns.clustermap(simulated_na_df.T, cmap="viridis")
-f.fig.suptitle("Simulated experiment NA genes")
-
 # ## Compare
 #
 # Let's compare how the ranking of genes changes between SOPHIE and traditional methods. If SOPHIE was better able to distinguish between common vs specific genes then we would expect the ranking of specific genes to increase using SOPHIE and decrease for common genes.
@@ -467,8 +502,8 @@ print(trad_de_stats_sorted_processed.shape)
 print(summary_gene_ranks_sorted_processed.shape)
 
 # Get ranking
-sophie_rank = summary_gene_ranks_sorted_processed["rank"].to_frame("sophie rank")
-trad_rank = trad_de_stats_sorted_processed["rank"].to_frame("traditional rank")
+sophie_rank = summary_gene_ranks_sorted_processed["rank"].to_frame("SOPHIE rank")
+trad_rank = trad_de_stats_sorted_processed["rank"].to_frame("Traditional rank")
 
 # +
 # Load pickled file
@@ -478,6 +513,11 @@ with open(template_specific_gene_ids_filename, "rb") as specific_fh:
 with open(generic_gene_ids_filename, "rb") as generic_fh:
     generic_gene_ids = pickle.load(generic_fh)
 # -
+
+# Get NA genes
+all_gene_ids = summary_gene_ranks_sorted_processed.index
+all_gene_ids_tmp = all_gene_ids.difference(specific_gene_ids)
+na_gene_ids = all_gene_ids_tmp.difference(generic_gene_ids)
 
 # Add label for gene type
 sophie_rank["gene type"] = "NA"
@@ -500,7 +540,7 @@ sophie_trad_rank.head()
 sophie_trad_rank_melt = pd.melt(
     sophie_trad_rank,
     id_vars=["index", "gene type"],
-    value_vars=["sophie rank", "traditional rank"],
+    value_vars=["SOPHIE rank", "Traditional rank"],
 )
 
 print(sophie_trad_rank_melt.shape)
@@ -508,115 +548,83 @@ sophie_trad_rank_melt.head()
 
 sophie_trad_rank_melt[sophie_trad_rank_melt["gene type"] == "specific"]
 
-fig = sns.catplot(
+# +
+fig_summary = sns.catplot(
     x="variable",
     y="value",
     data=sophie_trad_rank_melt,
     hue="gene type",
     join=True,
-    palette=["blue", "red", "grey"],
+    palette=["#3c78d8ff", "#9569b4ff", "grey"],
     hue_order=["common", "specific", "NA"],
-    order=["traditional rank", "sophie rank"],
+    order=["Traditional rank", "SOPHIE rank"],
     dodge=True,
     kind="point",
+    legend=False,
 )
-plt.title("Summarize ranking", fontsize=16)
+plt.title("Summarized gene ranking", fontsize=16)
 plt.xlabel("")
 plt.ylabel("Gene ranking", fontsize=14)
+plt.xticks(fontsize=14)
+plt.legend(fontsize=12, loc=(1.0, 0.5))
 
-fig = sns.catplot(
+fig_summary.savefig(
+    "sophie_vs_trad_summary.svg",
+    format="svg",
+    bbox_inches="tight",
+    transparent=True,
+    pad_inches=0,
+    dpi=300,
+)
+
+# +
+fig_specific = sns.catplot(
     x="variable",
     y="value",
     data=sophie_trad_rank_melt[sophie_trad_rank_melt["gene type"] == "specific"],
     hue="index",
     join=True,
-    # palette=["blue", "red", "grey"],
-    # hue_order=["common", "specific", "NA"],
-    order=["traditional rank", "sophie rank"],
-    # dodge=True,
+    color="#9569b4ff",
+    order=["Traditional rank", "SOPHIE rank"],
     kind="point",
     legend=False,
 )
 plt.title("Specific gene ranking", fontsize=16)
 plt.xlabel("")
 plt.ylabel("Gene ranking", fontsize=14)
+plt.xticks(fontsize=14)
 
-fig = sns.catplot(
+fig_specific.savefig(
+    "sophie_vs_trad_specific.svg",
+    format="svg",
+    bbox_inches="tight",
+    transparent=True,
+    pad_inches=0,
+    dpi=300,
+)
+
+# +
+fig_common = sns.catplot(
     x="variable",
     y="value",
     data=sophie_trad_rank_melt[sophie_trad_rank_melt["gene type"] == "common"],
     hue="index",
     join=True,
-    # palette=plot_color_gradients("sequential","blues"),
-    # hue_order=["common", "specific", "NA"],
-    order=["traditional rank", "sophie rank"],
-    # dodge=True,
+    color="#3c78d8ff",
+    order=["Traditional rank", "SOPHIE rank"],
     kind="point",
     legend=False,
 )
 plt.title("Common gene ranking", fontsize=16)
 plt.xlabel("")
 plt.ylabel("Gene ranking", fontsize=14)
+plt.xticks(fontsize=14)
 
-sns.catplot(
-    x="variable",
-    y="value",
-    data=sophie_trad_rank_melt,
-    hue="gene type",
-    # join=True,
-    palette=["blue", "red", "grey"],
-    hue_order=["common", "specific", "NA"],
-    order=["traditional rank", "sophie rank"],
-    dodge=True,
-    kind="swarm",
+fig_common.savefig(
+    "sophie_vs_trad_common.svg",
+    format="svg",
+    bbox_inches="tight",
+    transparent=True,
+    pad_inches=0,
+    dpi=300,
 )
-
-# ## Compare
-#
-# 1. mean rank of specific genes - mean rank of generic genes for template experiment
-# 2. We will need to re-run this notebook for each template experiment and then plot the distribution of difference scores
-#
-# We want to compare the mean ranking of specific genes vs the mean ranking of generic genes. If the mean difference is large then yes, that would indicate that there is a difference between the specific and generic genes that we can detect. In addition to the difference we want the specific genes to be higher ranked compared to the generic ones, so we want to see a large positive value if the method is performing better.
-
-"""# Load pickled file
-with open(template_specific_gene_ids_filename, "rb") as specific_fh:
-    specific_gene_ids = pickle.load(specific_fh)
-
-with open(generic_gene_ids_filename, "rb") as generic_fh:
-    generic_gene_ids = pickle.load(generic_fh)"""
-
-""" # Get mean of specific gene ranks
-sophie_specific_mean = summary_gene_ranks_sorted.loc[specific_gene_ids, "rank"].mean()
-trad_specific_mean = trad_de_stats_sorted.loc[specific_gene_ids, "rank"].mean()"""
-
-"""print(sophie_specific_mean)
-print(trad_specific_mean)"""
-
-# +
-# summary_gene_ranks_sorted.loc[specific_gene_ids, "rank"]
-
-# +
-# trad_de_stats_sorted.loc[specific_gene_ids, "rank"]
-
-# +
-# Get mean of generic gene ranks
-# sophie_generic_mean = summary_gene_ranks_sorted.loc[generic_gene_ids, "rank"].mean()
-# trad_generic_mean = trad_de_stats_sorted.loc[generic_gene_ids, "rank"].mean()
-
-# +
-# print(sophie_generic_mean)
-# print(trad_generic_mean)
-
-# +
-# summary_gene_ranks_sorted.loc[generic_gene_ids, "rank"]
-
-# +
-# trad_de_stats_sorted.loc[generic_gene_ids, "rank"]
-# -
-
-"""# Difference
-diff_sophie = sophie_specific_mean - sophie_generic_mean
-diff_trad = trad_specific_mean - trad_generic_mean
-
-print("sophie difference: ", diff_sophie)
-print("traditional difference: ", diff_trad)"""

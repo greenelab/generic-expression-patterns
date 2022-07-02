@@ -29,7 +29,7 @@ import random
 import seaborn as sns
 from ponyo import utils
 
-np.random.seed(1)
+np.random.seed(2)
 
 # +
 ## Need to make sure there is a consistent difference in all experiments in the compendium
@@ -49,9 +49,17 @@ num_generic_genes = 100
 num_specific_genes = 10
 num_experiments = 90
 
-"""p = random.uniform(0.0, 1.0)
+"""r = random.randint(5,50)
+print(r)
+p = random.uniform(0.0, 1.0)
 print(p)
-np.random.negative_binomial(5, p)"""
+backgrd_dist = np.random.negative_binomial(27, p, 1000)
+#pp = random.uniform(0.0, 0.2)
+#print(pp)
+perturb_dist = np.random.negative_binomial(20, p, 1000)"""
+
+"""sns.distplot(backgrd_dist, kde=False)
+sns.distplot(perturb_dist, kde=False)"""
 
 # +
 # Read in config variables
@@ -109,8 +117,7 @@ def run_make_experiment(
     all_gene_ids,
     generic_gene_ids,
     specific_gene_ids,
-    generic_scaler,
-    specific_scaler,
+    r,
 ):
     experiment_data = {}
     for gene in range(num_genes):
@@ -125,7 +132,7 @@ def run_make_experiment(
         # Randomly select a different success probability for each gene so that
         # each gene has a different rate at which its expressed
         p = random.uniform(0.0, 1.0)
-        gene_profile = np.random.negative_binomial(5, p, num_samples)
+        gene_profile = np.random.negative_binomial(r, p, num_samples)
 
         # Create dictionary to define dataframe
         experiment_data[f"G_{gene}"] = gene_profile
@@ -135,18 +142,6 @@ def run_make_experiment(
 
     # Set index
     experiment_df.index = sample_ids
-
-    # Perturb generic genes by scaler
-    # Randomly select a scaler
-    # Only add scaler to perturbed samples
-    experiment_df.loc[
-        experiment_df.index.str.contains("perturb"), generic_gene_ids
-    ] += generic_scaler
-
-    # Perturb specific genes by a different scaler
-    experiment_df.loc[
-        experiment_df.index.str.contains("perturb"), specific_gene_ids
-    ] += specific_scaler
 
     return experiment_df
 
@@ -175,10 +170,14 @@ def make_experiments(
         # Save specific gene ids for reference later
         specific_gene_id_lst.append(specific_gene_ids)
 
-        # Randomly select scaler for generic and specific genes from the same distribution
-        p = random.uniform(0.0, 0.7)
-        generic_scaler = np.random.negative_binomial(20, p)
-        specific_scaler = np.random.negative_binomial(20, p)
+        # Set a different r per experiment to try to add more
+        # variance to the compendium
+        # Issue: the VAE is compressing the DE signal in the template
+        # experiment too much so the simulated experiments don't retain this
+        # DE signal at all.
+        # Hypothesis: Generating more variance in the compendium experiments
+        # may reduce the compression
+        r = random.randint(5, 50)
 
         experiment_df = run_make_experiment(
             num_samples,
@@ -187,9 +186,31 @@ def make_experiments(
             all_gene_ids,
             generic_gene_ids,
             specific_gene_ids,
-            generic_scaler,
-            specific_scaler,
+            r,
         )
+
+        # Randomly select scaler for generic and specific genes to be the median
+        # of the expression values so that the signal is strong
+
+        # p = random.uniform(0.0, 0.2)
+        # generic_scaler = np.random.negative_binomial(100, p)
+        # specific_scaler = np.random.negative_binomial(50, p)
+        generic_scaler = experiment_df.median().quantile(0.98)
+        specific_scaler = generic_scaler
+        print("generic scaler", generic_scaler)
+        print("specific scaler", specific_scaler)
+
+        # Perturb generic genes by scaler
+        # Randomly select a scaler
+        # Only add scaler to perturbed samples
+        experiment_df.loc[
+            experiment_df.index.str.contains("perturb"), generic_gene_ids
+        ] += generic_scaler
+
+        # Perturb specific genes by a different scaler
+        experiment_df.loc[
+            experiment_df.index.str.contains("perturb"), specific_gene_ids
+        ] += specific_scaler
 
         # Concatenate experiments
         expression_df = pd.concat([expression_df, experiment_df])
@@ -224,54 +245,6 @@ for i in range(10):
     with open(template_specific_gene_ids_filename, "wb") as pkl_fh:
         pickle.dump(template_specific_gene_ids[0], pkl_fh, protocol=3)
 
-print(template_experiment.shape)
-template_experiment.head(8)
-
-template_specific_gene_ids[0]
-
-# ## Check template experiment
-#
-# We want to verify that we have a good differential expression signal - i.e. control and perturb samples separate based on specific and common genes
-
-i = 0
-
-template_filename = f"/home/alexandra/Documents/Data/Generic_expression_patterns/reviewer_experiment/raw_template_{i}.tsv"
-
-template_specific_gene_ids_filename = f"/home/alexandra/Documents/Data/Generic_expression_patterns/reviewer_experiment/template_specific_gene_ids_{i}.pickle"
-
-template_experiment = pd.read_csv(template_filename, sep="\t", index_col=0, header=0)
-
-with open(template_specific_gene_ids_filename, "rb") as specific_fh:
-    specific_gene_ids = pickle.load(specific_fh)
-
-# Get NA genes
-all_gene_ids = template_experiment.columns
-all_gene_ids_tmp = all_gene_ids.difference(template_specific_gene_ids[0])
-na_gene_ids = all_gene_ids_tmp.difference(generic_gene_ids)
-
-# Template data subsets
-template_specific_df = template_experiment[template_specific_gene_ids[0]]
-template_common_df = template_experiment[generic_gene_ids]
-template_na_df = template_experiment[na_gene_ids]
-
-print(template_specific_df.shape)
-template_specific_df
-
-print(template_common_df.shape)
-template_common_df
-
-print(template_na_df.shape)
-template_na_df
-
-f = sns.clustermap(template_specific_df.T, cmap="viridis")
-f.fig.suptitle("Template experiment specific genes")
-
-f = sns.clustermap(template_common_df.T, cmap="viridis")
-f.fig.suptitle("Template experiment common genes")
-
-f = sns.clustermap(template_na_df.T, cmap="viridis")
-f.fig.suptitle("Template experiment NA genes")
-
 # ## Make compendium
 
 compendium, compendium_specific_ids = make_experiments(
@@ -294,6 +267,5 @@ compendium_specific_ids
 compendium.to_csv(raw_compendium_filename, sep="\t")
 
 # Save generic genes
-# Pickle `scaler` as `scaler_filename` on disk
 with open(generic_gene_ids_filename, "wb") as pkl_fh:
     pickle.dump(generic_gene_ids, pkl_fh, protocol=3)
