@@ -167,8 +167,7 @@ template_experiment_scaled_df.head(10)
 
 # ## Simulate data
 
-# +
-# Simulate multiple experiments UPDATE COMMENT
+"""# Simulate multiple experiments UPDATE COMMENT
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -196,8 +195,7 @@ for run_id in range(num_runs):
         local_dir,
         latent_dim,
         run_id,
-    )
-# -
+    )"""
 
 # ## Quick check
 
@@ -436,6 +434,8 @@ summary_gene_ranks_sorted["rank"] = summary_gene_ranks_sorted["Z score"].rank(
 
 summary_gene_ranks_sorted.head(10)
 
+summary_gene_ranks_sorted[summary_gene_ranks_sorted["Z score"].isna()]
+
 # ## Traditional DE
 
 # + magic_args="-i template_DE_grouping_filename -i project_id -i processed_template_filename -i local_dir -i base_dir -i de_method" language="R"
@@ -483,6 +483,8 @@ trad_de_stats_sorted["rank"] = trad_de_stats_sorted["log2FoldChange"].rank(
 
 trad_de_stats_sorted.head(10)
 
+trad_de_stats_sorted[trad_de_stats_sorted["log2FoldChange"].isna()]
+
 # ## Compare
 #
 # Let's compare how the ranking of genes changes between SOPHIE and traditional methods. If SOPHIE was better able to distinguish between common vs specific genes then we would expect the ranking of specific genes to increase using SOPHIE and decrease for common genes.
@@ -520,6 +522,8 @@ all_gene_ids_tmp = all_gene_ids.difference(specific_gene_ids)
 na_gene_ids = all_gene_ids_tmp.difference(generic_gene_ids)
 
 # Add label for gene type
+# Note: There are some ranks that are NA because SOPHIE z-scores or traditional logFC
+# (which the rank is based on) is NA if the gene has base level expression of 0.
 sophie_rank["gene type"] = "NA"
 sophie_rank.loc[specific_gene_ids, "gene type"] = "specific"
 sophie_rank.loc[generic_gene_ids, "gene type"] = "common"

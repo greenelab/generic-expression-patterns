@@ -178,8 +178,6 @@ compendium_encoded_df = pd.DataFrame(
 
 # +
 # PCA embedding of VAE encoded data
-
-random_state = 1
 pca = PCA(n_components=2)
 model = pca.fit(compendium_encoded_df)
 

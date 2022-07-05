@@ -30,9 +30,6 @@ import seaborn as sns
 from ponyo import utils
 
 np.random.seed(2)
-
-# +
-## Need to make sure there is a consistent difference in all experiments in the compendium
 # -
 
 # ## Create simulated data
@@ -48,18 +45,6 @@ num_samples = 8
 num_generic_genes = 100
 num_specific_genes = 10
 num_experiments = 90
-
-"""r = random.randint(5,50)
-print(r)
-p = random.uniform(0.0, 1.0)
-print(p)
-backgrd_dist = np.random.negative_binomial(27, p, 1000)
-#pp = random.uniform(0.0, 0.2)
-#print(pp)
-perturb_dist = np.random.negative_binomial(20, p, 1000)"""
-
-"""sns.distplot(backgrd_dist, kde=False)
-sns.distplot(perturb_dist, kde=False)"""
 
 # +
 # Read in config variables
@@ -131,6 +116,11 @@ def run_make_experiment(
         # NB()
         # Randomly select a different success probability for each gene so that
         # each gene has a different rate at which its expressed
+        #
+        # The variance of the NB distribution gets smaller as r increases
+        # (specifically it's r * (p / (1 - p)^2)), see https://en.wikipedia.org/wiki/Negative_binomial_distribution
+        # Using different r values will give you both different means and different variances
+        # (so will different values of p, but the scaling is much simpler for r).
         p = random.uniform(0.0, 1.0)
         gene_profile = np.random.negative_binomial(r, p, num_samples)
 
