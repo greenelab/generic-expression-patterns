@@ -33,6 +33,7 @@ import pickle
 import pandas as pd
 import seaborn as sns
 import numpy as np
+import scipy
 from keras.models import load_model
 import matplotlib.pyplot as plt
 from rpy2.robjects import pandas2ri
@@ -167,7 +168,8 @@ template_experiment_scaled_df.head(10)
 
 # ## Simulate data
 
-"""# Simulate multiple experiments UPDATE COMMENT
+# +
+# Simulate multiple experiments UPDATE COMMENT
 # This step creates the following files in "<local_dir>/pseudo_experiment/" directory:
 #   - selected_simulated_data_SRP012656_<n>.txt
 #   - selected_simulated_encoded_data_SRP012656_<n>.txt
@@ -195,7 +197,8 @@ for run_id in range(num_runs):
         local_dir,
         latent_dim,
         run_id,
-    )"""
+    )
+# -
 
 # ## Quick check
 
@@ -551,6 +554,38 @@ print(sophie_trad_rank_melt.shape)
 sophie_trad_rank_melt.head()
 
 sophie_trad_rank_melt[sophie_trad_rank_melt["gene type"] == "specific"]
+
+# +
+# Statistical test using Wilcoxon to determine if the ranking of common genes is changed
+# using traditional vs SOPHIE. Similarly for specific genes
+trad_common_ranks = sophie_trad_rank_melt.loc[
+    (sophie_trad_rank_melt["gene type"] == "common")
+    & (sophie_trad_rank_melt["variable"] == "Traditional rank"),
+    "value",
+]
+
+sophie_common_ranks = sophie_trad_rank_melt.loc[
+    (sophie_trad_rank_melt["gene type"] == "common")
+    & (sophie_trad_rank_melt["variable"] == "SOPHIE rank"),
+    "value",
+]
+
+scipy.stats.wilcoxon(x=trad_common_ranks, y=sophie_common_ranks, alternative="greater")
+
+# +
+trad_specific_ranks = sophie_trad_rank_melt.loc[
+    (sophie_trad_rank_melt["gene type"] == "specific")
+    & (sophie_trad_rank_melt["variable"] == "Traditional rank"),
+    "value",
+]
+
+sophie_specific_ranks = sophie_trad_rank_melt.loc[
+    (sophie_trad_rank_melt["gene type"] == "specific")
+    & (sophie_trad_rank_melt["variable"] == "SOPHIE rank"),
+    "value",
+]
+
+scipy.stats.wilcoxon(x=trad_specific_ranks, y=sophie_specific_ranks, alternative="less")
 
 # +
 fig_summary = sns.catplot(
