@@ -33,7 +33,7 @@ import pickle
 import pandas as pd
 import seaborn as sns
 import numpy as np
-import scipy
+import scipy.stats
 from keras.models import load_model
 import matplotlib.pyplot as plt
 from rpy2.robjects import pandas2ri
