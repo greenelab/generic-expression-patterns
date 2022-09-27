@@ -146,7 +146,7 @@ fig1 += theme(
     axis_text=element_text(family="sans-serif", size=12),
     axis_title=element_text(family="sans-serif", size=15),
 )
-fig1 += guides(colour=guide_legend(override_aes={"alpha": 1}))
+fig1 += guides(colour=guide_legend(title="Strain", override_aes={"alpha": 1}))
 
 print(fig1)
 
@@ -216,7 +216,7 @@ fig2 += theme(
     axis_text=element_text(family="sans-serif", size=12),
     axis_title=element_text(family="sans-serif", size=15),
 )
-fig2 += guides(colour=guide_legend(override_aes={"alpha": 1}))
+fig2 += guides(colour=guide_legend(title="Strain", override_aes={"alpha": 1}))
 
 print(fig2)
 

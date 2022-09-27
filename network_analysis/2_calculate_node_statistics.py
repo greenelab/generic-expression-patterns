@@ -114,7 +114,7 @@ plt.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=col)
 plt.text(
     (x1 + x2) * 0.5,
     y + h + 3,
-    f"P-value = {format(pvalue, '.3g')}",
+    f"$P$-value = {format(pvalue, '.3g')}",
     ha="center",
     va="bottom",
     color=col,

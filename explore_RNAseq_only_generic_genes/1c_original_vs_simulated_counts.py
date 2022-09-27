@@ -560,10 +560,10 @@ def sns_violin_plot_original_vs_simulated(
                 # Format mean df for plotting
                 mean_dist = pd.DataFrame(
                     data={
-                        "RNAseq common DEGs (template)": np.log10(
+                        "RNA-seq common DEGs (template)": np.log10(
                             template_df[gene_list].mean()
                         ),
-                        "RNAseq common DEGs (simulated)": np.log10(
+                        "RNA-seq common DEGs (simulated)": np.log10(
                             simulated[gene_list].mean()
                         ),
                     }
@@ -575,10 +575,10 @@ def sns_violin_plot_original_vs_simulated(
                 # Format mean df for plotting
                 mean_dist = pd.DataFrame(
                     data={
-                        "Array/RNAseq common DEGs (template)": np.log10(
+                        "Array/RNA-seq common DEGs (template)": np.log10(
                             template_df[gene_list].mean()
                         ),
-                        "Array/RNAseq common DEGs (simulated)": np.log10(
+                        "Array/RNA-seq common DEGs (simulated)": np.log10(
                             simulated[gene_list].mean()
                         ),
                     }
@@ -601,10 +601,10 @@ def sns_violin_plot_original_vs_simulated(
                 # Format var df for plotting
                 var_dist = pd.DataFrame(
                     data={
-                        "RNAseq common DEGs (template)": np.log10(
+                        "RNA-seq common DEGs (template)": np.log10(
                             template_df[gene_list].var()
                         ),
-                        "RNAseq common DEGs (simulated)": np.log10(
+                        "RNA-seq common DEGs (simulated)": np.log10(
                             simulated[gene_list].var()
                         ),
                     }
@@ -616,10 +616,10 @@ def sns_violin_plot_original_vs_simulated(
                 # Format var df for plotting
                 var_dist = pd.DataFrame(
                     data={
-                        "Array/RNAseq common DEGs (template)": np.log10(
+                        "Array/RNA-seq common DEGs (template)": np.log10(
                             template_df[gene_list].var()
                         ),
-                        "Array/RNAseq common DEGs (simulated)": np.log10(
+                        "Array/RNA-seq common DEGs (simulated)": np.log10(
                             simulated[gene_list].var()
                         ),
                     }
