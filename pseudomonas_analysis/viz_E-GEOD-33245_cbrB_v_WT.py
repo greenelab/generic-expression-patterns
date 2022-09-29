@@ -634,7 +634,7 @@ f1.axhline(-np.log10(0.05), c="black", lw=0.7, ls="--")
 f1.axvline(1, c="black", lw=0.7, ls="--")
 f1.axvline(-1, c="black", lw=0.7, ls="--")
 
-f1.set_ylabel(r"-Log$_{10}$ (FDR adjusted p-value)", fontsize=16, fontname="Verdana")
+f1.set_ylabel(r"-Log$_{10}$ (FDR adjusted $P$-value)", fontsize=16, fontname="Verdana")
 f1.set_xlabel(r"-Log$_{2}$ FC (cbrB/WT)", fontsize=16, fontname="Verdana")
 # f1.set_title("$cbrB$ vs WT", fontsize=14, fontname="Verdana")
 
@@ -802,7 +802,7 @@ f2.axhline(-np.log10(0.05), c="black", lw=0.7, ls="--")
 f2.axvline(1, c="black", lw=0.7, ls="--")
 f2.axvline(-1, c="black", lw=0.7, ls="--")
 
-f2.set_ylabel(r"-Log$_{10}$ (FDR adjusted p-value)", fontsize=16, fontname="Verdana")
+f2.set_ylabel(r"-Log$_{10}$ (FDR adjusted $P$-value)", fontsize=16, fontname="Verdana")
 f2.set_xlabel(r"-Log$_{2}$ FC (crc/WT)", fontsize=16, fontname="Verdana")
 # f2.set_title("$crc$ vs WT", fontsize=14, fontname="Verdana")
 

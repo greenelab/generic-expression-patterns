@@ -308,9 +308,9 @@ figure_4.save("output/figure_4.svg")
 # Create panels for figure 5
 panel_5a = make_figure_panel(
     "Fig-5A.svg",
-    scale_x_input=2,
-    scale_y_input=2,
-    x_loc=30,
+    scale_x_input=0.5,
+    scale_y_input=0.5,
+    x_loc=10,
     y_loc=20,
 )
 panel_5b1 = make_figure_panel(

@@ -220,7 +220,7 @@ def plot_significance_vs_ranking(
         fig += pn.labs(
             x=x_label,
             y="Commonly enriched (percentile of ranking)",
-            title=f"{method_name} pathway statistics vs ranking",
+            title=f"{method_name} pathway statistics $v.s.$ ranking",
         )
         fig += pn.theme_bw()
         fig += pn.theme(
@@ -250,7 +250,7 @@ plot_significance_vs_ranking(
     gsea_pathway_summary,
     "GSEA",
     "adj p-value",
-    r"-log$_{10}$(median(adjusted p-value))",
+    r"-Log$_{10}$(median(adjusted $P$-value))",
     "rnaseq",
     "GSEA_pathway_ranking.svg",
 )
@@ -259,7 +259,7 @@ plot_significance_vs_ranking(
     gsva_pathway_summary,
     "GSVA",
     "ES",
-    "Median(Enrichment score)",
+    "Median(enrichment score)",
     "rnaseq",
     "GSVA_pathway_ranking.svg",
 )
@@ -268,7 +268,7 @@ plot_significance_vs_ranking(
     camera_pathway_summary,
     "CAMERA",
     "adj p-value",
-    r"-log$_{10}$(median(FDR))",
+    r"-Log$_{10}$(median(FDR))",
     "rnaseq",
     "CAMERA_pathway_ranking.svg",
 )
@@ -278,7 +278,7 @@ if platform == "rnaseq":
         ora_pathway_summary,
         "ORA",
         "adj p-value",
-        r"-log$_{10}(median(adjusted p-value)))",
+        r"-Log$_{10}$(median(adjusted $P$-value)))",
         "rnaseq",
         "ORA_pathway_ranking.svg",
     )
@@ -319,7 +319,7 @@ def plot_paired_ranking(
     fig += pn.labs(
         x=f"{method1_name} pathway ranking",
         y=f"{method2_name} pathway ranking",
-        title=f"{method1_name} vs {method2_name} pathway ranking",
+        title=f"{method1_name} $v.s.$ {method2_name} pathway ranking",
     )
     fig += pn.theme_bw()
     fig += pn.theme(

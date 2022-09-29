@@ -228,10 +228,12 @@ recount2_expression_mean.head()
 recount2_expression_mean_toplot = pd.DataFrame(
     data={
         "All genes": np.log10(recount2_expression_mean),
-        "Common in RNAseq and array": np.log10(
+        "Common in RNA-seq and array": np.log10(
             recount2_expression_mean[correlated_genes]
         ),
-        "Common in only RNAseq": np.log10(recount2_expression_mean[uncorrelated_genes]),
+        "Common in only RNA-seq": np.log10(
+            recount2_expression_mean[uncorrelated_genes]
+        ),
     }
 )
 
@@ -274,8 +276,8 @@ f.get_figure().savefig(
 crow_expression_mean_toplot = pd.DataFrame(
     data={
         "All genes": np.log10(crow_expression_mean),
-        "Common in RNAseq and array": np.log10(crow_expression_mean[correlated_genes]),
-        "Common only in RNAseq": np.log10(crow_expression_mean[uncorrelated_genes]),
+        "Common in RNA-seq and array": np.log10(crow_expression_mean[correlated_genes]),
+        "Common only in RNA-seq": np.log10(crow_expression_mean[uncorrelated_genes]),
     }
 )
 
@@ -300,7 +302,7 @@ plt.xlim(-1, 4)
 for _, s in g.spines.items():
     s.set_linewidth(1.5)
 
-g.set_title("Average array (Crow et. al.) expression", fontsize=18)
+g.set_title("Average array (Crow et al.) expression", fontsize=18)
 g.set_xlabel(r"Log$_{10}$ (average expression)", fontsize=16)
 # -
 
