@@ -149,58 +149,62 @@ plt.title(
 sns.set({"figure.figsize": (8, 6)})
 sns.set_style("whitegrid")
 
-communities_fig = sns.histplot(
-    nonzero_counts_df.iloc[0, 1:].values,
-    element="step",
-    bins=np.arange(n_generic_groups, n_total_groups + 1),
-    palette="lightgrey",
-    color="lightgrey",
-)
+with sns.axes_style(
+    {"axes.edgecolor": "black", "xtick.bottom": True, "ytick.left": True}
+):
 
-line1 = plt.gca().axvline(
-    x=n_generic_groups, linestyle="-", linewidth=4, color="#81448e"
-)
-line2 = plt.gca().axvline(
-    x=n_total_groups, linestyle="--", linewidth=2.5, color="black"
-)
+    communities_fig = sns.histplot(
+        nonzero_counts_df.iloc[0, 1:].values,
+        element="step",
+        bins=np.arange(n_generic_groups, n_total_groups + 1),
+        palette="lightgrey",
+        color="lightgrey",
+    )
 
-communities_fig.set_xlabel(
-    "Number of communities with selected genes", fontsize=14, fontname="Verdana"
-)
-communities_fig.set_ylabel("Count", fontsize=14, fontname="Verdana")
+    line1 = plt.gca().axvline(
+        x=n_generic_groups, linestyle="-", linewidth=4, color="#81448e"
+    )
+    line2 = plt.gca().axvline(
+        x=n_total_groups, linestyle="--", linewidth=2.5, color="black"
+    )
 
-font = font_manager.FontProperties(family="Verdana", style="normal", size=12)
+    communities_fig.set_xlabel(
+        "No. of communities with selected genes", fontsize=14, fontname="Verdana"
+    )
+    communities_fig.set_ylabel("Count", fontsize=14, fontname="Verdana")
 
-communities_fig.legend(
-    handles=[mpatches.Patch(color="lightgrey"), line1, line2],
-    labels=["Random gene samples", "Common DEGs", "Total communities"],
-    bbox_to_anchor=(1, 1),
-    loc="upper left",
-    prop=font,
-)
-communities_fig.set_title(
-    textwrap.fill(
-        r"Number of communities, common DEGs $\it{vs.}$ 1000 degree-matched samples",
-        width=40,
-    ),
-    fontsize=16,
-    fontname="Verdana",
-)
+    font = font_manager.FontProperties(family="Verdana", style="normal", size=12)
 
-plt.xlim(20, 180)
-plt.ylim(0, 180)
+    communities_fig.legend(
+        handles=[mpatches.Patch(color="lightgrey"), line1, line2],
+        labels=["Random gene samples", "Common DEGs", "Total communities"],
+        bbox_to_anchor=(1, 1),
+        loc="upper left",
+        prop=font,
+    )
+    communities_fig.set_title(
+        textwrap.fill(
+            r"Number of communities, common DEGs $\it{vs.}$ 1000 degree-matched samples",
+            width=40,
+        ),
+        fontsize=16,
+        fontname="Verdana",
+    )
 
-communities_fig.grid(False)
+    plt.xlim(20, 180)
+    plt.ylim(0, 180)
 
-# Save
-communities_fig.figure.savefig(
-    "communities_fig.svg",
-    format="svg",
-    bbox_inches="tight",
-    transparent=True,
-    pad_inches=0,
-    dpi=300,
-)
+    communities_fig.grid(False)
+
+    # Save
+    communities_fig.figure.savefig(
+        "communities_fig.svg",
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )
 # -
 
 # These results do not differ substantially from the planted partition results, suggesting that our conclusions are not sensitive to the choice of community detection algorithm.

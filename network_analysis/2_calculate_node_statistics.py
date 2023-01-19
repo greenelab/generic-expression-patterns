@@ -84,56 +84,61 @@ print(pvalue)
 # Format figure for manuscript
 sns.set({"figure.figsize": (8, 6)})
 sns.set_style("whitegrid")
-centrality_fig = sns.boxplot(
-    data=degree_df,
-    x="is_generic",
-    y="degree",
-    notch=True,
-    palette=["lightgrey", "#81448e"],
-)
 
-centrality_fig.set_xlabel(None)
-centrality_fig.set_xticklabels(
-    ["Other genes", "Common DEGs"], fontsize=16, fontname="Verdana"
-)
-centrality_fig.set_ylabel(
-    textwrap.fill("Degree of genes", width=30), fontsize=16, fontname="Verdana"
-)
-centrality_fig.tick_params(labelsize=14)
-centrality_fig.set_title(
-    "Degree distribution of common DEGs/other genes",
-    fontsize=18,
-    fontname="Verdana",
-    pad=10,
-)
+with sns.axes_style(
+    {"axes.edgecolor": "black", "xtick.bottom": True, "ytick.left": True}
+):
 
-# Manually add statistical annotations based on t-tests below
-x1, x2 = 0, 1  # columns 'Sat' and 'Sun' (first column: 0, see plt.xticks())
-y, h, col = degree_df["degree"].max() + 10, 10, "k"
-plt.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=col)
-plt.text(
-    (x1 + x2) * 0.5,
-    y + h + 3,
-    f"$P$-value = {format(pvalue, '.3g')}",
-    ha="center",
-    va="bottom",
-    color=col,
-    size=14,
-)
+    centrality_fig = sns.boxplot(
+        data=degree_df,
+        x="is_generic",
+        y="degree",
+        notch=True,
+        palette=["lightgrey", "#81448e"],
+    )
 
-plt.ylim(0, 250)
+    centrality_fig.set_xlabel(None)
+    centrality_fig.set_xticklabels(
+        ["Other genes", "Common DEGs"], fontsize=16, fontname="Verdana"
+    )
+    centrality_fig.set_ylabel(
+        textwrap.fill("Degree of genes", width=30), fontsize=16, fontname="Verdana"
+    )
+    centrality_fig.tick_params(labelsize=14)
+    centrality_fig.set_title(
+        "Degree distribution of common DEGs/other genes",
+        fontsize=18,
+        fontname="Verdana",
+        pad=10,
+    )
 
-centrality_fig.grid(False)
+    # Manually add statistical annotations based on t-tests below
+    x1, x2 = 0, 1  # columns 'Sat' and 'Sun' (first column: 0, see plt.xticks())
+    y, h, col = degree_df["degree"].max() + 10, 10, "k"
+    plt.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=col)
+    plt.text(
+        (x1 + x2) * 0.5,
+        y + h + 3,
+        f"$P$-value = {format(pvalue, '.3g')}",
+        ha="center",
+        va="bottom",
+        color=col,
+        size=14,
+    )
 
-# Save
-centrality_fig.figure.savefig(
-    "centrality_figure.svg",
-    format="svg",
-    bbox_inches="tight",
-    transparent=True,
-    pad_inches=0,
-    dpi=300,
-)
+    plt.ylim(0, 250)
+
+    centrality_fig.grid(False)
+
+    # Save
+    centrality_fig.figure.savefig(
+        "centrality_figure.svg",
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        pad_inches=0,
+        dpi=300,
+    )
 # -
 
 # ### Plot weight distribution + look at weights of edges connecting generic genes
