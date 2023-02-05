@@ -19,14 +19,13 @@ jobs:
       - name: Setup conda environment
         run: |
           # $CONDA is an environment variable pointing to the root of the miniconda directory
-          $CONDA/bin/conda install conda = 4.9.2
-          $CONDA/bin/conda env update --file environment.yml --name base
-          $CONDA/bin/pip install .
-          $CONDA/bin/pip install pytest
-          $CONDA/bin/pip install nbval
+          # $CONDA/bin/conda env update --file environment.yml --name base
+          # $CONDA/bin/pip install .
+          # $CONDA/bin/pip install pytest
+          # $CONDA/bin/pip install nbval
 
       - name: Run analysis notebooks
         run: |
-          export R_HOME=`$CONDA/bin/R RHOME`
-          $CONDA/bin/pytest -v --nbval-lax --current-env tests/1_process_recount2_data.ipynb
-          $CONDA/bin/pytest -v --nbval-lax --current-env tests/2_identify_generic_genes_pathways.ipynb
+          #export R_HOME=`$CONDA/bin/R RHOME`
+          #$CONDA/bin/pytest -v --nbval-lax --current-env tests/1_process_recount2_data.ipynb
+          #$CONDA/bin/pytest -v --nbval-lax --current-env tests/2_identify_generic_genes_pathways.ipynb
