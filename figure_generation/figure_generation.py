@@ -251,7 +251,7 @@ panel_4b = make_figure_panel(
     "../LV_analysis/highweight_LV_coverage.svg",
     scale_x_input=0.8,
     scale_y_input=0.8,
-    x_loc=350,
+    x_loc=360,
     y_loc=10,
 )
 panel_4c = make_figure_panel(
@@ -277,7 +277,7 @@ panel_4e = make_figure_panel(
 )
 
 panel_4a_label = sg.TextElement(10, 20, "A", size=18, weight="bold", font="Verdana")
-panel_4b_label = sg.TextElement(350, 20, "B", size=18, weight="bold", font="Verdana")
+panel_4b_label = sg.TextElement(360, 20, "B", size=18, weight="bold", font="Verdana")
 panel_4c_label = sg.TextElement(700, 20, "C", size=18, weight="bold", font="Verdana")
 panel_4d_label = sg.TextElement(10, 300, "D", size=18, weight="bold", font="Verdana")
 panel_4e_label = sg.TextElement(600, 300, "E", size=18, weight="bold", font="Verdana")

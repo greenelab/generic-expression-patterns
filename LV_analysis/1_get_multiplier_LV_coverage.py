@@ -216,7 +216,9 @@ nonzero_fig.set_xticklabels(
     ["Common DEGs", "Other genes"], fontsize=14, fontname="Verdana"
 )
 nonzero_fig.set_ylabel(
-    textwrap.fill("Number of LVs", width=30), fontsize=14, fontname="Verdana"
+    textwrap.fill("No. of LVs                   (genes are present in)", width=30),
+    fontsize=14,
+    fontname="Verdana",
 )
 nonzero_fig.tick_params(labelsize=14)
 nonzero_fig.set_title(
@@ -252,7 +254,11 @@ highweight_fig.set_xticklabels(
     ["Common DEGs", "Other genes"], fontsize=14, fontname="Verdana"
 )
 highweight_fig.set_ylabel(
-    textwrap.fill("Number of LVs", width=30), fontsize=14, fontname="Verdana"
+    textwrap.fill(
+        "No. of LVs                    (genes contribute highly to)", width=30
+    ),
+    fontsize=14,
+    fontname="Verdana",
 )
 highweight_fig.tick_params(labelsize=14)
 highweight_fig.set_title(
